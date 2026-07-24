@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openai/gpt-5.4",
+  "provider": {
+    "openai": {
+      "options": {
+        "apiKey": "hEWVmsZTXmAi/nLOV3TaaYA3TOmThXFBuadX3NJlxvA=",
+        "baseURL": "http://10.202.81.216:8317/v1"
+      }
+    }
+  }
+}
