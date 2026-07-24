@@ -1,5 +1,5 @@
 # 多阶段构建
-FROM node:20 AS builder
+FROM node:22 AS builder
 
 # 设置工作目录
 WORKDIR /app
