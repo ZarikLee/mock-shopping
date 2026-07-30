@@ -1,11 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { orderApi } from '../api/orders'
 
 export const useCartStore = defineStore('cart', () => {
-  // 购物车商品列表
   const items = ref(JSON.parse(localStorage.getItem('cartItems') || '[]'))
 
-  // 计算属性
   const itemCount = computed(() => {
     return items.value.reduce((total, item) => total + item.quantity, 0)
   })
@@ -34,12 +33,10 @@ export const useCartStore = defineStore('cart', () => {
     return items.value.length > 0 && items.value.every(item => item.selected)
   })
 
-  // 保存到本地存储
   const saveToStorage = () => {
     localStorage.setItem('cartItems', JSON.stringify(items.value))
   }
 
-  // 添加商品到购物车
   const addToCart = (product, quantity = 1, selectedSpec = null, selectedColor = null) => {
     const existingItem = items.value.find(item => 
       item.productId === product.id && 
@@ -68,7 +65,6 @@ export const useCartStore = defineStore('cart', () => {
     saveToStorage()
   }
 
-  // 从购物车移除
   const removeFromCart = (itemId) => {
     const index = items.value.findIndex(item => item.id === itemId)
     if (index > -1) {
@@ -77,19 +73,16 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
-  // 批量删除选中的商品
   const removeSelected = () => {
     items.value = items.value.filter(item => !item.selected)
     saveToStorage()
   }
 
-  // 清空购物车
   const clearCart = () => {
     items.value = []
     saveToStorage()
   }
 
-  // 更新商品数量
   const updateQuantity = (itemId, quantity) => {
     const item = items.value.find(item => item.id === itemId)
     if (item) {
@@ -98,7 +91,6 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
-  // 切换商品选中状态
   const toggleSelected = (itemId) => {
     const item = items.value.find(item => item.id === itemId)
     if (item) {
@@ -107,7 +99,6 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
-  // 切换全选状态
   const toggleSelectAll = () => {
     const newState = !isSelectedAll.value
     items.value.forEach(item => {
@@ -116,7 +107,6 @@ export const useCartStore = defineStore('cart', () => {
     saveToStorage()
   }
 
-  // 根据订单移除商品（支付成功后）
   const removeByOrder = (orderItems) => {
     orderItems.forEach(orderItem => {
       const index = items.value.findIndex(item => 
@@ -129,6 +119,50 @@ export const useCartStore = defineStore('cart', () => {
       }
     })
     saveToStorage()
+  }
+
+  const buyNow = async (product, quantity, selectedSpec, selectedColor) => {
+    const orderData = {
+      items: [{
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity,
+        selectedSpec: selectedSpec || '',
+        selectedColor: selectedColor || '',
+        shop: product.shop,
+        shopId: product.shopId
+      }],
+      totalAmount: product.price * quantity,
+      discountAmount: 0,
+      payAmount: product.price * quantity
+    }
+    const res = await orderApi.create(orderData)
+    return res.data || res
+  }
+
+  const checkout = async (address, coupon) => {
+    const orderData = {
+      items: selectedItems.value.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+        quantity: item.quantity,
+        selectedSpec: item.selectedSpec,
+        selectedColor: item.selectedColor,
+        shop: item.shop,
+        shopId: item.shopId
+      })),
+      address,
+      coupon: coupon || null,
+      totalAmount: totalOriginalPrice.value,
+      discountAmount: totalDiscount.value + (coupon?.amount || 0),
+      payAmount: totalPrice.value - (coupon?.amount || 0)
+    }
+    const res = await orderApi.create(orderData)
+    return res.data || res
   }
 
   return {
@@ -146,6 +180,8 @@ export const useCartStore = defineStore('cart', () => {
     updateQuantity,
     toggleSelected,
     toggleSelectAll,
-    removeByOrder
+    removeByOrder,
+    buyNow,
+    checkout
   }
 })
