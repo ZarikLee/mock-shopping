@@ -1,117 +1,210 @@
 <template>
-  <div class="games-page">
-    <div class="games-header">
+  <div class="earn-center">
+    <div class="top-section">
       <div class="container">
-        <div class="header-left">
-          <div class="header-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><path d="M10 9h4"/><path d="M12 7v4"/></svg>
+        <div class="points-card">
+          <div class="points-info">
+            <span class="points-label">我的积分</span>
+            <span class="points-value">{{ userStore.points }}</span>
           </div>
-          <h1>游戏中心</h1>
-        </div>
-        <div class="header-right">
-          <span class="points-label">当前积分</span>
-          <span class="points-value">{{ userStore.points }}</span>
+          <div class="today-earned">
+            <span>今日赚取</span>
+            <span class="today-num">+{{ todayEarned }}</span>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="container">
-      <div class="games-grid">
-        <div class="game-card wheel-game">
-          <div class="card-header">
-            <h2>幸运转盘</h2>
-            <span class="card-badge">消耗10积分</span>
-          </div>
-          <p class="card-desc">转动转盘，赢取丰厚积分奖励！最高可赢500积分！</p>
-          <div class="wheel-wrapper">
-            <div class="wheel-pointer">
-              <svg viewBox="0 0 24 24" width="32" height="32"><polygon points="12,2 4,18 12,14 20,18" fill="#ff4400" stroke="#fff" stroke-width="1.5"/></svg>
-            </div>
-            <div class="wheel" :class="{ spinning: spinning }" :style="{ transform: `rotate(${wheelRotation}deg)` }" @transitionend="onWheelTransitionEnd">
-              <svg viewBox="0 0 400 400" width="100%" height="100%">
-                <circle cx="200" cy="200" r="190" fill="none" stroke="#fff" stroke-width="4"/>
-                <g v-for="(seg, i) in wheelSegments" :key="i">
-                  <path :d="seg.path" :fill="seg.color" stroke="#fff" stroke-width="2"/>
-                  <text
-                    :x="seg.textX"
-                    :y="seg.textY"
-                    :transform="`rotate(${seg.textRot}, ${seg.textX}, ${seg.textY})`"
-                    text-anchor="middle"
-                    dominant-baseline="middle"
-                    fill="#fff"
-                    font-weight="bold"
-                    font-size="18"
-                  >{{ seg.prize }}</text>
-                </g>
-                <circle cx="200" cy="200" r="25" fill="#fff" stroke="#ddd" stroke-width="2"/>
-                <circle cx="200" cy="200" r="18" fill="#ff4400"/>
-              </svg>
-            </div>
-          </div>
-          <button class="play-btn wheel-btn" :disabled="!userStore.isLoggedIn || spinning" @click="spinWheel">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><path d="M21 3v5h-5"/></svg>
-            {{ spinning ? '转动中...' : '转动转盘' }}
-          </button>
+      <section class="category-section">
+        <div class="category-header">
+          <span class="category-icon">📋</span>
+          <h2>每日任务</h2>
         </div>
-
-        <div class="game-card guess-game">
-          <div class="card-header">
-            <h2>猜数字</h2>
-            <span class="card-badge">双倍奖励</span>
+        <div class="task-grid">
+          <div class="task-card">
+            <div class="task-icon daily-checkin">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="task-body">
+              <span class="task-name">每日签到</span>
+              <span class="task-desc">{{ checkedIn ? '今日已签到' : '签到赚取积分' }}</span>
+            </div>
+            <button class="task-btn" :class="{ done: checkedIn }" :disabled="checkedIn" @click="doCheckin">
+              {{ checkedIn ? '已签到' : '签到' }}
+            </button>
           </div>
-          <p class="card-desc">下注积分，猜随机数字的大小，猜中赢得双倍积分！</p>
-          <div class="guess-body">
-            <div class="bet-area">
-              <span class="bet-label">下注积分</span>
-              <el-input-number v-model="betAmount" :min="10" :step="10" :max="userStore.points" :disabled="guessing" controls-position="right" size="large" />
-              <span class="bet-hint" v-if="userStore.points < 10">积分不足！</span>
+          <div class="task-card">
+            <div class="task-icon browse">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
-            <div class="number-display" :class="{ revealed: guessRevealed, win: guessResult === 'win', lose: guessResult === 'lose' }">
-              <span class="number-value">{{ guessRevealed ? randomNumber : '?' }}</span>
-              <span class="number-label">{{ guessRevealed ? (randomNumber > 50 ? '大于50' : '小于等于50') : '等待猜数' }}</span>
+            <div class="task-body">
+              <span class="task-name">浏览商品</span>
+              <span class="task-desc">去浏览5件商品赚10积分</span>
             </div>
-            <div class="result-area" v-if="guessRevealed">
-              <div class="result-icon" :class="guessResult">
-                <svg v-if="guessResult === 'win'" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#52c41a" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
-                <svg v-else viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ff4d4f" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/></svg>
-              </div>
-              <div class="result-text">
-                <span class="result-title" :class="guessResult">{{ guessResult === 'win' ? '恭喜猜中！' : '很遗憾猜错了' }}</span>
-                <span class="result-score" :class="guessResult">{{ guessResult === 'win' ? '+' : '' }}{{ lastGuessScore }} 积分</span>
-              </div>
-              <button class="play-btn guess-again-btn" @click="resetGuess">再来一局</button>
+            <button class="task-btn" :class="{ done: browsed }" :disabled="browsed" @click="doBrowse">
+              {{ browsed ? '已领取' : '去浏览' }}
+            </button>
+          </div>
+          <div class="task-card">
+            <div class="task-icon share">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             </div>
-            <div class="guess-buttons" v-else>
-              <button class="guess-btn high" :disabled="!userStore.isLoggedIn || guessing || userStore.points < 10" @click="makeGuess('high')">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
-                高（大于50）
-              </button>
-              <button class="guess-btn low" :disabled="!userStore.isLoggedIn || guessing || userStore.points < 10" @click="makeGuess('low')">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-                低（小于等于50）
-              </button>
+            <div class="task-body">
+              <span class="task-name">分享赚积分</span>
+              <span class="task-desc">分享给好友赚5积分</span>
             </div>
+            <button class="task-btn" :class="{ done: shared }" :disabled="shared" @click="doShare">
+              {{ shared ? '已领取' : '分享' }}
+            </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="history-section">
-        <div class="history-header">
-          <h2>游戏记录</h2>
+      <section class="category-section">
+        <div class="category-header">
+          <span class="category-icon">🎮</span>
+          <h2>小游戏</h2>
+        </div>
+        <div class="games-grid">
+          <div class="game-card wheel-game">
+            <div class="card-header">
+              <h3>幸运转盘</h3>
+              <span class="card-badge">消耗10积分</span>
+            </div>
+            <p class="card-desc">转动转盘，赢取丰厚积分奖励！最高可赢500积分！</p>
+            <div class="wheel-wrapper">
+              <div class="wheel-pointer">
+                <svg viewBox="0 0 24 24" width="32" height="32"><polygon points="12,2 4,18 12,14 20,18" fill="#ff4400" stroke="#fff" stroke-width="1.5"/></svg>
+              </div>
+              <div class="wheel" :class="{ spinning: spinning }" :style="{ transform: `rotate(${wheelRotation}deg)` }" @transitionend="onWheelTransitionEnd">
+                <svg viewBox="0 0 400 400" width="100%" height="100%">
+                  <circle cx="200" cy="200" r="190" fill="none" stroke="#fff" stroke-width="4"/>
+                  <g v-for="(seg, i) in wheelSegments" :key="i">
+                    <path :d="seg.path" :fill="seg.color" stroke="#fff" stroke-width="2"/>
+                    <text :x="seg.textX" :y="seg.textY" :transform="`rotate(${seg.textRot}, ${seg.textX}, ${seg.textY})`" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-weight="bold" font-size="18">{{ seg.prize }}</text>
+                  </g>
+                  <circle cx="200" cy="200" r="25" fill="#fff" stroke="#ddd" stroke-width="2"/>
+                  <circle cx="200" cy="200" r="18" fill="#ff4400"/>
+                </svg>
+              </div>
+            </div>
+            <button class="play-btn wheel-btn" :disabled="!userStore.isLoggedIn || spinning" @click="spinWheel">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><path d="M21 3v5h-5"/></svg>
+              {{ spinning ? '转动中...' : '转动转盘' }}
+            </button>
+          </div>
+
+          <div class="game-card guess-game">
+            <div class="card-header">
+              <h3>猜数字</h3>
+              <span class="card-badge">双倍奖励</span>
+            </div>
+            <p class="card-desc">下注积分，猜随机数字的大小，猜中赢得双倍积分！</p>
+            <div class="guess-body">
+              <div class="bet-area">
+                <span class="bet-label">下注</span>
+                <el-input-number v-model="betAmount" :min="10" :step="10" :max="userStore.points" :disabled="guessing" controls-position="right" size="large" />
+                <span class="bet-hint" v-if="userStore.points < 10">积分不足！</span>
+              </div>
+              <div class="number-display" :class="{ revealed: guessRevealed, win: guessResult === 'win', lose: guessResult === 'lose' }">
+                <span class="number-value">{{ guessRevealed ? randomNumber : '?' }}</span>
+                <span class="number-label">{{ guessRevealed ? (randomNumber > 50 ? '大于50' : '小于等于50') : '等待猜数' }}</span>
+              </div>
+              <div class="result-area" v-if="guessRevealed">
+                <div class="result-icon" :class="guessResult">
+                  <svg v-if="guessResult === 'win'" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#52c41a" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
+                  <svg v-else viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ff4d4f" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/></svg>
+                </div>
+                <div class="result-text">
+                  <span class="result-title" :class="guessResult">{{ guessResult === 'win' ? '恭喜猜中！' : '很遗憾猜错了' }}</span>
+                  <span class="result-score" :class="guessResult">{{ guessResult === 'win' ? '+' : '' }}{{ lastGuessScore }} 积分</span>
+                </div>
+                <button class="play-btn guess-again-btn" @click="resetGuess">再来一局</button>
+              </div>
+              <div class="guess-buttons" v-else>
+                <button class="guess-btn high" :disabled="!userStore.isLoggedIn || guessing || userStore.points < 10" @click="makeGuess('high')">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>高（大于50）
+                </button>
+                <button class="guess-btn low" :disabled="!userStore.isLoggedIn || guessing || userStore.points < 10" @click="makeGuess('low')">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>低（小于等于50）
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="game-card match-game">
+            <div class="card-header">
+              <h3>翻翻乐</h3>
+              <span class="card-badge">配对有奖</span>
+            </div>
+            <p class="card-desc">翻开卡片，找到配对的图案！每对奖励20积分。</p>
+            <div class="match-body" v-if="!matchGameOver">
+              <div class="match-grid">
+                <div v-for="(card, i) in matchCards" :key="i" class="match-card" :class="{ flipped: card.flipped || card.matched, matched: card.matched }" @click="flipCard(i)">
+                  <div class="match-card-inner">
+                    <div class="match-front">?</div>
+                    <div class="match-back">{{ card.emoji }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="match-score-row">
+                <span class="match-pairs">已配对: {{ matchPairs }} / 2</span>
+                <span class="match-earned">获得: +{{ matchEarned }} 积分</span>
+              </div>
+            </div>
+            <div class="match-body" v-else>
+              <div class="match-result">
+                <span class="match-result-icon">🎉</span>
+                <span class="match-result-text">恭喜完成！获得 {{ matchEarned }} 积分</span>
+                <button class="play-btn match-restart-btn" @click="initMatchGame">再来一局</button>
+              </div>
+            </div>
+            <button v-if="!matchGameOver && matchEarned > 0" class="play-btn match-claim-btn" @click="claimMatchReward">领取 {{ matchEarned }} 积分</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="category-section">
+        <div class="category-header">
+          <span class="category-icon">🛍️</span>
+          <h2>购物返利</h2>
+        </div>
+        <div class="rebate-card">
+          <div class="rebate-rule">
+            <span class="rebate-icon">💰</span>
+            <div class="rebate-info">
+              <span class="rebate-title">购物返积分</span>
+              <span class="rebate-desc">购物每满100元返5积分，多买多送！</span>
+            </div>
+          </div>
+          <div class="promo-list">
+            <div class="promo-item" v-for="(p, i) in promotions" :key="i">
+              <span class="promo-tag">{{ p.tag }}</span>
+              <span class="promo-desc">{{ p.desc }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="history-section">
+        <div class="section-header">
+          <h2>赚取记录</h2>
           <span class="history-count" v-if="records.length">共 {{ records.length }} 条</span>
         </div>
         <div class="history-empty" v-if="records.length === 0">
           <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ccc" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <p>还没有游戏记录，快来玩一局吧！</p>
+          <p>还没有记录，快来赚取积分吧！</p>
         </div>
         <div class="history-list" v-else>
           <div class="history-item" v-for="(rec, i) in records" :key="rec.id || i">
-            <div class="history-icon" :class="rec.gameType">
+            <div class="history-icon" :class="getGameType(rec)">
               <svg v-if="rec.gameType === 'wheel'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4"/><path d="M12 19v4"/><path d="M4.22 4.22l2.83 2.83"/><path d="M16.95 16.95l2.83 2.83"/><path d="M1 12h4"/><path d="M19 12h4"/><path d="M4.22 19.78l2.83-2.83"/><path d="M16.95 7.05l2.83-2.83"/></svg>
-              <svg v-else viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><path d="M10 9h4"/><path d="M12 7v4"/></svg>
+              <svg v-else-if="rec.gameType === 'guess'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><path d="M10 9h4"/><path d="M12 7v4"/></svg>
+              <svg v-else viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <div class="history-info">
-              <span class="history-game">{{ rec.gameType === 'wheel' ? '幸运转盘' : '猜数字' }}</span>
+              <span class="history-game">{{ getGameName(rec) }}</span>
               <span class="history-time">{{ formatTime(rec.created_at) }}</span>
             </div>
             <div class="history-score" :class="rec.score >= 0 ? 'win' : 'lose'">
@@ -119,10 +212,10 @@
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
-    <el-dialog v-model="showPrizeDialog" title="🎉 中奖结果" width="360px" :close-on-click-modal="false" center>
+    <el-dialog v-model="showPrizeDialog" title="中奖结果" width="360px" :close-on-click-modal="false" center>
       <div class="prize-dialog-body">
         <div class="prize-value" :class="lastPrize > 0 ? 'win' : 'lose'">{{ lastPrize }}</div>
         <div class="prize-label">{{ lastPrize > 0 ? '积分' : '下次加油！' }}</div>
@@ -137,12 +230,73 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { gameApi } from '../../api/games'
+import { authApi } from '../../api/auth'
 import { useUserStore } from '../../stores/user'
 
+const router = useRouter()
 const userStore = useUserStore()
+
+const todayEarned = ref(0)
+const checkedIn = ref(false)
+const browsed = ref(false)
+const shared = ref(false)
+
+const doCheckin = async () => {
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  try {
+    const res = await userStore.checkin()
+    const pts = res.points || 10
+    todayEarned.value += pts
+    checkedIn.value = true
+    ElMessage.success(`签到成功 +${pts} 积分`)
+    loadRecords()
+  } catch (e) {
+    const err = e.error || ''
+    if (err.includes('Already checked in')) {
+      checkedIn.value = true
+      ElMessage.info('今日已签到')
+    } else {
+      ElMessage.error('签到失败')
+    }
+  }
+}
+
+const doBrowse = () => {
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  router.push('/products')
+}
+
+const doShare = () => {
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  if (userStore.userInfo) {
+    userStore.userInfo.points = (userStore.userInfo.points || 0) + 5
+    localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
+  }
+  todayEarned.value += 5
+  shared.value = true
+  ElMessage.success('分享成功 +5 积分')
+}
+
+const loadCheckinStatus = async () => {
+  if (!userStore.isLoggedIn) return
+  try {
+    const res = await authApi.getCheckinStatus()
+    checkedIn.value = res.checkedIn
+  } catch {}
+}
 
 const SEG_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F']
 const PRIZES = [10, 20, 50, 100, 0, 200, 5, 500]
@@ -210,6 +364,8 @@ const onWheelTransitionEnd = () => {
   } else {
     ElMessage.info('很遗憾，没有中奖')
   }
+  const netScore = lastPrize.value - 10
+  if (netScore > 0) todayEarned.value += netScore
   userStore.fetchUserInfo()
   loadRecords()
 }
@@ -238,6 +394,7 @@ const makeGuess = async (guess) => {
     guessResult.value = res.result
     lastGuessScore.value = res.score
     guessRevealed.value = true
+    if (res.score > 0) todayEarned.value += res.score
     userStore.fetchUserInfo()
     loadRecords()
   } catch (e) {
@@ -257,6 +414,85 @@ const resetGuess = () => {
   }
 }
 
+const matchCards = ref([])
+const matchFlipped = ref([])
+const matchPairs = ref(0)
+const matchEarned = ref(0)
+const matchGameOver = ref(false)
+const matchClaimed = ref(false)
+const matchLocked = ref(false)
+
+const emojis = ['🍎', '🍊', '🍋', '🍇']
+
+const initMatchGame = () => {
+  const deck = [...emojis, ...emojis]
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]]
+  }
+  matchCards.value = deck.map((emoji, idx) => ({
+    emoji,
+    id: idx,
+    flipped: false,
+    matched: false
+  }))
+  matchFlipped.value = []
+  matchPairs.value = 0
+  matchEarned.value = 0
+  matchGameOver.value = false
+  matchClaimed.value = false
+  matchLocked.value = false
+}
+
+const flipCard = (idx) => {
+  if (matchLocked.value) return
+  const card = matchCards.value[idx]
+  if (card.flipped || card.matched) return
+  card.flipped = true
+  matchFlipped.value.push(idx)
+  if (matchFlipped.value.length === 2) {
+    matchLocked.value = true
+    const [i1, i2] = matchFlipped.value
+    const c1 = matchCards.value[i1]
+    const c2 = matchCards.value[i2]
+    if (c1.emoji === c2.emoji) {
+      c1.matched = true
+      c2.matched = true
+      matchPairs.value++
+      matchEarned.value += 20
+      matchFlipped.value = []
+      matchLocked.value = false
+      if (matchPairs.value === 2) {
+        matchGameOver.value = true
+      }
+    } else {
+      setTimeout(() => {
+        c1.flipped = false
+        c2.flipped = false
+        matchFlipped.value = []
+        matchLocked.value = false
+      }, 800)
+    }
+  }
+}
+
+const claimMatchReward = () => {
+  if (matchClaimed.value) return
+  if (userStore.userInfo) {
+    userStore.userInfo.points = (userStore.userInfo.points || 0) + matchEarned.value
+    localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
+  }
+  todayEarned.value += matchEarned.value
+  matchClaimed.value = true
+  ElMessage.success(`获得 ${matchEarned.value} 积分`)
+}
+
+const promotions = [
+  { tag: '满减', desc: '购物满200元返10积分' },
+  { tag: '限时', desc: '限时3倍积分，仅限今日' },
+  { tag: '新客', desc: '首次购物额外返20积分' }
+]
+
 const records = ref([])
 const loadRecords = async () => {
   try {
@@ -265,6 +501,21 @@ const loadRecords = async () => {
   } catch {
     records.value = []
   }
+}
+
+const getGameType = (rec) => {
+  if (rec.gameType === 'wheel') return 'wheel'
+  if (rec.gameType === 'guess') return 'guess'
+  return 'task'
+}
+
+const getGameName = (rec) => {
+  if (rec.gameType === 'wheel') return '幸运转盘'
+  if (rec.gameType === 'guess') return '猜数字'
+  if (rec.gameType === 'checkin') return '每日签到'
+  if (rec.gameType === 'browse') return '浏览商品'
+  if (rec.gameType === 'share') return '分享赚积分'
+  return rec.gameType || '赚米任务'
 }
 
 const formatTime = (t) => {
@@ -276,13 +527,15 @@ const formatTime = (t) => {
 
 onMounted(() => {
   if (userStore.isLoggedIn) {
+    loadCheckinStatus()
     loadRecords()
   }
+  initMatchGame()
 })
 </script>
 
 <style scoped>
-.games-page {
+.earn-center {
   min-height: 100vh;
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
   padding-bottom: 80px;
@@ -294,84 +547,199 @@ onMounted(() => {
   padding: 0 16px;
 }
 
-.games-header {
+.top-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 24px 0;
+  padding: 30px 0;
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
 }
-.games-header .container {
+
+.points-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.header-icon svg {
-  width: 36px;
-  height: 36px;
-  color: #fff;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
-.games-header h1 {
-  font-size: 26px;
-  color: #fff;
-  margin: 0;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.12);
   backdrop-filter: blur(10px);
-  padding: 10px 20px;
-  border-radius: 30px;
+  padding: 24px 32px;
+  border-radius: 20px;
 }
+
+.points-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .points-label {
-  color: rgba(255,255,255,0.8);
+  color: rgba(255,255,255,0.7);
   font-size: 14px;
 }
+
 .points-value {
   color: #ffd700;
+  font-size: 42px;
+  font-weight: bold;
+  text-shadow: 0 0 30px rgba(255,215,0,0.5);
+  line-height: 1;
+}
+
+.today-earned {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  color: rgba(255,255,255,0.6);
+  font-size: 13px;
+}
+
+.today-num {
+  color: #52c41a;
   font-size: 22px;
   font-weight: bold;
-  text-shadow: 0 0 20px rgba(255,215,0,0.5);
+}
+
+.category-section {
+  margin: 28px 0;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.category-icon {
+  font-size: 24px;
+}
+
+.category-header h2 {
+  color: #fff;
+  font-size: 20px;
+  margin: 0;
+}
+
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 18px 20px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+
+.task-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.task-icon.daily-checkin {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+.task-icon.browse {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+}
+
+.task-icon.share {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+}
+
+.task-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-name {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.task-desc {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+}
+
+.task-btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+
+.task-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.task-btn.done {
+  background: #555;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .games-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin: 30px 0;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
 }
+
 .game-card {
   background: rgba(255,255,255,0.06);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 20px;
-  padding: 28px;
+  padding: 24px;
   transition: transform 0.3s, box-shadow 0.3s;
   display: flex;
   flex-direction: column;
 }
+
 .game-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 40px rgba(0,0,0,0.3);
 }
+
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
-.card-header h2 {
+
+.card-header h3 {
   color: #fff;
-  font-size: 20px;
+  font-size: 18px;
   margin: 0;
 }
+
 .card-badge {
   padding: 4px 14px;
   border-radius: 20px;
@@ -379,24 +747,32 @@ onMounted(() => {
   font-weight: 600;
   color: #fff;
 }
+
 .wheel-game .card-badge {
   background: linear-gradient(135deg, #f093fb, #f5576c);
 }
+
 .guess-game .card-badge {
   background: linear-gradient(135deg, #4facfe, #00f2fe);
 }
+
+.match-game .card-badge {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+}
+
 .card-desc {
   color: rgba(255,255,255,0.6);
   font-size: 13px;
-  margin: 0 0 20px;
+  margin: 0 0 16px;
 }
 
 .wheel-wrapper {
   position: relative;
-  width: 280px;
-  height: 280px;
-  margin: 0 auto 20px;
+  width: 240px;
+  height: 240px;
+  margin: 0 auto 16px;
 }
+
 .wheel-pointer {
   position: absolute;
   top: -8px;
@@ -405,6 +781,7 @@ onMounted(() => {
   z-index: 10;
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
 }
+
 .wheel {
   width: 100%;
   height: 100%;
@@ -412,16 +789,17 @@ onMounted(() => {
   transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
   box-shadow: 0 0 0 6px rgba(255,255,255,0.15), 0 8px 40px rgba(0,0,0,0.4);
 }
+
 .wheel.spinning {
   cursor: not-allowed;
 }
 
 .play-btn {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   border: none;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -430,15 +808,18 @@ onMounted(() => {
   gap: 8px;
   transition: all 0.3s;
 }
+
 .play-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .wheel-btn {
   background: linear-gradient(135deg, #f093fb, #f5576c);
   color: #fff;
   margin-top: auto;
 }
+
 .wheel-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #e881f0, #e94d60);
   box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
@@ -447,67 +828,78 @@ onMounted(() => {
 .guess-body {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   flex: 1;
 }
+
 .bet-area {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
+
 .bet-label {
   color: rgba(255,255,255,0.7);
   font-size: 14px;
   white-space: nowrap;
 }
+
 .bet-hint {
   color: #ff6b6b;
   font-size: 12px;
 }
+
 .number-display {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 24px;
+  padding: 20px;
   border-radius: 16px;
   background: rgba(255,255,255,0.05);
   border: 2px solid rgba(255,255,255,0.1);
   transition: all 0.4s;
 }
+
 .number-display.revealed {
   border-color: rgba(255,255,255,0.3);
   background: rgba(255,255,255,0.08);
 }
+
 .number-display.win {
   border-color: #52c41a;
   background: rgba(82, 196, 26, 0.1);
   box-shadow: 0 0 30px rgba(82, 196, 26, 0.2);
 }
+
 .number-display.lose {
   border-color: #ff4d4f;
   background: rgba(255, 77, 79, 0.1);
   box-shadow: 0 0 30px rgba(255, 77, 79, 0.2);
 }
+
 .number-value {
-  font-size: 48px;
+  font-size: 42px;
   font-weight: bold;
   color: #fff;
   text-shadow: 0 0 30px rgba(255,255,255,0.3);
   transition: all 0.4s;
-  min-height: 60px;
+  min-height: 52px;
   display: flex;
   align-items: center;
 }
+
 .number-display.win .number-value {
   color: #52c41a;
   text-shadow: 0 0 30px rgba(82, 196, 26, 0.5);
 }
+
 .number-display.lose .number-value {
   color: #ff4d4f;
   text-shadow: 0 0 30px rgba(255, 77, 79, 0.5);
 }
+
 .number-label {
   font-size: 13px;
   color: rgba(255,255,255,0.5);
@@ -516,14 +908,15 @@ onMounted(() => {
 .guess-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
   margin-top: auto;
 }
+
 .guess-btn {
-  padding: 16px;
+  padding: 14px;
   border: none;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -533,21 +926,26 @@ onMounted(() => {
   transition: all 0.3s;
   color: #fff;
 }
+
 .guess-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .guess-btn.high {
   background: linear-gradient(135deg, #f093fb, #f5576c);
 }
+
 .guess-btn.high:hover:not(:disabled) {
   background: linear-gradient(135deg, #e881f0, #e94d60);
   box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
   transform: scale(1.03);
 }
+
 .guess-btn.low {
   background: linear-gradient(135deg, #4facfe, #00f2fe);
 }
+
 .guess-btn.low:hover:not(:disabled) {
   background: linear-gradient(135deg, #3d9ef0, #00d8f0);
   box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
@@ -558,51 +956,244 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 10px;
+  padding: 12px;
   margin-top: auto;
 }
+
 .result-icon {
   animation: resultPop 0.4s ease;
 }
+
 .result-icon.win svg {
   filter: drop-shadow(0 0 20px rgba(82, 196, 26, 0.6));
 }
+
 .result-icon.lose svg {
   filter: drop-shadow(0 0 20px rgba(255, 77, 79, 0.6));
 }
+
 .result-text {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
+
 .result-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
 }
+
 .result-title.win { color: #52c41a; }
 .result-title.lose { color: #ff4d4f; }
+
 .result-score {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: bold;
 }
+
 .result-score.win { color: #52c41a; }
 .result-score.lose { color: #ff4d4f; }
+
 .guess-again-btn {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: #fff;
   max-width: 200px;
 }
+
 .guess-again-btn:hover {
   background: linear-gradient(135deg, #5a6fd6, #6a4196);
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
-@keyframes resultPop {
-  0% { transform: scale(0); opacity: 0; }
-  60% { transform: scale(1.2); }
-  100% { transform: scale(1); opacity: 1; }
+.match-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.match-card {
+  aspect-ratio: 1;
+  perspective: 600px;
+  cursor: pointer;
+}
+
+.match-card.matched {
+  cursor: default;
+}
+
+.match-card-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  transition: transform 0.4s;
+  transform-style: preserve-3d;
+}
+
+.match-card.flipped .match-card-inner {
+  transform: rotateY(180deg);
+}
+
+.match-front, .match-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+}
+
+.match-front {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 28px;
+}
+
+.match-back {
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  transform: rotateY(180deg);
+}
+
+.match-card.matched .match-back {
+  border-color: #52c41a;
+  background: rgba(82, 196, 26, 0.15);
+  box-shadow: 0 0 16px rgba(82, 196, 26, 0.3);
+}
+
+.match-score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.match-pairs {
+  color: rgba(255,255,255,0.6);
+  font-size: 13px;
+}
+
+.match-earned {
+  color: #52c41a;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.match-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 30px 0;
+}
+
+.match-result-icon {
+  font-size: 48px;
+}
+
+.match-result-text {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.match-restart-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  max-width: 200px;
+}
+
+.match-claim-btn {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  color: #fff;
+  margin-top: 8px;
+}
+
+.match-claim-btn:hover:not(:disabled) {
+  box-shadow: 0 8px 25px rgba(67, 233, 123, 0.4);
+}
+
+.rebate-card {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.rebate-rule {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 18px;
+}
+
+.rebate-icon {
+  font-size: 32px;
+}
+
+.rebate-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rebate-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.rebate-desc {
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+}
+
+.promo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.promo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+}
+
+.promo-tag {
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  white-space: nowrap;
+}
+
+.promo-desc {
+  color: rgba(255,255,255,0.6);
+  font-size: 13px;
 }
 
 .history-section {
@@ -613,21 +1204,25 @@ onMounted(() => {
   padding: 24px;
   margin-bottom: 40px;
 }
-.history-header {
+
+.section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
 }
-.history-header h2 {
+
+.section-header h2 {
   color: #fff;
   font-size: 18px;
   margin: 0;
 }
+
 .history-count {
   color: rgba(255,255,255,0.4);
   font-size: 13px;
 }
+
 .history-empty {
   display: flex;
   flex-direction: column;
@@ -636,67 +1231,85 @@ onMounted(() => {
   padding: 40px;
   color: rgba(255,255,255,0.3);
 }
+
 .history-empty p {
   margin: 0;
   font-size: 14px;
 }
+
 .history-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
+
 .history-item {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 16px;
+  padding: 12px 16px;
   border-radius: 12px;
   background: rgba(255,255,255,0.04);
   transition: background 0.2s;
 }
+
 .history-item:hover {
   background: rgba(255,255,255,0.08);
 }
+
 .history-icon {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
+
 .history-icon.wheel {
   background: rgba(240, 147, 251, 0.2);
   color: #f093fb;
 }
+
 .history-icon.guess {
   background: rgba(79, 172, 254, 0.2);
   color: #4facfe;
 }
+
+.history-icon.task {
+  background: rgba(67, 233, 123, 0.2);
+  color: #43e97b;
+}
+
 .history-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
+
 .history-game {
   color: #fff;
   font-size: 14px;
   font-weight: 500;
 }
+
 .history-time {
   color: rgba(255,255,255,0.4);
   font-size: 12px;
 }
+
 .history-score {
   font-size: 16px;
   font-weight: bold;
   white-space: nowrap;
 }
+
 .history-score.win {
   color: #52c41a;
 }
+
 .history-score.lose {
   color: #ff4d4f;
 }
@@ -708,66 +1321,72 @@ onMounted(() => {
   gap: 8px;
   padding: 20px 0;
 }
+
 .prize-value {
   font-size: 64px;
   font-weight: bold;
   line-height: 1;
 }
+
 .prize-value.win {
   color: #ffd700;
   text-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
 }
+
 .prize-value.win::after {
   content: ' 🎉';
 }
+
 .prize-value.lose {
   color: #999;
 }
+
 .prize-label {
   font-size: 16px;
   color: rgba(0,0,0,0.4);
 }
+
 .prize-message {
   font-size: 14px;
   color: rgba(0,0,0,0.6);
   margin-top: 8px;
 }
 
+@keyframes resultPop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 @media (max-width: 768px) {
-  .games-page {
+  .earn-center {
     padding-bottom: 100px;
+  }
+  .task-grid {
+    grid-template-columns: 1fr;
   }
   .games-grid {
     grid-template-columns: 1fr;
-    gap: 20px;
-    margin: 20px 0;
   }
-  .games-header {
-    padding: 16px 0;
+  .top-section {
+    padding: 20px 0;
   }
-  .games-header h1 {
-    font-size: 20px;
-  }
-  .header-icon svg {
-    width: 28px;
-    height: 28px;
-  }
-  .header-right {
-    padding: 8px 14px;
+  .points-card {
+    padding: 18px 20px;
   }
   .points-value {
-    font-size: 18px;
-  }
-  .game-card {
-    padding: 20px;
+    font-size: 32px;
   }
   .wheel-wrapper {
-    width: 220px;
-    height: 220px;
+    width: 200px;
+    height: 200px;
   }
   .number-value {
     font-size: 36px;
     min-height: 44px;
+  }
+  .match-grid {
+    gap: 6px;
   }
   .history-section {
     padding: 16px;

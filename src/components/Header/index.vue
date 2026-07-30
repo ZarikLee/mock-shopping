@@ -100,6 +100,8 @@
           <router-link to="/products?categoryId=5" class="nav-item">服饰鞋包</router-link>
           <router-link to="/products?categoryId=6" class="nav-item">美妆个护</router-link>
           <router-link to="/products?categoryId=4" class="nav-item">家用电器</router-link>
+          <router-link to="/games" class="nav-item nav-highlight">🎮 赚米中心</router-link>
+          <router-link to="/leaderboard" class="nav-item nav-highlight">🏆 全服排行榜</router-link>
         </div>
       </div>
     </div>
@@ -156,19 +158,19 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         <span class="nav-label">分类</span>
       </router-link>
-      <router-link to="/games" class="bottom-nav-item" :class="{ active: route.path === '/games' }">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><path d="M10 9h4"/><path d="M12 7v4"/></svg>
-        <span class="nav-label">游戏</span>
-      </router-link>
       <router-link to="/cart" class="bottom-nav-item" :class="{ active: route.path === '/cart' }">
         <el-badge :value="cartStore.itemCount" :hidden="cartStore.itemCount === 0">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
         </el-badge>
         <span class="nav-label">购物车</span>
       </router-link>
+      <router-link to="/games" class="bottom-nav-item" :class="{ active: route.path === '/games' }">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <span class="nav-label">赚米</span>
+      </router-link>
       <router-link to="/leaderboard" class="bottom-nav-item" :class="{ active: route.path === '/leaderboard' }">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9zm0 0v6m0-6H3m3 0h3m-3 0v6m0 0H3m3 0h3"/><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M18 9v6a3 3 0 0 1-3 3h-3"/></svg>
-        <span class="nav-label">排行榜</span>
+        <span class="nav-label">全服排行</span>
       </router-link>
       <router-link to="/user" class="bottom-nav-item" :class="{ active: route.path === '/user' }">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -417,6 +419,16 @@ const toggleMobileSearch = () => {
 .nav-item:hover {
   color: #ff4400;
   background: #fff5f0;
+}
+
+.nav-highlight {
+  color: #ff4400;
+  font-weight: 600;
+}
+
+.nav-highlight:hover {
+  color: #fff;
+  background: #ff4400;
 }
 
 .mobile-header-left {

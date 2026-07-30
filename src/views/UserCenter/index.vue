@@ -270,7 +270,7 @@ import { useRouter, useRoute } from 'vue-router'
 import {
   User, Edit, ArrowRight, Camera, CircleCheck,
   Wallet, Van, Position, ChatLineSquare, Box,
-  List, Location, Ticket, Star, Check, Delete, Trophy
+  List, Location, Ticket, Star, Check, Delete
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../../stores/user'
@@ -335,7 +335,6 @@ const menuList = [
   { key: 'coupon', label: '我的优惠券', icon: Ticket },
   { key: 'wishlist', label: '我的收藏', icon: Star },
   { key: 'balance', label: '账户余额', icon: Wallet },
-  { key: 'games', label: '游戏中心', icon: Trophy, link: '/games' },
   { key: 'checkin', label: '每日签到', icon: Check },
 ]
 

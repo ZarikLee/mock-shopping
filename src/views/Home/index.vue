@@ -45,6 +45,31 @@
         </div>
       </section>
 
+      <section class="section promo-banner">
+        <div class="promo-cards">
+          <router-link to="/games" class="promo-card promo-games">
+            <div class="promo-icon">🎮</div>
+            <div class="promo-content">
+              <span class="promo-title">赚米中心</span>
+              <span class="promo-desc">做任务玩游戏，赚取海量积分</span>
+            </div>
+            <div class="promo-arrow">
+              <el-icon><ArrowRight /></el-icon>
+            </div>
+          </router-link>
+          <router-link to="/leaderboard" class="promo-card promo-leaderboard">
+            <div class="promo-icon">🏆</div>
+            <div class="promo-content">
+              <span class="promo-title">全服排行榜</span>
+              <span class="promo-desc">与全服玩家一较高下</span>
+            </div>
+            <div class="promo-arrow">
+              <el-icon><ArrowRight /></el-icon>
+            </div>
+          </router-link>
+        </div>
+      </section>
+
       <section class="section hot-recommend">
         <div class="section-header">
           <h2>
@@ -301,6 +326,88 @@ const goToProduct = (id) => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
+}
+
+.promo-banner {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.promo-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.promo-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.promo-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.promo-games {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.promo-leaderboard {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.promo-icon {
+  font-size: 36px;
+  flex-shrink: 0;
+}
+
+.promo-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.promo-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.promo-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+}
+
+.promo-arrow {
+  color: rgba(255,255,255,0.6);
+  font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  .promo-cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .promo-card {
+    padding: 14px 18px;
+  }
+  .promo-icon {
+    font-size: 28px;
+  }
+  .promo-title {
+    font-size: 15px;
+  }
+  .promo-desc {
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 768px) {
