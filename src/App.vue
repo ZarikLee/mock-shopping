@@ -5,12 +5,14 @@
       <router-view />
     </main>
     <Footer />
+    <LoginDialog />
   </div>
 </template>
 
 <script setup>
 import Header from './components/Header/index.vue'
 import Footer from './components/Footer/index.vue'
+import LoginDialog from './components/LoginDialog/index.vue'
 import { useDevice } from './utils/device.js'
 
 const { isMobile } = useDevice()

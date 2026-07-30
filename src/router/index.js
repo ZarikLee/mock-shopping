@@ -50,6 +50,11 @@ const routes = [
     path: '/user',
     name: 'UserCenter',
     component: () => import('../views/UserCenter/index.vue')
+  },
+  {
+    path: '/games',
+    name: 'Games',
+    component: () => import('../views/Games/index.vue')
   }
 ]
 

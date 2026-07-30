@@ -1,0 +1,491 @@
+<template>
+  <div class="leaderboard-page">
+    <div class="container">
+      <div class="leaderboard-header">
+        <div class="header-icon">🏆</div>
+        <h1 class="header-title">全服排行榜</h1>
+        <p class="header-subtitle">与全服玩家一较高下</p>
+      </div>
+
+      <el-card class="leaderboard-card" shadow="never">
+        <div class="tab-bar">
+          <div
+            v-for="tab in tabs"
+            :key="tab.key"
+            class="tab-item"
+            :class="{ active: activeTab === tab.key }"
+            @click="switchTab(tab.key)"
+          >
+            <span class="tab-icon">{{ tab.icon }}</span>
+            <span class="tab-label">{{ tab.label }}</span>
+          </div>
+        </div>
+
+        <div class="leaderboard-stats" v-if="currentUserRank">
+          <div class="stat-row">
+            <span class="stat-label">我的排名</span>
+            <span class="stat-value rank-highlight">#{{ currentUserRank }}</span>
+          </div>
+        </div>
+
+        <div class="leaderboard-body" v-loading="loading">
+          <template v-if="list.length > 0">
+            <div
+              v-for="(item, index) in list"
+              :key="item.userId"
+              class="rank-row"
+              :class="{
+                'rank-top-1': item.rank === 1,
+                'rank-top-2': item.rank === 2,
+                'rank-top-3': item.rank === 3,
+                'is-current-user': item.userId === currentUserId
+              }"
+            >
+              <div class="rank-col">
+                <span v-if="item.rank <= 3" class="medal">{{ medals[item.rank - 1] }}</span>
+                <span v-else class="rank-num">{{ item.rank }}</span>
+              </div>
+              <div class="avatar-col">
+                <img :src="item.avatar" :alt="item.nickname" class="user-avatar" />
+                <div v-if="item.rank <= 3" class="avatar-ring"></div>
+              </div>
+              <div class="info-col">
+                <span class="username">{{ item.nickname || item.username }}</span>
+                <span class="userid">ID: {{ item.userId }}</span>
+              </div>
+              <div class="value-col">
+                <span class="value-num">{{ formatValue(item) }}</span>
+                <span class="value-label">{{ valueLabel }}</span>
+              </div>
+            </div>
+          </template>
+          <div v-else-if="!loading" class="empty-state">
+            <span class="empty-icon">📊</span>
+            <p>暂无排行数据</p>
+          </div>
+        </div>
+      </el-card>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useUserStore } from '../../stores/user'
+import { leaderboardApi } from '../../api/leaderboard'
+
+const userStore = useUserStore()
+const currentUserId = computed(() => userStore.userInfo?.id)
+
+const medals = ['🥇', '🥈', '🥉']
+
+const tabs = [
+  { key: 'balance', label: '财富榜', icon: '💰' },
+  { key: 'points', label: '积分榜', icon: '⭐' },
+  { key: 'spending', label: '消费榜', icon: '🛒' }
+]
+
+const activeTab = ref('balance')
+const list = ref([])
+const loading = ref(false)
+
+const valueLabel = computed(() => {
+  const map = { balance: '余额', points: '积分', spending: '总消费' }
+  return map[activeTab.value] || ''
+})
+
+const currentUserRank = computed(() => {
+  const found = list.value.find(item => item.userId === currentUserId.value)
+  return found ? found.rank : null
+})
+
+function formatValue(item) {
+  if (activeTab.value === 'points') return item.points?.toLocaleString() || '0'
+  const val = activeTab.value === 'balance' ? item.balance : item.totalSpent
+  return '¥' + (val !== undefined ? Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00')
+}
+
+async function fetchData() {
+  loading.value = true
+  try {
+    const apiMap = {
+      balance: leaderboardApi.getByBalance,
+      points: leaderboardApi.getByPoints,
+      spending: leaderboardApi.getBySpending
+    }
+    const res = await apiMap[activeTab.value]()
+    list.value = (res.leaderboard || []).map((item, idx) => ({
+      ...item,
+      rank: item.rank || idx + 1
+    }))
+  } catch {
+    list.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+function switchTab(key) {
+  if (activeTab.value === key) return
+  activeTab.value = key
+  fetchData()
+}
+
+onMounted(fetchData)
+</script>
+
+<style scoped>
+.leaderboard-page {
+  padding: 30px 0;
+  min-height: 60vh;
+}
+
+.leaderboard-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header-icon {
+  font-size: 56px;
+  margin-bottom: 8px;
+}
+
+.header-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a2e;
+  letter-spacing: 2px;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: #999;
+  margin-top: 6px;
+}
+
+.leaderboard-card {
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border: none;
+}
+
+:deep(.el-card__body) {
+  padding: 0;
+}
+
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tab-item {
+  flex: 1;
+  padding: 18px 10px;
+  text-align: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tab-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #e94560, #ff6b6b);
+  border-radius: 3px 3px 0 0;
+  transition: width 0.3s;
+}
+
+.tab-item.active {
+  color: #fff;
+}
+
+.tab-item.active::after {
+  width: 60px;
+}
+
+.tab-item:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tab-icon {
+  font-size: 18px;
+}
+
+.leaderboard-stats {
+  padding: 14px 24px;
+  background: rgba(233, 69, 96, 0.12);
+  border-bottom: 1px solid rgba(233, 69, 96, 0.2);
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.rank-highlight {
+  font-size: 18px;
+  font-weight: 800;
+  color: #e94560;
+}
+
+.leaderboard-body {
+  padding: 8px 0;
+  min-height: 300px;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  gap: 14px;
+  transition: background 0.2s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.rank-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rank-row.is-current-user {
+  background: rgba(233, 69, 96, 0.15) !important;
+  border-left: 3px solid #e94560;
+}
+
+.rank-col {
+  width: 40px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.medal {
+  font-size: 24px;
+}
+
+.rank-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  font-feature-settings: 'tnum';
+}
+
+.rank-top-1 .rank-num,
+.rank-top-2 .rank-num,
+.rank-top-3 .rank-num {
+  display: none;
+}
+
+.avatar-col {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: relative;
+  z-index: 1;
+}
+
+.rank-top-1 .user-avatar {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #ffd700;
+}
+
+.rank-top-2 .user-avatar {
+  border: 2px solid #c0c0c0;
+}
+
+.rank-top-3 .user-avatar {
+  border: 2px solid #cd7f32;
+}
+
+.avatar-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.rank-top-1 .avatar-ring {
+  background: conic-gradient(#ffd700, #ffed4a, #ffd700);
+}
+
+.rank-top-2 .avatar-ring {
+  background: conic-gradient(#c0c0c0, #e8e8e8, #c0c0c0);
+}
+
+.rank-top-3 .avatar-ring {
+  background: conic-gradient(#cd7f32, #e8a84c, #cd7f32);
+}
+
+.info-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.username {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.is-current-user .username {
+  color: #e94560;
+}
+
+.userid {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.value-col {
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.value-num {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffd700;
+  font-feature-settings: 'tnum';
+}
+
+.rank-top-1 .value-num {
+  font-size: 19px;
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.value-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.empty-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+:deep(.el-loading-mask) {
+  background: rgba(26, 26, 46, 0.8);
+}
+
+:deep(.el-loading-spinner .circular) {
+  border-color: #e94560 transparent transparent transparent;
+}
+
+@media (max-width: 768px) {
+  .leaderboard-page {
+    padding: 16px 0;
+  }
+
+  .header-icon {
+    font-size: 42px;
+  }
+
+  .header-title {
+    font-size: 22px;
+  }
+
+  .leaderboard-card {
+    border-radius: 12px;
+  }
+
+  .tab-item {
+    font-size: 13px;
+    padding: 14px 6px;
+  }
+
+  .rank-row {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .rank-col {
+    width: 32px;
+  }
+
+  .medal {
+    font-size: 20px;
+  }
+
+  .rank-num {
+    font-size: 13px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .rank-top-1 .user-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .username {
+    font-size: 13px;
+  }
+
+  .value-num {
+    font-size: 14px;
+  }
+
+  .rank-top-1 .value-num {
+    font-size: 16px;
+  }
+
+  .leaderboard-stats {
+    padding: 10px 14px;
+  }
+}
+</style>

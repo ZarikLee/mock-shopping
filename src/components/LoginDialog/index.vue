@@ -1,19 +1,26 @@
 <template>
-  <div class="auth-page">
-    <div class="auth-card">
-      <div class="auth-header">
-        <img src="https://img.alicdn.com/tfs/TB1Zv0gXpY7gK0jSZKzXXaikpXa-520-280.png" alt="logo" class="auth-logo" />
-        <h2>{{ isLogin ? '登录' : '注册' }}</h2>
+  <el-dialog
+    :model-value="authStore.showLogin || authStore.showRegister"
+    :width="420"
+    :close-on-click-modal="true"
+    :show-close="true"
+    top="12vh"
+    class="login-dialog"
+    @close="authStore.closeAuth"
+  >
+    <div class="dialog-body">
+      <div class="dialog-header">
+        <img src="https://img.alicdn.com/tfs/TB1Zv0gXpY7gK0jSZKzXXaikpXa-520-280.png" alt="logo" class="dialog-logo" />
       </div>
 
       <div class="auth-tabs">
         <span
           :class="{ active: isLogin }"
-          @click="isLogin = true"
+          @click="switchToLogin"
         >登录</span>
         <span
           :class="{ active: !isLogin }"
-          @click="isLogin = false"
+          @click="switchToRegister"
         >注册</span>
       </div>
 
@@ -107,28 +114,24 @@
         >注册</el-button>
       </el-form>
     </div>
-  </div>
+  </el-dialog>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock, EditPen } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useAuthStore } from '../../stores/auth'
 
+const emit = defineEmits(['logged-in'])
+
 const router = useRouter()
 const userStore = useUserStore()
 const authStore = useAuthStore()
 
 const isLogin = ref(true)
-
-onMounted(() => {
-  if (authStore.showRegister) {
-    isLogin.value = false
-  }
-})
 const loading = ref(false)
 const loginFormRef = ref(null)
 const registerFormRef = ref(null)
@@ -171,6 +174,24 @@ const registerRules = {
   ]
 }
 
+const switchToLogin = () => {
+  isLogin.value = true
+  authStore.openLogin()
+}
+
+const switchToRegister = () => {
+  isLogin.value = false
+  authStore.openRegister()
+}
+
+watch(() => authStore.showLogin, (val) => {
+  if (val) isLogin.value = true
+})
+
+watch(() => authStore.showRegister, (val) => {
+  if (val) isLogin.value = false
+})
+
 const handleLogin = async () => {
   if (!loginFormRef.value) return
   try {
@@ -182,6 +203,8 @@ const handleLogin = async () => {
   try {
     await userStore.login(loginForm.username, loginForm.password)
     ElMessage.success('登录成功')
+    authStore.closeAuth()
+    emit('logged-in')
     router.push('/')
   } catch (e) {
     ElMessage.error(e?.message || e?.msg || '登录失败，请检查用户名和密码')
@@ -202,8 +225,13 @@ const handleRegister = async () => {
     await userStore.register(registerForm.username, registerForm.password, registerForm.nickname)
     ElMessage.success('注册成功，请登录')
     isLogin.value = true
+    authStore.openLogin()
     loginForm.username = registerForm.username
     loginForm.password = ''
+    registerForm.username = ''
+    registerForm.nickname = ''
+    registerForm.password = ''
+    registerForm.confirmPassword = ''
   } catch (e) {
     ElMessage.error(e?.message || e?.msg || '注册失败')
   } finally {
@@ -213,49 +241,49 @@ const handleRegister = async () => {
 </script>
 
 <style scoped>
-.auth-page {
-  min-height: calc(100vh - 130px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #fff5f0 0%, #fff 50%, #fff5f0 100%);
-  padding: 40px 20px;
+.login-dialog :deep(.el-dialog__header) {
+  padding: 0;
 }
 
-.auth-card {
-  width: 420px;
-  background: #fff;
+.login-dialog :deep(.el-dialog__headerbtn) {
+  top: 16px;
+  right: 16px;
+  font-size: 18px;
+}
+
+.login-dialog :deep(.el-dialog__body) {
+  padding: 0;
+}
+
+.login-dialog :deep(.el-dialog) {
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(255, 68, 0, 0.08);
-  padding: 40px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
-.auth-header {
+.dialog-body {
+  padding: 32px 40px 40px;
+}
+
+.dialog-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
-.auth-logo {
-  height: 40px;
-  margin-bottom: 16px;
-}
-
-.auth-header h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
+.dialog-logo {
+  height: 36px;
 }
 
 .auth-tabs {
   display: flex;
   border-bottom: 2px solid #f0f0f0;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
 }
 
 .auth-tabs span {
   flex: 1;
   text-align: center;
-  padding: 12px 0;
+  padding: 10px 0;
   font-size: 16px;
   color: #999;
   cursor: pointer;
@@ -280,6 +308,10 @@ const handleRegister = async () => {
   border-radius: 1px;
 }
 
+.auth-form :deep(.el-form-item) {
+  margin-bottom: 20px;
+}
+
 .auth-form :deep(.el-form-item__label) {
   font-size: 14px;
   color: #666;
@@ -301,7 +333,7 @@ const handleRegister = async () => {
 
 .auth-btn {
   width: 100%;
-  margin-top: 8px;
+  margin-top: 4px;
   height: 48px;
   font-size: 16px;
   border-radius: 8px;
@@ -312,20 +344,5 @@ const handleRegister = async () => {
 .auth-btn:hover {
   background: #ff6600;
   border-color: #ff6600;
-}
-
-@media (max-width: 768px) {
-  .auth-page {
-    min-height: calc(100vh - 90px);
-    padding: 20px 12px;
-  }
-
-  .auth-card {
-    padding: 24px 20px;
-  }
-
-  .auth-header h2 {
-    font-size: 20px;
-  }
 }
 </style>
