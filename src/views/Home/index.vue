@@ -61,7 +61,8 @@
             <el-icon><ArrowRight /></el-icon>
           </router-link>
         </div>
-        <div class="product-grid">
+        <SkeletonLoader v-if="loading" type="product-card" :count="4" />
+        <div class="product-grid" v-else>
           <ProductCard 
             v-for="product in hotProducts" 
             :key="product.id" 
@@ -82,7 +83,8 @@
             <el-icon><ArrowRight /></el-icon>
           </router-link>
         </div>
-        <div class="product-grid">
+        <SkeletonLoader v-if="loading" type="product-card" :count="4" />
+        <div class="product-grid" v-else>
           <ProductCard 
             v-for="product in newArrivals" 
             :key="product.id" 
@@ -101,9 +103,19 @@ import { Timer, TrendCharts, Star, ArrowRight } from '@element-plus/icons-vue'
 import Banner from '../../components/Banner/index.vue'
 import CategoryNav from '../../components/CategoryNav/index.vue'
 import ProductCard from '../../components/ProductCard/index.vue'
+import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 import products from '../../data/products.json'
 
 const router = useRouter()
+
+const loading = ref(true)
+
+onMounted(() => {
+  startCountdown()
+  setTimeout(() => {
+    loading.value = false
+  }, 500)
+})
 
 // 倒计时
 const hours = ref('02')
@@ -130,7 +142,6 @@ const startCountdown = () => {
 }
 
 onMounted(() => {
-  startCountdown()
 })
 
 onUnmounted(() => {

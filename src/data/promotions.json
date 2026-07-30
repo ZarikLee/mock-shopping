@@ -1,0 +1,8 @@
+[
+  { "id": 1, "name": "满200减20", "threshold": 200, "discount": 20 },
+  { "id": 2, "name": "满300减40", "threshold": 300, "discount": 40 },
+  { "id": 3, "name": "满500减80", "threshold": 500, "discount": 80 },
+  { "id": 4, "name": "满1000减200", "threshold": 1000, "discount": 200 },
+  { "id": 5, "name": "限时秒杀", "type": "flash", "description": "每天10点/20点开抢" },
+  { "id": 6, "name": "新人专享", "type": "new_user", "description": "首单立减50元" }
+]

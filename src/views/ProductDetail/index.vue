@@ -184,46 +184,7 @@
         </el-tab-pane>
 
         <el-tab-pane label="用户评价" name="reviews">
-          <div class="reviews-section">
-            <div class="review-summary">
-              <div class="review-score">
-                <span class="score-number">{{ product.rating }}</span>
-                <span class="score-label">综合评分</span>
-              </div>
-              <div class="review-tags">
-                <el-tag type="success">好评 ({{ Math.floor(product.reviews * 0.85) }})</el-tag>
-                <el-tag type="warning">中评 ({{ Math.floor(product.reviews * 0.1) }})</el-tag>
-                <el-tag type="danger">差评 ({{ Math.floor(product.reviews * 0.05) }})</el-tag>
-              </div>
-            </div>
-            <div class="review-list">
-              <div
-                v-for="review in mockReviews"
-                :key="review.id"
-                class="review-item"
-              >
-                <div class="review-header">
-                  <el-avatar :size="40">{{ review.avatar }}</el-avatar>
-                  <div class="review-user-info">
-                    <span class="review-username">{{ review.username }}</span>
-                    <el-rate
-                      v-model="review.rating"
-                      disabled
-                      show-score
-                      score-template="{value}"
-                    />
-                  </div>
-                  <span class="review-date">{{ review.date }}</span>
-                </div>
-                <div class="review-content">
-                  <p>{{ review.content }}</p>
-                </div>
-                <div class="review-specs" v-if="review.spec">
-                  <el-tag size="small">{{ review.spec }}</el-tag>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ProductReviews :product-id="product.id" />
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -241,6 +202,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ShoppingCart, CircleCheck, Timer, RefreshRight } from '@element-plus/icons-vue'
 import { useCartStore } from '@/stores/cart'
 import products from '@/data/products.json'
+import ProductReviews from './components/ProductReviews.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -267,45 +229,6 @@ const discountPercent = computed(() => {
   }
   return null
 })
-
-const mockReviews = computed(() => [
-  {
-    id: 1,
-    username: '用户***8',
-    avatar: '张',
-    rating: 5,
-    date: '2026-07-20',
-    content: '非常满意！质量很好，物流也很快，包装很仔细。客服态度也很好，有问题及时解答。下次还会回购！',
-    spec: product.value?.specs?.[0] || '默认规格'
-  },
-  {
-    id: 2,
-    username: '用户***2',
-    avatar: '李',
-    rating: 4,
-    date: '2026-07-18',
-    content: '整体还不错，做工精细，颜色跟图片一致。就是发货稍微慢了点，总体满意。',
-    spec: product.value?.specs?.[0] || '默认规格'
-  },
-  {
-    id: 3,
-    username: '用户***5',
-    avatar: '王',
-    rating: 5,
-    date: '2026-07-15',
-    content: '第二次购买了，品质一如既往的好，推荐给朋友们了。性价比很高，值得入手！',
-    spec: product.value?.specs?.[0] || '默认规格'
-  },
-  {
-    id: 4,
-    username: '用户***1',
-    avatar: '赵',
-    rating: 4,
-    date: '2026-07-12',
-    content: '宝贝收到了，质量不错，手感很好。就是价格稍微有点贵，不过一分钱一分货吧。',
-    spec: product.value?.specs?.[0] || '默认规格'
-  }
-])
 
 onMounted(() => {
   if (product.value?.specs?.length) {
@@ -648,86 +571,6 @@ const handleBuyNow = () => {
   color: #333;
 }
 
-.reviews-section {
-  padding: 20px 0;
-}
-
-.review-summary {
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  padding: 20px;
-  background: #f8f8f8;
-  border-radius: 8px;
-  margin-bottom: 30px;
-}
-
-.review-score {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.score-number {
-  font-size: 48px;
-  font-weight: bold;
-  color: #ff4400;
-}
-
-.score-label {
-  color: #666;
-  margin-top: 5px;
-}
-
-.review-tags {
-  display: flex;
-  gap: 10px;
-}
-
-.review-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.review-item {
-  padding: 20px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-}
-
-.review-header {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.review-user-info {
-  flex: 1;
-}
-
-.review-username {
-  display: block;
-  color: #333;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.review-date {
-  color: #999;
-  font-size: 12px;
-}
-
-.review-content {
-  color: #666;
-  line-height: 1.6;
-}
-
-.review-specs {
-  margin-top: 10px;
-}
-
 .product-not-found {
   text-align: center;
   padding: 100px 20px;
@@ -787,9 +630,5 @@ const handleBuyNow = () => {
     gap: 15px;
   }
 
-  .review-summary {
-    flex-direction: column;
-    gap: 20px;
-  }
 }
 </style>

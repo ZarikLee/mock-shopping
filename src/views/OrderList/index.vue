@@ -19,8 +19,10 @@
         </div>
       </div>
 
+      <SkeletonLoader v-if="loading" type="order" :count="3" />
+
       <!-- 订单列表 -->
-      <div class="order-list" v-if="filteredOrders.length > 0">
+      <div class="order-list" v-else-if="filteredOrders.length > 0">
         <div 
           v-for="order in filteredOrders" 
           :key="order.id"
@@ -75,7 +77,7 @@
       </div>
 
       <!-- 无订单 -->
-      <div class="no-orders" v-else>
+      <div class="no-orders" v-else-if="!loading">
         <el-icon :size="60" color="#ccc"><Document /></el-icon>
         <p>暂无相关订单</p>
         <el-button type="primary" @click="router.push('/')">去购物</el-button>
@@ -85,14 +87,22 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Document } from '@element-plus/icons-vue'
 import { useOrderStore } from '../../stores/order'
+import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const orderStore = useOrderStore()
+const loading = ref(true)
+
+onMounted(() => {
+  setTimeout(() => {
+    loading.value = false
+  }, 300)
+})
 
 const currentTab = ref(-1)
 

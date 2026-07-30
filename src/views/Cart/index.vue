@@ -6,8 +6,13 @@
         <span class="total-count">共 <span class="count">{{ cartStore.itemCount }}</span> 件商品</span>
       </div>
 
+      <SkeletonLoader v-if="loading" type="cart" :count="3" />
+
       <!-- 购物车有商品 -->
-      <div class="cart-content" v-if="cartStore.items.length > 0">
+      <div class="cart-content" v-else-if="cartStore.items.length > 0">
+        <!-- 优惠活动条 -->
+        <PromotionBar :total-amount="cartStore.totalPrice" type="cart" />
+
         <!-- 表头 -->
         <div class="cart-table-header">
           <div class="col checkbox">
@@ -118,7 +123,7 @@
       </div>
 
       <!-- 购物车为空 -->
-      <div class="cart-empty" v-else>
+      <div class="cart-empty" v-else-if="!loading">
         <el-icon :size="80" color="#ccc"><ShoppingCart /></el-icon>
         <h2>购物车是空的</h2>
         <p>快去挑选心仪的商品吧</p>
@@ -129,12 +134,22 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ShoppingCart } from '@element-plus/icons-vue'
 import { useCartStore } from '../../stores/cart'
+import PromotionBar from '../../components/PromotionBar/index.vue'
+import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 
 const router = useRouter()
 const cartStore = useCartStore()
+const loading = ref(true)
+
+onMounted(() => {
+  setTimeout(() => {
+    loading.value = false
+  }, 300)
+})
 
 const goToCheckout = () => {
   router.push('/checkout')

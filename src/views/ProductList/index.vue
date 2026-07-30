@@ -94,7 +94,8 @@
           </div>
 
           <!-- 商品列表 -->
-          <div class="product-grid" v-if="filteredProducts.length > 0">
+          <SkeletonLoader v-if="loading" type="product-card" :count="6" />
+          <div class="product-grid" v-else-if="filteredProducts.length > 0">
             <ProductCard 
               v-for="product in paginatedProducts" 
               :key="product.id" 
@@ -132,6 +133,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Check, Box, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import ProductCard from '../../components/ProductCard/index.vue'
+import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 import products from '../../data/products.json'
 import categories from '../../data/categories.json'
 
@@ -146,6 +148,7 @@ const currentSort = ref('default')
 const sortDirection = ref('asc')
 
 // 分页
+const loading = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(12)
 
@@ -282,6 +285,12 @@ const handleSizeChange = () => {
 const handleCurrentChange = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+onMounted(() => {
+  setTimeout(() => {
+    loading.value = false
+  }, 300)
+})
 
 // 监听路由变化
 watch(() => route.query, (newQuery) => {

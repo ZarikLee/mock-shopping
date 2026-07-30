@@ -1,5 +1,6 @@
 <template>
   <div class="product-card" @click="goToDetail">
+    <WishlistButton :product="product" />
     <div class="product-image">
       <img :src="product.image" :alt="product.name" />
       <div class="product-tags">
@@ -38,6 +39,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { ShoppingCart } from '@element-plus/icons-vue'
+import WishlistButton from '../../components/WishlistButton/index.vue'
 import { useCartStore } from '../../stores/cart'
 import { ElMessage } from 'element-plus'
 

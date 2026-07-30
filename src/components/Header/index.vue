@@ -38,16 +38,26 @@
         </div>
         
         <!-- 搜索框 -->
-        <div class="search-box">
-          <input 
-            v-model="searchKeyword"
-            type="text" 
-            placeholder="搜索商品"
-            @keyup.enter="handleSearch"
+        <div class="search-wrapper">
+          <div class="search-box">
+            <input 
+              v-model="searchKeyword"
+              type="text" 
+              placeholder="搜索商品"
+              @keyup.enter="handleSearch"
+              @focus="showSuggestions = true"
+              @blur="handleBlur"
+            />
+            <button class="search-btn" @click="handleSearch">
+              <el-icon><Search /></el-icon>
+            </button>
+          </div>
+          <SearchSuggestions
+            :keyword="searchKeyword"
+            :visible="showSuggestions"
+            @select="closeSuggestions"
+            @close="closeSuggestions"
           />
-          <button class="search-btn" @click="handleSearch">
-            <el-icon><Search /></el-icon>
-          </button>
         </div>
 
         <!-- 购物车 -->
@@ -84,26 +94,54 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, ShoppingCart, ArrowDown } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
+import SearchSuggestions from '../SearchSuggestions/index.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
 
 const searchKeyword = ref('')
+const showSuggestions = ref(false)
 
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
+    showSuggestions.value = false
     router.push({
       path: '/products',
       query: { keyword: searchKeyword.value.trim() }
     })
   }
 }
+
+const closeSuggestions = () => {
+  showSuggestions.value = false
+}
+
+const handleBlur = () => {
+  setTimeout(() => {
+    showSuggestions.value = false
+  }, 200)
+}
+
+const handleDocumentClick = (e) => {
+  const wrapper = document.querySelector('.search-wrapper')
+  if (wrapper && !wrapper.contains(e.target)) {
+    showSuggestions.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocumentClick)
+})
 
 const goToCart = () => {
   router.push('/cart')
@@ -186,10 +224,14 @@ const handleLogout = () => {
   color: #999;
 }
 
-.search-box {
+.search-wrapper {
   flex: 1;
   max-width: 500px;
   margin: 0 40px;
+  position: relative;
+}
+
+.search-box {
   display: flex;
   border: 2px solid #ff4400;
   border-radius: 4px;
@@ -283,7 +325,7 @@ const handleLogout = () => {
     display: none;
   }
   
-  .search-box {
+  .search-wrapper {
     margin: 0 15px;
   }
   
