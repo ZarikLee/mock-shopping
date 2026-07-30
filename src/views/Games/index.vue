@@ -537,7 +537,7 @@ onMounted(() => {
 <style scoped>
 .earn-center {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  background: #f5f5f5;
   padding-bottom: 80px;
 }
 
@@ -548,17 +548,16 @@ onMounted(() => {
 }
 
 .top-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff4400, #ff6600);
   padding: 30px 0;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 20px rgba(255, 68, 0, 0.3);
 }
 
 .points-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(10px);
+  background: #fff;
   padding: 24px 32px;
   border-radius: 20px;
 }
@@ -570,15 +569,14 @@ onMounted(() => {
 }
 
 .points-label {
-  color: rgba(255,255,255,0.7);
+  color: #666;
   font-size: 14px;
 }
 
 .points-value {
-  color: #ffd700;
+  color: #ff4400;
   font-size: 42px;
   font-weight: bold;
-  text-shadow: 0 0 30px rgba(255,215,0,0.5);
   line-height: 1;
 }
 
@@ -587,7 +585,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
-  color: rgba(255,255,255,0.6);
+  color: #999;
   font-size: 13px;
 }
 
@@ -613,7 +611,7 @@ onMounted(() => {
 }
 
 .category-header h2 {
-  color: #fff;
+  color: #333;
   font-size: 20px;
   margin: 0;
 }
@@ -628,17 +626,16 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: #fff;
   border-radius: 16px;
   padding: 18px 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .task-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
 }
 
 .task-icon {
@@ -653,15 +650,15 @@ onMounted(() => {
 }
 
 .task-icon.daily-checkin {
-  background: linear-gradient(135deg, #f093fb, #f5576c);
+  background: #ff4400;
 }
 
 .task-icon.browse {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  background: #ff6600;
 }
 
 .task-icon.share {
-  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  background: #ff8833;
 }
 
 .task-body {
@@ -672,13 +669,13 @@ onMounted(() => {
 }
 
 .task-name {
-  color: #fff;
+  color: #333;
   font-size: 15px;
   font-weight: 600;
 }
 
 .task-desc {
-  color: rgba(255,255,255,0.5);
+  color: #999;
   font-size: 12px;
 }
 
@@ -691,18 +688,19 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s;
   white-space: nowrap;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: #ff4400;
   color: #fff;
 }
 
 .task-btn:hover:not(:disabled) {
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 16px rgba(255, 68, 0, 0.4);
 }
 
 .task-btn.done {
-  background: #555;
+  background: #ccc;
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.8;
+  color: #fff;
 }
 
 .games-grid {
@@ -712,11 +710,11 @@ onMounted(() => {
 }
 
 .game-card {
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: #fff;
+  border: 1px solid #f0f0f0;
   border-radius: 20px;
   padding: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
   transition: transform 0.3s, box-shadow 0.3s;
   display: flex;
   flex-direction: column;
@@ -724,7 +722,7 @@ onMounted(() => {
 
 .game-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
 }
 
 .card-header {
@@ -735,7 +733,7 @@ onMounted(() => {
 }
 
 .card-header h3 {
-  color: #fff;
+  color: #333;
   font-size: 18px;
   margin: 0;
 }
@@ -749,19 +747,19 @@ onMounted(() => {
 }
 
 .wheel-game .card-badge {
-  background: linear-gradient(135deg, #f093fb, #f5576c);
+  background: #ff4400;
 }
 
 .guess-game .card-badge {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  background: #ff6600;
 }
 
 .match-game .card-badge {
-  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  background: #ff8833;
 }
 
 .card-desc {
-  color: rgba(255,255,255,0.6);
+  color: #666;
   font-size: 13px;
   margin: 0 0 16px;
 }
@@ -779,7 +777,7 @@ onMounted(() => {
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
 }
 
 .wheel {
@@ -787,7 +785,7 @@ onMounted(() => {
   height: 100%;
   border-radius: 50%;
   transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
-  box-shadow: 0 0 0 6px rgba(255,255,255,0.15), 0 8px 40px rgba(0,0,0,0.4);
+  box-shadow: 0 0 0 6px rgba(255,255,255,0.8), 0 8px 40px rgba(0,0,0,0.15);
 }
 
 .wheel.spinning {
@@ -815,14 +813,14 @@ onMounted(() => {
 }
 
 .wheel-btn {
-  background: linear-gradient(135deg, #f093fb, #f5576c);
+  background: #ff4400;
   color: #fff;
   margin-top: auto;
 }
 
 .wheel-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #e881f0, #e94d60);
-  box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
+  background: #e63e00;
+  box-shadow: 0 8px 25px rgba(255, 68, 0, 0.4);
 }
 
 .guess-body {
@@ -840,7 +838,7 @@ onMounted(() => {
 }
 
 .bet-label {
-  color: rgba(255,255,255,0.7);
+  color: #666;
   font-size: 14px;
   white-space: nowrap;
 }
@@ -857,33 +855,32 @@ onMounted(() => {
   gap: 4px;
   padding: 20px;
   border-radius: 16px;
-  background: rgba(255,255,255,0.05);
-  border: 2px solid rgba(255,255,255,0.1);
+  background: #fafafa;
+  border: 2px solid #eee;
   transition: all 0.4s;
 }
 
 .number-display.revealed {
-  border-color: rgba(255,255,255,0.3);
-  background: rgba(255,255,255,0.08);
+  border-color: #ddd;
+  background: #fff;
 }
 
 .number-display.win {
   border-color: #52c41a;
-  background: rgba(82, 196, 26, 0.1);
-  box-shadow: 0 0 30px rgba(82, 196, 26, 0.2);
+  background: rgba(82, 196, 26, 0.05);
+  box-shadow: 0 0 30px rgba(82, 196, 26, 0.15);
 }
 
 .number-display.lose {
   border-color: #ff4d4f;
-  background: rgba(255, 77, 79, 0.1);
-  box-shadow: 0 0 30px rgba(255, 77, 79, 0.2);
+  background: rgba(255, 77, 79, 0.05);
+  box-shadow: 0 0 30px rgba(255, 77, 79, 0.15);
 }
 
 .number-value {
   font-size: 42px;
   font-weight: bold;
-  color: #fff;
-  text-shadow: 0 0 30px rgba(255,255,255,0.3);
+  color: #333;
   transition: all 0.4s;
   min-height: 52px;
   display: flex;
@@ -892,17 +889,17 @@ onMounted(() => {
 
 .number-display.win .number-value {
   color: #52c41a;
-  text-shadow: 0 0 30px rgba(82, 196, 26, 0.5);
+  text-shadow: 0 0 30px rgba(82, 196, 26, 0.3);
 }
 
 .number-display.lose .number-value {
   color: #ff4d4f;
-  text-shadow: 0 0 30px rgba(255, 77, 79, 0.5);
+  text-shadow: 0 0 30px rgba(255, 77, 79, 0.3);
 }
 
 .number-label {
   font-size: 13px;
-  color: rgba(255,255,255,0.5);
+  color: #999;
 }
 
 .guess-buttons {
@@ -933,22 +930,22 @@ onMounted(() => {
 }
 
 .guess-btn.high {
-  background: linear-gradient(135deg, #f093fb, #f5576c);
+  background: #ff4400;
 }
 
 .guess-btn.high:hover:not(:disabled) {
-  background: linear-gradient(135deg, #e881f0, #e94d60);
-  box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
+  background: #e63e00;
+  box-shadow: 0 8px 25px rgba(255, 68, 0, 0.4);
   transform: scale(1.03);
 }
 
 .guess-btn.low {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  background: #ff6600;
 }
 
 .guess-btn.low:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3d9ef0, #00d8f0);
-  box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+  background: #e65c00;
+  box-shadow: 0 8px 25px rgba(255, 102, 0, 0.4);
   transform: scale(1.03);
 }
 
@@ -997,14 +994,14 @@ onMounted(() => {
 .result-score.lose { color: #ff4d4f; }
 
 .guess-again-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: #ff4400;
   color: #fff;
   max-width: 200px;
 }
 
 .guess-again-btn:hover {
-  background: linear-gradient(135deg, #5a6fd6, #6a4196);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  background: #e63e00;
+  box-shadow: 0 8px 25px rgba(255, 68, 0, 0.4);
 }
 
 .match-body {
@@ -1059,21 +1056,21 @@ onMounted(() => {
 }
 
 .match-front {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: #ff4400;
   color: #fff;
   font-size: 28px;
 }
 
 .match-back {
-  background: rgba(255,255,255,0.1);
-  border: 2px solid rgba(255,255,255,0.2);
+  background: #fff;
+  border: 2px solid #f0f0f0;
   transform: rotateY(180deg);
 }
 
 .match-card.matched .match-back {
   border-color: #52c41a;
-  background: rgba(82, 196, 26, 0.15);
-  box-shadow: 0 0 16px rgba(82, 196, 26, 0.3);
+  background: rgba(82, 196, 26, 0.08);
+  box-shadow: 0 0 16px rgba(82, 196, 26, 0.2);
 }
 
 .match-score-row {
@@ -1084,7 +1081,7 @@ onMounted(() => {
 }
 
 .match-pairs {
-  color: rgba(255,255,255,0.6);
+  color: #666;
   font-size: 13px;
 }
 
@@ -1107,31 +1104,30 @@ onMounted(() => {
 }
 
 .match-result-text {
-  color: #fff;
+  color: #333;
   font-size: 16px;
   font-weight: 600;
 }
 
 .match-restart-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: #ff4400;
   color: #fff;
   max-width: 200px;
 }
 
 .match-claim-btn {
-  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  background: #52c41a;
   color: #fff;
   margin-top: 8px;
 }
 
 .match-claim-btn:hover:not(:disabled) {
-  box-shadow: 0 8px 25px rgba(67, 233, 123, 0.4);
+  box-shadow: 0 8px 25px rgba(82, 196, 26, 0.4);
 }
 
 .rebate-card {
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: #fff;
+  border: 1px solid #f0f0f0;
   border-radius: 20px;
   padding: 24px;
 }
@@ -1141,7 +1137,7 @@ onMounted(() => {
   align-items: center;
   gap: 14px;
   padding-bottom: 18px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid #f0f0f0;
   margin-bottom: 18px;
 }
 
@@ -1156,13 +1152,13 @@ onMounted(() => {
 }
 
 .rebate-title {
-  color: #fff;
+  color: #333;
   font-size: 16px;
   font-weight: 600;
 }
 
 .rebate-desc {
-  color: rgba(255,255,255,0.5);
+  color: #999;
   font-size: 13px;
 }
 
@@ -1177,7 +1173,7 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(255,255,255,0.04);
+  background: #fafafa;
   border-radius: 12px;
 }
 
@@ -1187,22 +1183,22 @@ onMounted(() => {
   font-size: 11px;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(135deg, #f093fb, #f5576c);
+  background: #ff4400;
   white-space: nowrap;
 }
 
 .promo-desc {
-  color: rgba(255,255,255,0.6);
+  color: #666;
   font-size: 13px;
 }
 
 .history-section {
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: #fff;
+  border: 1px solid #f0f0f0;
   border-radius: 20px;
   padding: 24px;
   margin-bottom: 40px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
 
 .section-header {
@@ -1213,13 +1209,13 @@ onMounted(() => {
 }
 
 .section-header h2 {
-  color: #fff;
+  color: #333;
   font-size: 18px;
   margin: 0;
 }
 
 .history-count {
-  color: rgba(255,255,255,0.4);
+  color: #999;
   font-size: 13px;
 }
 
@@ -1229,7 +1225,7 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 40px;
-  color: rgba(255,255,255,0.3);
+  color: #999;
 }
 
 .history-empty p {
@@ -1249,12 +1245,12 @@ onMounted(() => {
   gap: 14px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.04);
+  background: #fafafa;
   transition: background 0.2s;
 }
 
 .history-item:hover {
-  background: rgba(255,255,255,0.08);
+  background: #f0f0f0;
 }
 
 .history-icon {
@@ -1268,18 +1264,18 @@ onMounted(() => {
 }
 
 .history-icon.wheel {
-  background: rgba(240, 147, 251, 0.2);
-  color: #f093fb;
+  background: rgba(255, 68, 0, 0.1);
+  color: #ff4400;
 }
 
 .history-icon.guess {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  background: rgba(255, 102, 0, 0.1);
+  color: #ff6600;
 }
 
 .history-icon.task {
-  background: rgba(67, 233, 123, 0.2);
-  color: #43e97b;
+  background: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
 }
 
 .history-info {
@@ -1290,13 +1286,13 @@ onMounted(() => {
 }
 
 .history-game {
-  color: #fff;
+  color: #333;
   font-size: 14px;
   font-weight: 500;
 }
 
 .history-time {
-  color: rgba(255,255,255,0.4);
+  color: #999;
   font-size: 12px;
 }
 
@@ -1329,8 +1325,7 @@ onMounted(() => {
 }
 
 .prize-value.win {
-  color: #ffd700;
-  text-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
+  color: #ff4400;
 }
 
 .prize-value.win::after {
@@ -1343,12 +1338,12 @@ onMounted(() => {
 
 .prize-label {
   font-size: 16px;
-  color: rgba(0,0,0,0.4);
+  color: #999;
 }
 
 .prize-message {
   font-size: 14px;
-  color: rgba(0,0,0,0.6);
+  color: #666;
   margin-top: 8px;
 }
 

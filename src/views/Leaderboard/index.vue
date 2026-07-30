@@ -138,6 +138,7 @@ onMounted(fetchData)
 .leaderboard-page {
   padding: 30px 0;
   min-height: 60vh;
+  background: #f5f5f5;
 }
 
 .leaderboard-header {
@@ -153,7 +154,7 @@ onMounted(fetchData)
 .header-title {
   font-size: 28px;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #333;
   letter-spacing: 2px;
 }
 
@@ -164,10 +165,11 @@ onMounted(fetchData)
 }
 
 .leaderboard-card {
-  border-radius: 16px;
+  border-radius: 8px;
   overflow: hidden;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: #fff;
   border: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 
 :deep(.el-card__body) {
@@ -176,7 +178,8 @@ onMounted(fetchData)
 
 .tab-bar {
   display: flex;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .tab-item {
@@ -184,7 +187,7 @@ onMounted(fetchData)
   padding: 18px 10px;
   text-align: center;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.5);
+  color: #666;
   font-size: 15px;
   font-weight: 600;
   transition: all 0.3s;
@@ -203,13 +206,13 @@ onMounted(fetchData)
   transform: translateX(-50%);
   width: 0;
   height: 3px;
-  background: linear-gradient(90deg, #e94560, #ff6b6b);
+  background: #ff4400;
   border-radius: 3px 3px 0 0;
   transition: width 0.3s;
 }
 
 .tab-item.active {
-  color: #fff;
+  color: #ff4400;
 }
 
 .tab-item.active::after {
@@ -217,7 +220,7 @@ onMounted(fetchData)
 }
 
 .tab-item:hover {
-  color: rgba(255, 255, 255, 0.8);
+  color: #ff4400;
 }
 
 .tab-icon {
@@ -226,8 +229,8 @@ onMounted(fetchData)
 
 .leaderboard-stats {
   padding: 14px 24px;
-  background: rgba(233, 69, 96, 0.12);
-  border-bottom: 1px solid rgba(233, 69, 96, 0.2);
+  background: #fff5f0;
+  border-bottom: 1px solid rgba(255, 68, 0, 0.12);
 }
 
 .stat-row {
@@ -238,13 +241,13 @@ onMounted(fetchData)
 
 .stat-label {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #666;
 }
 
 .rank-highlight {
   font-size: 18px;
   font-weight: 800;
-  color: #e94560;
+  color: #ff4400;
 }
 
 .leaderboard-body {
@@ -258,16 +261,17 @@ onMounted(fetchData)
   padding: 12px 24px;
   gap: 14px;
   transition: background 0.2s;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid #f5f5f5;
+  background: #fff;
 }
 
 .rank-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: #fafafa;
 }
 
 .rank-row.is-current-user {
-  background: rgba(233, 69, 96, 0.15) !important;
-  border-left: 3px solid #e94560;
+  background: #fff5f0 !important;
+  border-left: 3px solid #ff4400;
 }
 
 .rank-col {
@@ -283,7 +287,7 @@ onMounted(fetchData)
 .rank-num {
   font-size: 15px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.5);
+  color: #999;
   font-feature-settings: 'tnum';
 }
 
@@ -356,19 +360,19 @@ onMounted(fetchData)
 .username {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: #333;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .is-current-user .username {
-  color: #e94560;
+  color: #ff4400;
 }
 
 .userid {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.35);
+  color: #999;
 }
 
 .value-col {
@@ -382,27 +386,24 @@ onMounted(fetchData)
 .value-num {
   font-size: 17px;
   font-weight: 700;
-  color: #ffd700;
+  color: #ff4400;
   font-feature-settings: 'tnum';
 }
 
 .rank-top-1 .value-num {
   font-size: 19px;
-  background: linear-gradient(135deg, #ffd700, #ffed4a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffd700;
 }
 
 .value-label {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.35);
+  color: #999;
 }
 
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #999;
 }
 
 .empty-icon {
@@ -416,11 +417,11 @@ onMounted(fetchData)
 }
 
 :deep(.el-loading-mask) {
-  background: rgba(26, 26, 46, 0.8);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 :deep(.el-loading-spinner .circular) {
-  border-color: #e94560 transparent transparent transparent;
+  border-color: #ff4400 transparent transparent transparent;
 }
 
 @media (max-width: 768px) {
@@ -437,7 +438,7 @@ onMounted(fetchData)
   }
 
   .leaderboard-card {
-    border-radius: 12px;
+    border-radius: 8px;
   }
 
   .tab-item {
