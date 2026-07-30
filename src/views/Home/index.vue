@@ -48,7 +48,9 @@
       <section class="section promo-banner">
         <div class="promo-cards">
           <router-link to="/games" class="promo-card promo-games">
-            <div class="promo-icon">🎮</div>
+            <div class="promo-icon">
+              <el-icon :size="28"><Trophy /></el-icon>
+            </div>
             <div class="promo-content">
               <span class="promo-title">赚米中心</span>
               <span class="promo-desc">做任务玩游戏，赚取海量积分</span>
@@ -58,7 +60,9 @@
             </div>
           </router-link>
           <router-link to="/leaderboard" class="promo-card promo-leaderboard">
-            <div class="promo-icon">🏆</div>
+            <div class="promo-icon">
+              <el-icon :size="28"><Trophy /></el-icon>
+            </div>
             <div class="promo-content">
               <span class="promo-title">全服排行榜</span>
               <span class="promo-desc">与全服玩家一较高下</span>
@@ -118,7 +122,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Timer, TrendCharts, Star, ArrowRight } from '@element-plus/icons-vue'
+import { Timer, TrendCharts, Star, ArrowRight, Trophy } from '@element-plus/icons-vue'
 import { useDevice } from '../../utils/device'
 import Banner from '../../components/Banner/index.vue'
 import CategoryNav from '../../components/CategoryNav/index.vue'
@@ -364,8 +368,8 @@ const goToProduct = (id) => {
 }
 
 .promo-icon {
-  font-size: 36px;
   flex-shrink: 0;
+  display: flex;
 }
 
 .promo-content {
@@ -398,9 +402,6 @@ const goToProduct = (id) => {
   }
   .promo-card {
     padding: 14px 18px;
-  }
-  .promo-icon {
-    font-size: 28px;
   }
   .promo-title {
     font-size: 15px;

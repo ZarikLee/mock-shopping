@@ -8,7 +8,7 @@
           class="category-item"
           @click="goToCategory(category.id)"
         >
-          <span class="category-icon">{{ category.icon }}</span>
+          <el-icon :size="28" class="category-icon"><component :is="category.icon" /></el-icon>
           <span class="category-name">{{ category.name }}</span>
           <div class="category-dropdown">
             <div class="subcategory-list">
@@ -77,7 +77,6 @@ const goToSubCategory = (categoryId, subcategory) => {
 }
 
 .category-icon {
-  font-size: 32px;
   margin-bottom: 8px;
 }
 
@@ -139,10 +138,6 @@ const goToSubCategory = (categoryId, subcategory) => {
   .category-item {
     padding: 10px 15px;
     min-width: 80px;
-  }
-  
-  .category-icon {
-    font-size: 24px;
   }
   
   .category-name {

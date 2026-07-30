@@ -90,20 +90,20 @@
           <el-radio-group v-model="paymentType">
             <el-radio :value="1">
               <span class="payment-option">
-                <span class="payment-icon">💰</span>
+                <el-icon class="payment-icon"><Coin /></el-icon>
                 <span>余额支付</span>
                 <span class="balance">(可用余额: ¥{{ userStore.balance.toFixed(2) }})</span>
               </span>
             </el-radio>
             <el-radio :value="2">
               <span class="payment-option">
-                <span class="payment-icon">💳</span>
+                <el-icon class="payment-icon"><CreditCard /></el-icon>
                 <span>模拟支付宝</span>
               </span>
             </el-radio>
             <el-radio :value="3">
               <span class="payment-option">
-                <span class="payment-icon">📱</span>
+                <el-icon class="payment-icon"><Phone /></el-icon>
                 <span>模拟微信支付</span>
               </span>
             </el-radio>
@@ -182,7 +182,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Location, ShoppingBag, Van, CreditCard, Ticket } from '@element-plus/icons-vue'
+import { Location, ShoppingBag, Van, CreditCard, Ticket, Coin, Phone } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useOrderStore } from '../../stores/order'
@@ -410,7 +410,7 @@ const submitOrder = async () => {
 }
 
 .payment-icon {
-  font-size: 20px;
+  display: flex;
 }
 
 .balance {

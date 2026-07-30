@@ -2,7 +2,9 @@
   <div class="leaderboard-page">
     <div class="container">
       <div class="leaderboard-header">
-        <div class="header-icon">🏆</div>
+        <div class="header-icon">
+          <el-icon :size="40" color="#ff4400"><Trophy /></el-icon>
+        </div>
         <h1 class="header-title">全服排行榜</h1>
         <p class="header-subtitle">与全服玩家一较高下</p>
       </div>
@@ -16,7 +18,7 @@
             :class="{ active: activeTab === tab.key }"
             @click="switchTab(tab.key)"
           >
-            <span class="tab-icon">{{ tab.icon }}</span>
+            <el-icon class="tab-icon"><component :is="tab.icon" /></el-icon>
             <span class="tab-label">{{ tab.label }}</span>
           </div>
         </div>
@@ -42,7 +44,9 @@
               }"
             >
               <div class="rank-col">
-                <span v-if="item.rank <= 3" class="medal">{{ medals[item.rank - 1] }}</span>
+                <span v-if="item.rank <= 3" class="medal">
+                  <span class="medal-badge" :class="'medal-rank-' + item.rank">{{ item.rank }}</span>
+                </span>
                 <span v-else class="rank-num">{{ item.rank }}</span>
               </div>
               <div class="avatar-col">
@@ -60,7 +64,7 @@
             </div>
           </template>
           <div v-else-if="!loading" class="empty-state">
-            <span class="empty-icon">📊</span>
+            <el-icon class="empty-icon" :size="48"><DataAnalysis /></el-icon>
             <p>暂无排行数据</p>
           </div>
         </div>
@@ -71,18 +75,17 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { Trophy, Wallet, Star, ShoppingCart, DataAnalysis } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { leaderboardApi } from '../../api/leaderboard'
 
 const userStore = useUserStore()
 const currentUserId = computed(() => userStore.userInfo?.id)
 
-const medals = ['🥇', '🥈', '🥉']
-
 const tabs = [
-  { key: 'balance', label: '财富榜', icon: '💰' },
-  { key: 'points', label: '积分榜', icon: '⭐' },
-  { key: 'spending', label: '消费榜', icon: '🛒' }
+  { key: 'balance', label: '财富榜', icon: 'Wallet' },
+  { key: 'points', label: '积分榜', icon: 'Star' },
+  { key: 'spending', label: '消费榜', icon: 'ShoppingCart' }
 ]
 
 const activeTab = ref('balance')
@@ -147,7 +150,6 @@ onMounted(fetchData)
 }
 
 .header-icon {
-  font-size: 56px;
   margin-bottom: 8px;
 }
 
@@ -224,7 +226,7 @@ onMounted(fetchData)
 }
 
 .tab-icon {
-  font-size: 18px;
+  display: flex;
 }
 
 .leaderboard-stats {
@@ -281,7 +283,36 @@ onMounted(fetchData)
 }
 
 .medal {
-  font-size: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.medal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.medal-rank-1 {
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.medal-rank-2 {
+  background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+  box-shadow: 0 2px 8px rgba(192, 192, 192, 0.4);
+}
+
+.medal-rank-3 {
+  background: linear-gradient(135deg, #cd7f32, #e8a84c);
+  box-shadow: 0 2px 8px rgba(205, 127, 50, 0.4);
 }
 
 .rank-num {
@@ -407,7 +438,6 @@ onMounted(fetchData)
 }
 
 .empty-icon {
-  font-size: 48px;
   display: block;
   margin-bottom: 12px;
 }
@@ -455,8 +485,10 @@ onMounted(fetchData)
     width: 32px;
   }
 
-  .medal {
-    font-size: 20px;
+  .medal-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
   }
 
   .rank-num {

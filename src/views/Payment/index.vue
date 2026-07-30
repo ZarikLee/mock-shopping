@@ -16,7 +16,7 @@
             <h3>选择支付方式</h3>
             <div class="method-list">
               <div class="method-item" :class="{ active: selectedMethod === 'balance' }" @click="selectedMethod = 'balance'">
-                <span class="method-icon">💰</span>
+                <el-icon class="method-icon"><Coin /></el-icon>
                 <div class="method-info">
                   <span class="method-name">余额支付</span>
                   <span class="method-desc">可用余额：¥{{ userStore.balance.toFixed(2) }}</span>
@@ -24,7 +24,7 @@
                 <el-icon v-if="selectedMethod === 'balance'" class="check-icon"><CircleCheck /></el-icon>
               </div>
               <div class="method-item" :class="{ active: selectedMethod === 'alipay' }" @click="selectedMethod = 'alipay'">
-                <span class="method-icon">💳</span>
+                <el-icon class="method-icon"><CreditCard /></el-icon>
                 <div class="method-info">
                   <span class="method-name">模拟支付宝</span>
                   <span class="method-desc">推荐支付宝用户使用</span>
@@ -32,7 +32,7 @@
                 <el-icon v-if="selectedMethod === 'alipay'" class="check-icon"><CircleCheck /></el-icon>
               </div>
               <div class="method-item" :class="{ active: selectedMethod === 'wechat' }" @click="selectedMethod = 'wechat'">
-                <span class="method-icon">📱</span>
+                <el-icon class="method-icon"><Phone /></el-icon>
                 <div class="method-info">
                   <span class="method-name">模拟微信支付</span>
                   <span class="method-desc">推荐微信用户使用</span>
@@ -96,7 +96,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Timer, CircleCheck } from '@element-plus/icons-vue'
+import { Timer, CircleCheck, Coin, CreditCard, Phone } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useOrderStore } from '../../stores/order'
 import { ElMessage } from 'element-plus'
@@ -164,7 +164,7 @@ const continueShopping = () => {
 .method-item { display: flex; align-items: center; gap: 12px; padding: 15px; border: 2px solid #e8e8e8; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
 .method-item:hover { border-color: #ff4400; }
 .method-item.active { border-color: #ff4400; background: #fff5f0; }
-.method-icon { font-size: 24px; }
+.method-icon { display: flex; }
 .method-info { flex: 1; }
 .method-name { display: block; font-weight: bold; }
 .method-desc { font-size: 12px; color: #999; }

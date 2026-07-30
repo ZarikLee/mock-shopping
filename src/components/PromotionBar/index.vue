@@ -2,7 +2,7 @@
   <div class="promotion-bar" :class="[type]" v-if="type === 'cart' || (type === 'detail' && flashPromotions.length > 0)">
     <div class="promo-header">
       <div class="promo-title">
-        <span class="promo-icon">🏷️</span>
+        <el-icon class="promo-icon"><PriceTag /></el-icon>
         <span class="promo-label">优惠活动</span>
         <span v-if="type === 'cart' && progress.current" class="promo-badge">
           已省 ¥{{ currentDiscount }}
@@ -46,23 +46,25 @@
           :style="{ left: ((tier.threshold - 0) / (tier.threshold || 1)) * 100 + '%' }"
           :class="{ active: totalAmount >= tier.threshold }"
         >
-          <span class="marker-icon">{{ totalAmount >= tier.threshold ? '🎉' : '🎯' }}</span>
+          <el-icon class="marker-icon" :size="20">
+            <component :is="totalAmount >= tier.threshold ? 'CircleCheck' : 'Aim'" />
+          </el-icon>
         </div>
       </div>
     </div>
 
     <div class="promo-tags">
       <div v-if="type === 'cart' && newUserPromotions.length > 0" class="promo-tag new-user">
-        <span class="tag-icon">👶</span>
+        <el-icon class="tag-icon"><UserFilled /></el-icon>
         <span class="tag-text">{{ newUserPromotions[0].description }}</span>
       </div>
       <div v-for="p in flashPromotions" :key="p.id" class="promo-tag flash">
-        <span class="tag-icon">⚡</span>
+        <el-icon class="tag-icon"><Lightning /></el-icon>
         <span class="tag-text">{{ p.name }}</span>
         <span class="tag-desc">{{ p.description }}</span>
       </div>
       <div v-if="type === 'cart'" class="promo-tag action" @click="handleAddItems">
-        <span class="tag-icon">🛒</span>
+        <el-icon class="tag-icon"><ShoppingCart /></el-icon>
         <span class="tag-text">去凑单</span>
         <span class="tag-arrow">›</span>
       </div>
@@ -74,6 +76,7 @@
 import { useRouter } from 'vue-router'
 import { usePromotions } from '../../composables/usePromotions'
 import { computed, ref, watch, onMounted } from 'vue'
+import { PriceTag, CircleCheck, Aim, UserFilled, Lightning, ShoppingCart } from '@element-plus/icons-vue'
 
 const props = defineProps({
   type: {
@@ -174,7 +177,7 @@ const handleAddItems = () => {
 }
 
 .promo-icon {
-  font-size: 18px;
+  display: flex;
 }
 
 .promo-label {
@@ -279,7 +282,6 @@ const handleAddItems = () => {
 }
 
 .marker-icon {
-  font-size: 14px;
   filter: grayscale(1);
   opacity: 0.5;
   transition: all 0.3s;
@@ -335,7 +337,7 @@ const handleAddItems = () => {
 }
 
 .tag-icon {
-  font-size: 14px;
+  display: flex;
   line-height: 1;
 }
 

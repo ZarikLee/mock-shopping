@@ -18,7 +18,7 @@
     <div class="container">
       <section class="category-section">
         <div class="category-header">
-          <span class="category-icon">📋</span>
+          <el-icon :size="24" color="#ff4400"><List /></el-icon>
           <h2>每日任务</h2>
         </div>
         <div class="task-grid">
@@ -63,7 +63,7 @@
 
       <section class="category-section">
         <div class="category-header">
-          <span class="category-icon">🎮</span>
+          <el-icon :size="24" color="#ff4400"><Trophy /></el-icon>
           <h2>小游戏</h2>
         </div>
         <div class="games-grid">
@@ -144,7 +144,9 @@
                 <div v-for="(card, i) in matchCards" :key="i" class="match-card" :class="{ flipped: card.flipped || card.matched, matched: card.matched }" @click="flipCard(i)">
                   <div class="match-card-inner">
                     <div class="match-front">?</div>
-                    <div class="match-back">{{ card.emoji }}</div>
+                    <div class="match-back">
+                      <div class="match-color" :style="{ backgroundColor: card.emoji }"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -155,7 +157,7 @@
             </div>
             <div class="match-body" v-else>
               <div class="match-result">
-                <span class="match-result-icon">🎉</span>
+                <el-icon :size="48" color="#ff4400" class="match-result-icon"><CircleCheck /></el-icon>
                 <span class="match-result-text">恭喜完成！获得 {{ matchEarned }} 积分</span>
                 <button class="play-btn match-restart-btn" @click="initMatchGame">再来一局</button>
               </div>
@@ -167,12 +169,12 @@
 
       <section class="category-section">
         <div class="category-header">
-          <span class="category-icon">🛍️</span>
+          <el-icon :size="24" color="#ff4400"><ShoppingBag /></el-icon>
           <h2>购物返利</h2>
         </div>
         <div class="rebate-card">
           <div class="rebate-rule">
-            <span class="rebate-icon">💰</span>
+            <el-icon :size="32" color="#ff4400"><Coin /></el-icon>
             <div class="rebate-info">
               <span class="rebate-title">购物返积分</span>
               <span class="rebate-desc">购物每满100元返5积分，多买多送！</span>
@@ -233,6 +235,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { List, Trophy, ShoppingBag, Coin, CircleCheck } from '@element-plus/icons-vue'
 import { gameApi } from '../../api/games'
 import { authApi } from '../../api/auth'
 import { useUserStore } from '../../stores/user'
@@ -422,10 +425,10 @@ const matchGameOver = ref(false)
 const matchClaimed = ref(false)
 const matchLocked = ref(false)
 
-const emojis = ['🍎', '🍊', '🍋', '🍇']
+const matchIcons = ['#ff4400', '#1890ff', '#52c41a', '#faad14']
 
 const initMatchGame = () => {
-  const deck = [...emojis, ...emojis]
+  const deck = [...matchIcons, ...matchIcons]
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]]
@@ -607,7 +610,7 @@ onMounted(() => {
 }
 
 .category-icon {
-  font-size: 24px;
+  display: flex;
 }
 
 .category-header h2 {
@@ -1034,8 +1037,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  font-weight: bold;
   transition: transform 0.4s;
   transform-style: preserve-3d;
 }
@@ -1059,12 +1060,20 @@ onMounted(() => {
   background: #ff4400;
   color: #fff;
   font-size: 28px;
+  font-weight: bold;
 }
 
 .match-back {
   background: #fff;
   border: 2px solid #f0f0f0;
   transform: rotateY(180deg);
+  padding: 6px;
+}
+
+.match-color {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
 }
 
 .match-card.matched .match-back {
@@ -1100,7 +1109,7 @@ onMounted(() => {
 }
 
 .match-result-icon {
-  font-size: 48px;
+  display: flex;
 }
 
 .match-result-text {
@@ -1142,7 +1151,7 @@ onMounted(() => {
 }
 
 .rebate-icon {
-  font-size: 32px;
+  display: flex;
 }
 
 .rebate-info {
@@ -1326,10 +1335,6 @@ onMounted(() => {
 
 .prize-value.win {
   color: #ff4400;
-}
-
-.prize-value.win::after {
-  content: ' 🎉';
 }
 
 .prize-value.lose {

@@ -39,7 +39,7 @@ body {
 
 .main-content {
   flex: 1;
-  padding-top: 130px;
+  padding-top: 140px;
 }
 
 a {
@@ -48,7 +48,7 @@ a {
 }
 
 .is-mobile .main-content {
-  padding-top: 90px;
+  padding-top: 56px;
   padding-bottom: 60px;
 }
 
