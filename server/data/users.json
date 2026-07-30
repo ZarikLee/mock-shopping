@@ -1,0 +1,21 @@
+[
+  {
+    "username": "test",
+    "password": "$2b$10$rAB/tRA5XQ0ClP92ZB8lTuKVx8SfulonKsy.YZ/nUBEnTrUNlJJmu",
+    "nickname": "T",
+    "created_at": "2026-07-30T09:52:32.927Z",
+    "points": 0,
+    "balance": 0,
+    "id": 1
+  },
+  {
+    "username": "testuser88",
+    "password": "$2b$10$zWAoADYM.58ao8ZCHP/2QuXPDKj76fJUPWW7QfKm3TwOaI8IyjUd2",
+    "nickname": "测试88",
+    "avatar": "https://picsum.photos/seed/default/100/100",
+    "created_at": "2026-07-30T10:07:47.709Z",
+    "points": 5000,
+    "balance": 9900,
+    "id": 2
+  }
+]

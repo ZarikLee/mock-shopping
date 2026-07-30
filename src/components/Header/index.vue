@@ -18,9 +18,9 @@
             <span class="link logout" @click="handleLogout">退出</span>
           </template>
           <template v-else>
-            <router-link to="/user" class="link">请登录</router-link>
+            <router-link to="/auth" class="link">请登录</router-link>
             <span class="separator">|</span>
-            <span class="link">免费注册</span>
+            <router-link to="/auth" class="link">免费注册</router-link>
           </template>
         </div>
       </div>
