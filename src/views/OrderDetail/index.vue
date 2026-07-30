@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { CircleCheck, Van, Location, ShoppingBag } from '@element-plus/icons-vue'
 import { useOrderStore } from '../../stores/order'
@@ -143,8 +143,14 @@ const router = useRouter()
 const route = useRoute()
 const orderStore = useOrderStore()
 
-const order = computed(() => {
-  return orderStore.getOrder(Number(route.params.id))
+const order = ref(null)
+
+onMounted(async () => {
+  try {
+    order.value = await orderStore.getOrder(Number(route.params.id))
+  } catch {
+    ElMessage.error('订单不存在')
+  }
 })
 
 const reversedLogs = computed(() => {

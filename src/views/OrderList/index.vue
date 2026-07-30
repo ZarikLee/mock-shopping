@@ -98,10 +98,14 @@ const router = useRouter()
 const orderStore = useOrderStore()
 const loading = ref(true)
 
-onMounted(() => {
-  setTimeout(() => {
-    loading.value = false
-  }, 300)
+onMounted(async () => {
+  loading.value = true
+  try {
+    await orderStore.getOrders()
+  } catch (e) {
+    console.error(e)
+  }
+  loading.value = false
 })
 
 const currentTab = ref(-1)

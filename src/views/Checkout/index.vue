@@ -225,8 +225,7 @@ const totalAmount = computed(() => {
 })
 
 // 提交订单
-const submitOrder = () => {
-  // 验证
+const submitOrder = async () => {
   if (!selectedAddressId.value) {
     ElMessage.warning('请选择收货地址')
     return
@@ -238,28 +237,24 @@ const submitOrder = () => {
 
   const address = userStore.userInfo.addresses.find(a => a.id === selectedAddressId.value)
 
-  // 创建订单
-  const order = orderStore.createOrder({
-    items: cartStore.selectedItems.map(item => ({
-      ...item,
-      productId: item.productId
-    })),
-    totalAmount: cartStore.totalPrice,
-    discountAmount: couponDiscount.value,
-    payAmount: totalAmount.value,
-    address
-  })
+  try {
+    const order = await orderStore.createOrder({
+      items: cartStore.selectedItems.map(item => ({
+        ...item,
+        productId: item.productId
+      })),
+      totalAmount: cartStore.totalPrice,
+      discountAmount: couponDiscount.value,
+      payAmount: totalAmount.value,
+      address
+    })
 
-  // 使用优惠券
-  if (selectedCouponId.value > 0) {
-    userStore.useCoupon(selectedCouponId.value)
+    cartStore.removeByOrder(cartStore.selectedItems)
+    ElMessage.success('订单创建成功')
+    router.push(`/payment/${order.id}`)
+  } catch (e) {
+    ElMessage.error(e?.message || '订单创建失败')
   }
-
-  // 清除已结算的商品
-  cartStore.removeByOrder(cartStore.selectedItems)
-
-  ElMessage.success('订单创建成功')
-  router.push(`/payment/${order.id}`)
 }
 </script>
 

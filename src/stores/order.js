@@ -4,6 +4,7 @@ import { orderApi } from '../api/orders'
 
 export const useOrderStore = defineStore('order', () => {
   const currentOrder = ref(null)
+  const orders = ref([])
 
   const ORDER_STATUS = {
     PENDING_PAYMENT: { code: 0, text: '待付款', color: '#ff4400' },
@@ -25,12 +26,24 @@ export const useOrderStore = defineStore('order', () => {
 
   const payOrder = async (orderId) => {
     const res = await orderApi.pay(orderId)
-    return res.data || res
+    const data = res.data || res
+    if (currentOrder.value?.id === orderId) {
+      currentOrder.value = data
+    }
+    return data
   }
 
   const cancelOrder = async (orderId) => {
     const res = await orderApi.cancel(orderId)
-    return res.data || res
+    const data = res.data || res
+    const idx = orders.value.findIndex(o => o.id === orderId)
+    if (idx !== -1) {
+      orders.value[idx] = { ...orders.value[idx], status: ORDER_STATUS.CANCELLED }
+    }
+    if (currentOrder.value?.id === orderId) {
+      currentOrder.value = { ...currentOrder.value, status: ORDER_STATUS.CANCELLED }
+    }
+    return data
   }
 
   const completeOrder = async (orderId) => {
@@ -40,17 +53,21 @@ export const useOrderStore = defineStore('order', () => {
 
   const getOrder = async (orderId) => {
     const res = await orderApi.detail(orderId)
-    currentOrder.value = res.data || res
-    return currentOrder.value
+    const data = res.data || res
+    currentOrder.value = data
+    return data
   }
 
   const getOrders = async (params = {}) => {
     const res = await orderApi.list(params)
-    return res.data || res
+    const data = res.data || res
+    orders.value = data
+    return data
   }
 
   return {
     currentOrder,
+    orders,
     ORDER_STATUS,
     createOrder,
     payOrder,

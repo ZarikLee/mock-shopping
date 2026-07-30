@@ -1,0 +1,35 @@
+[
+  {
+    "orderId": 2,
+    "productId": 1,
+    "name": "Test",
+    "price": 100,
+    "quantity": 1,
+    "image": "test.jpg",
+    "selectedSpec": "",
+    "selectedColor": "",
+    "id": 1
+  },
+  {
+    "orderId": 4,
+    "productId": 2,
+    "name": "Test2",
+    "price": 50,
+    "quantity": 2,
+    "image": "test2.jpg",
+    "selectedSpec": "",
+    "selectedColor": "",
+    "id": 2
+  },
+  {
+    "orderId": 6,
+    "productId": 1,
+    "name": "Expensive",
+    "price": 99999,
+    "quantity": 1,
+    "image": "x.jpg",
+    "selectedSpec": "",
+    "selectedColor": "",
+    "id": 3
+  }
+]
