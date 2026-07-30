@@ -1,183 +1,97 @@
-import initSqlJs from 'sql.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, '..', 'database.sqlite');
+const DATA_DIR = path.join(__dirname, '..', 'data');
 
-let db = null;
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
 
-export async function getDb() {
-  if (db) return db;
+const tables = ['users', 'orders', 'order_items', 'reviews', 'addresses', 'coupons', 'game_scores', 'checkins'];
 
-  const SQL = await initSqlJs();
+const data = {};
 
-  if (fs.existsSync(DB_PATH)) {
-    const buffer = fs.readFileSync(DB_PATH);
-    db = new SQL.Database(buffer);
+function loadTable(name) {
+  const file = path.join(DATA_DIR, `${name}.json`);
+  if (fs.existsSync(file)) {
+    try {
+      data[name] = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    } catch {
+      data[name] = [];
+    }
   } else {
-    db = new SQL.Database();
+    data[name] = [];
   }
-
-  db.run('PRAGMA journal_mode=WAL');
-  db.run('PRAGMA foreign_keys=ON');
-
-  createTables();
-  saveDb();
-
-  return db;
 }
 
-function saveDb() {
-  if (!db) return;
-  const data = db.export();
-  const buffer = Buffer.from(data);
-  fs.writeFileSync(DB_PATH, buffer);
+function saveTable(name) {
+  const file = path.join(DATA_DIR, `${name}.json`);
+  fs.writeFileSync(file, JSON.stringify(data[name], null, 2));
 }
 
-function createTables() {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      password TEXT,
-      nickname TEXT,
-      avatar TEXT,
-      phone TEXT,
-      balance REAL DEFAULT 10000,
-      points INTEGER DEFAULT 5000,
-      created_at TEXT DEFAULT (datetime('now'))
-    )
-  `);
+tables.forEach(loadTable);
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS products (
-      id INTEGER PRIMARY KEY,
-      name TEXT, category TEXT, categoryId INTEGER,
-      price REAL, originalPrice REAL,
-      sales INTEGER DEFAULT 0, rating REAL,
-      image TEXT, images TEXT,
-      specs TEXT, colors TEXT,
-      brand TEXT, shop TEXT, shopId INTEGER,
-      description TEXT, stock INTEGER
-    )
-  `);
+let autoId = {};
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS orders (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      orderNo TEXT, userId INTEGER,
-      totalAmount REAL, discountAmount REAL, payAmount REAL,
-      status INTEGER DEFAULT 0,
-      address TEXT, createTime TEXT, payTime TEXT,
-      shipTime TEXT, completeTime TEXT,
-      logistics TEXT,
-      FOREIGN KEY (userId) REFERENCES users(id)
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS order_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      orderId INTEGER, productId INTEGER,
-      name TEXT, price REAL, quantity INTEGER,
-      image TEXT, selectedSpec TEXT, selectedColor TEXT,
-      FOREIGN KEY (orderId) REFERENCES orders(id)
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS reviews (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      productId INTEGER, userId INTEGER,
-      username TEXT, avatar TEXT,
-      rating REAL, content TEXT,
-      images TEXT, specs TEXT,
-      created_at TEXT DEFAULT (datetime('now'))
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS addresses (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId INTEGER, name TEXT, phone TEXT,
-      province TEXT, city TEXT, district TEXT,
-      detail TEXT, isDefault INTEGER DEFAULT 0,
-      FOREIGN KEY (userId) REFERENCES users(id)
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS coupons (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId INTEGER, name TEXT,
-      amount REAL, minConsume REAL,
-      expireTime TEXT, used INTEGER DEFAULT 0,
-      FOREIGN KEY (userId) REFERENCES users(id)
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS game_scores (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId INTEGER, gameType TEXT,
-      score INTEGER, result TEXT,
-      created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (userId) REFERENCES users(id)
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS checkins (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId INTEGER, date TEXT,
-      points INTEGER,
-      created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (userId) REFERENCES users(id)
-    )
-  `);
-}
-
-// Helper: run a query and return all rows
-export function queryAll(sql, params = []) {
-  const stmt = db.prepare(sql);
-  if (params.length > 0) stmt.bind(params);
-  const rows = [];
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject());
+export function queryAll(table, filter = {}) {
+  let rows = data[table] || [];
+  const keys = Object.keys(filter);
+  if (keys.length > 0) {
+    rows = rows.filter(row => keys.every(k => row[k] === filter[k]));
   }
-  stmt.free();
   return rows;
 }
 
-// Helper: run a query and return first row
-export function queryOne(sql, params = []) {
-  const rows = queryAll(sql, params);
+export function queryOne(table, filter = {}) {
+  const rows = queryAll(table, filter);
   return rows.length > 0 ? rows[0] : null;
 }
 
-// Helper: execute a write query, auto-save
-export function execute(sql, params = []) {
-  if (params.length > 0) {
-    db.run(sql, params);
-  } else {
-    db.run(sql);
+export function insert(table, row) {
+  if (!data[table]) data[table] = [];
+  if (!autoId[table]) {
+    autoId[table] = data[table].reduce((max, r) => Math.max(max, r.id || 0), 0);
   }
-  saveDb();
+  autoId[table]++;
+  row.id = autoId[table];
+  data[table].push(row);
+  saveTable(table);
+  return row;
 }
 
-// Helper: get last insert rowid
-export function lastInsertRowId() {
-  return queryOne('SELECT last_insert_rowid() as id').id;
+export function update(table, id, updates) {
+  const rows = data[table];
+  const idx = rows.findIndex(r => r.id === id);
+  if (idx === -1) return null;
+  rows[idx] = { ...rows[idx], ...updates };
+  saveTable(table);
+  return rows[idx];
 }
 
-export function closeDb() {
-  if (db) {
-    saveDb();
-    db.close();
-    db = null;
+export function remove(table, id) {
+  const rows = data[table];
+  const idx = rows.findIndex(r => r.id === id);
+  if (idx === -1) return false;
+  rows.splice(idx, 1);
+  saveTable(table);
+  return true;
+}
+
+export function initTable(table, rows) {
+  if (!data[table] || data[table].length === 0) {
+    data[table] = rows;
+    saveTable(table);
+    autoId[table] = rows.reduce((max, r) => Math.max(max, r.id || 0), 0);
   }
 }
 
-export default { getDb, queryAll, queryOne, execute, lastInsertRowId, closeDb, saveDb };
+export function getNextId(table) {
+  if (!autoId[table]) {
+    autoId[table] = (data[table] || []).reduce((max, r) => Math.max(max, r.id || 0), 0);
+  }
+  return ++autoId[table];
+}
+
+export default { queryAll, queryOne, insert, update, remove, initTable, getNextId };

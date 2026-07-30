@@ -28,7 +28,6 @@ app.use('/api/games', gameRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/checkin', checkinRoutes);
 
-// Serve frontend static files in production
 const distPath = join(__dirname, '..', '..', 'dist');
 app.use(express.static(distPath));
 app.use((req, res, next) => {

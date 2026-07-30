@@ -1,17 +1,16 @@
 import { Router } from 'express';
-import { getDb, queryAll, queryOne, execute, lastInsertRowId } from '../db.js';
+import { queryAll, queryOne, insert, update } from '../db.js';
 import { authMiddleware } from './auth.js';
 
 const router = Router();
 
-router.post('/play', authMiddleware, async (req, res) => {
-  await getDb();
+router.post('/play', authMiddleware, (req, res) => {
   const { gameType, bet } = req.body;
   if (!gameType || !['wheel', 'guess'].includes(gameType)) {
     return res.status(400).json({ error: 'Invalid game type' });
   }
 
-  const user = queryOne('SELECT * FROM users WHERE id = ?', [req.user.id]);
+  const user = queryOne('users', { id: req.user.id });
 
   if (gameType === 'wheel') {
     if (user.points < 10) {
@@ -20,8 +19,8 @@ router.post('/play', authMiddleware, async (req, res) => {
     const prizes = [10, 20, 30, 50, 80, 100, 150, 200];
     const prize = prizes[Math.floor(Math.random() * prizes.length)];
     const now = new Date().toISOString();
-    execute('UPDATE users SET points = points - 10 + ? WHERE id = ?', [prize, req.user.id]);
-    execute('INSERT INTO game_scores (userId, gameType, score, created_at) VALUES (?, ?, ?, ?)', [req.user.id, 'wheel', prize - 10, now]);
+    update('users', req.user.id, { points: (user.points || 0) - 10 + prize });
+    insert('game_scores', { userId: req.user.id, gameType: 'wheel', score: prize - 10, created_at: now });
     res.json({ prize, netPoints: prize - 10, message: `You won ${prize} points!` });
   }
 
@@ -35,16 +34,16 @@ router.post('/play', authMiddleware, async (req, res) => {
     const won = guess === target;
     const score = won ? betAmount : -betAmount;
     const now = new Date().toISOString();
-    execute('UPDATE users SET points = points + ? WHERE id = ?', [score, req.user.id]);
-    execute('INSERT INTO game_scores (userId, gameType, score, created_at) VALUES (?, ?, ?, ?)', [req.user.id, 'guess', score, now]);
+    update('users', req.user.id, { points: (user.points || 0) + score });
+    insert('game_scores', { userId: req.user.id, gameType: 'guess', score, created_at: now });
     res.json({ target, guess, won, score, message: won ? `You won ${betAmount} points!` : `You lost ${betAmount} points. Target was ${target}` });
   }
 });
 
-router.get('/records', authMiddleware, async (req, res) => {
-  await getDb();
-  const records = queryAll('SELECT * FROM game_scores WHERE userId = ? ORDER BY created_at DESC LIMIT 50', [req.user.id]);
-  res.json(records);
+router.get('/records', authMiddleware, (req, res) => {
+  const records = queryAll('game_scores', { userId: req.user.id });
+  records.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  res.json(records.slice(0, 50));
 });
 
 export default router;

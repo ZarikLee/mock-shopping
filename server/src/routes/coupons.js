@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDb, queryAll, queryOne, execute, lastInsertRowId } from '../db.js';
+import { queryAll, queryOne, insert } from '../db.js';
 import { authMiddleware } from './auth.js';
 
 const router = Router();
@@ -12,21 +12,23 @@ const couponTemplates = [
   { name: '满50减5', amount: 5, minConsume: 50 },
 ];
 
-router.get('/', authMiddleware, async (req, res) => {
-  await getDb();
-  const coupons = queryAll('SELECT * FROM coupons WHERE userId = ? ORDER BY id DESC', [req.user.id]);
+router.get('/', authMiddleware, (req, res) => {
+  const coupons = queryAll('coupons', { userId: req.user.id });
+  coupons.sort((a, b) => b.id - a.id);
   res.json(coupons);
 });
 
-router.post('/claim', authMiddleware, async (req, res) => {
-  await getDb();
+router.post('/claim', authMiddleware, (req, res) => {
   const template = couponTemplates[Math.floor(Math.random() * couponTemplates.length)];
   const expireTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-  execute(`
-    INSERT INTO coupons (userId, name, amount, minConsume, expireTime, used)
-    VALUES (?, ?, ?, ?, ?, 0)
-  `, [req.user.id, template.name, template.amount, template.minConsume, expireTime]);
-  const coupon = queryOne('SELECT * FROM coupons WHERE id = ?', [lastInsertRowId()]);
+  const coupon = insert('coupons', {
+    userId: req.user.id,
+    name: template.name,
+    amount: template.amount,
+    minConsume: template.minConsume,
+    expireTime,
+    used: 0,
+  });
   res.json(coupon);
 });
 

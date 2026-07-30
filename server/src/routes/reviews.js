@@ -1,48 +1,49 @@
 import { Router } from 'express';
-import { getDb, queryAll, queryOne, execute, lastInsertRowId } from '../db.js';
+import { queryAll, queryOne, insert } from '../db.js';
 import { authMiddleware } from './auth.js';
 
 const router = Router();
 
-router.get('/:productId', async (req, res) => {
-  await getDb();
+router.get('/:productId', (req, res) => {
   const { rating } = req.query;
-  let sql = 'SELECT * FROM reviews WHERE productId = ?';
-  const params = [Number(req.params.productId)];
+  let reviews = queryAll('reviews', { productId: Number(req.params.productId) });
   if (rating) {
-    sql += ' AND rating = ?';
-    params.push(Number(rating));
+    reviews = reviews.filter(r => r.rating === Number(rating));
   }
-  sql += ' ORDER BY created_at DESC';
-  const reviews = queryAll(sql, params).map(r => ({
-    ...r,
-    images: r.images ? JSON.parse(r.images) : [],
-  }));
+  reviews.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   res.json(reviews);
 });
 
-router.get('/:productId/stats', async (req, res) => {
-  await getDb();
+router.get('/:productId/stats', (req, res) => {
   const productId = Number(req.params.productId);
-  const stats = queryOne('SELECT COUNT(*) as count, AVG(rating) as average FROM reviews WHERE productId = ?', [productId]);
-  const byRating = queryAll('SELECT rating, COUNT(*) as count FROM reviews WHERE productId = ? GROUP BY rating ORDER BY rating', [productId]);
-  res.json({ total: stats.count, average: stats.average || 0, byRating });
+  const reviews = queryAll('reviews', { productId });
+  const total = reviews.length;
+  const average = total > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0;
+  const byRating = [1, 2, 3, 4, 5].map(rating => ({
+    rating,
+    count: reviews.filter(r => r.rating === rating).length,
+  })).filter(g => g.count > 0);
+  res.json({ total, average, byRating });
 });
 
-router.post('/', authMiddleware, async (req, res) => {
-  await getDb();
+router.post('/', authMiddleware, (req, res) => {
   const { productId, rating, content, images, specs } = req.body;
   if (!productId || !rating) {
     return res.status(400).json({ error: 'Product ID and rating required' });
   }
-  const user = queryOne('SELECT * FROM users WHERE id = ?', [req.user.id]);
+  const user = queryOne('users', { id: req.user.id });
   const now = new Date().toISOString();
-  execute(`
-    INSERT INTO reviews (productId, userId, username, avatar, rating, content, images, specs, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [productId, req.user.id, user.nickname || user.username, user.avatar || '', rating, content || '', JSON.stringify(images || []), specs || '', now]);
-  const review = queryOne('SELECT * FROM reviews WHERE id = ?', [lastInsertRowId()]);
-  review.images = review.images ? JSON.parse(review.images) : [];
+  const review = insert('reviews', {
+    productId,
+    userId: req.user.id,
+    username: user.nickname || user.username,
+    avatar: user.avatar || '',
+    rating,
+    content: content || '',
+    images: images || [],
+    specs: specs || '',
+    created_at: now,
+  });
   res.json(review);
 });
 
