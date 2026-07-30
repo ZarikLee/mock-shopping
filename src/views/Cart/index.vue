@@ -8,16 +8,13 @@
 
       <SkeletonLoader v-if="loading" type="cart" :count="3" />
 
-      <!-- 购物车有商品 -->
       <div class="cart-content" v-else-if="cartStore.items.length > 0">
-        <!-- 优惠活动条 -->
         <PromotionBar :total-amount="cartStore.totalPrice" type="cart" />
 
-        <!-- 表头 -->
-        <div class="cart-table-header">
+        <div class="cart-table-header" v-if="!isMobile">
           <div class="col checkbox">
-            <el-checkbox 
-              :model-value="cartStore.isSelectedAll" 
+            <el-checkbox
+              :model-value="cartStore.isSelectedAll"
               @change="cartStore.toggleSelectAll"
             >
               全选
@@ -30,16 +27,15 @@
           <div class="col action">操作</div>
         </div>
 
-        <!-- 商品列表 -->
         <div class="cart-table-body">
-          <div 
-            v-for="item in cartStore.items" 
+          <div
+            v-for="item in cartStore.items"
             :key="item.id"
             class="cart-item"
           >
             <div class="col checkbox">
-              <el-checkbox 
-                :model-value="item.selected" 
+              <el-checkbox
+                :model-value="item.selected"
                 @change="cartStore.toggleSelected(item.id)"
               />
             </div>
@@ -55,50 +51,54 @@
                   <span v-if="item.selectedSpec">{{ item.selectedSpec }}</span>
                   <span v-if="item.selectedColor"> / {{ item.selectedColor }}</span>
                 </div>
+                <div class="item-price-mobile" v-if="isMobile">
+                  <span class="current-price">¥{{ item.price }}</span>
+                  <span v-if="item.originalPrice > item.price" class="original-price">¥{{ item.originalPrice }}</span>
+                </div>
               </div>
             </div>
-            <div class="col price">
+            <div class="col price" v-if="!isMobile">
               <span class="current-price">¥{{ item.price }}</span>
               <span v-if="item.originalPrice > item.price" class="original-price">¥{{ item.originalPrice }}</span>
             </div>
             <div class="col quantity">
-              <el-input-number 
-                :model-value="item.quantity" 
-                :min="1" 
+              <el-input-number
+                :model-value="item.quantity"
+                :min="1"
                 :max="99"
-                size="small"
+                :size="isMobile ? 'small' : 'small'"
+                controls-position="right"
                 @change="(val) => cartStore.updateQuantity(item.id, val)"
               />
             </div>
-            <div class="col subtotal">
+            <div class="col subtotal" v-if="!isMobile">
               <span class="subtotal-price">¥{{ (item.price * item.quantity).toFixed(2) }}</span>
             </div>
             <div class="col action">
-              <el-button type="danger" link @click="cartStore.removeFromCart(item.id)">
+              <el-button type="danger" link size="small" @click="cartStore.removeFromCart(item.id)">
                 删除
               </el-button>
             </div>
           </div>
         </div>
 
-        <!-- 结算栏 -->
-        <div class="cart-footer">
+        <div class="cart-footer" :class="{ 'mobile-footer': isMobile }">
           <div class="footer-left">
-            <el-checkbox 
-              :model-value="cartStore.isSelectedAll" 
+            <el-checkbox
+              :model-value="cartStore.isSelectedAll"
               @change="cartStore.toggleSelectAll"
             >
               全选
             </el-checkbox>
-            <el-button type="danger" link @click="cartStore.removeSelected">
+            <el-button v-if="!isMobile" type="danger" link @click="cartStore.removeSelected">
               删除选中商品
             </el-button>
-            <el-button type="danger" link @click="cartStore.clearCart">
+            <el-button v-if="!isMobile" type="danger" link @click="cartStore.clearCart">
               清空购物车
             </el-button>
           </div>
           <div class="footer-right">
-            <div class="summary">
+            <div class="summary" v-if="!isMobile">
               <span class="label">已选商品</span>
               <span class="count">{{ cartStore.selectedItems.length }} 件</span>
             </div>
@@ -109,20 +109,20 @@
                 <span class="price-value">{{ cartStore.totalPrice.toFixed(2) }}</span>
               </span>
             </div>
-            <el-button 
-              type="primary" 
-              size="large" 
+            <el-button
+              type="primary"
+              :size="isMobile ? 'default' : 'large'"
               class="btn-checkout"
+              :class="{ 'btn-checkout-mobile': isMobile }"
               :disabled="cartStore.selectedItems.length === 0"
               @click="goToCheckout"
             >
-              去结算
+              去结算{{ isMobile ? ` (${cartStore.selectedItems.length})` : '' }}
             </el-button>
           </div>
         </div>
       </div>
 
-      <!-- 购物车为空 -->
       <div class="cart-empty" v-else-if="!loading">
         <el-icon :size="80" color="#ccc"><ShoppingCart /></el-icon>
         <h2>购物车是空的</h2>
@@ -138,9 +138,11 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ShoppingCart } from '@element-plus/icons-vue'
 import { useCartStore } from '../../stores/cart'
+import { useDevice } from '../../utils/device'
 import PromotionBar from '../../components/PromotionBar/index.vue'
 import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 
+const { isMobile } = useDevice()
 const router = useRouter()
 const cartStore = useCartStore()
 const loading = ref(true)
@@ -348,30 +350,118 @@ const goToShopping = () => {
 }
 
 @media (max-width: 768px) {
+  .cart-page {
+    padding: 12px 0;
+  }
+
+  .cart-header {
+    padding: 0 12px;
+    margin-bottom: 12px;
+  }
+
+  .cart-header h1 {
+    font-size: 18px;
+  }
+
   .cart-table-header {
     display: none;
   }
-  
+
   .cart-item {
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 12px;
+    padding: 15px;
   }
-  
-  .col.checkbox { width: auto; }
-  .col.product { width: 100%; order: 1; }
-  .col.price { width: auto; order: 2; }
-  .col.quantity { width: auto; order: 3; }
-  .col.subtotal { width: auto; order: 4; flex: 1; text-align: right; }
-  .col.action { width: auto; order: 5; }
-  
-  .cart-footer {
-    flex-direction: column;
-    gap: 15px;
+
+  .col.checkbox {
+    width: auto;
   }
-  
+
+  .col.product {
+    width: calc(100% - 80px);
+    order: 1;
+  }
+
+  .col.quantity {
+    width: auto;
+    order: 2;
+    margin-left: 80px;
+  }
+
+  .col.action {
+    width: auto;
+    order: 3;
+  }
+
+  .item-image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .item-price-mobile {
+    margin-top: 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .item-price-mobile .current-price {
+    font-size: 15px;
+    font-weight: bold;
+    color: #ff4400;
+  }
+
+  .item-price-mobile .original-price {
+    font-size: 12px;
+    color: #999;
+    text-decoration: line-through;
+  }
+
+  .col.quantity :deep(.el-input-number) {
+    width: 100px;
+  }
+
+  .col.quantity :deep(.el-input-number .el-input__inner) {
+    padding: 0 24px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .col.quantity :deep(.el-input-number .el-input-number__decrease),
+  .col.quantity :deep(.el-input-number .el-input-number__increase) {
+    width: 22px;
+  }
+
+  .cart-footer.mobile-footer {
+    flex-direction: row;
+    padding: 12px 15px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
+    position: sticky;
+    bottom: 0;
+  }
+
+  .footer-left {
+    gap: 8px;
+  }
+
+  .footer-left :deep(.el-checkbox) {
+    font-size: 13px;
+  }
+
   .footer-right {
-    width: 100%;
-    justify-content: space-between;
+    gap: 10px;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .total-price .price-value {
+    font-size: 16px;
+  }
+
+  .btn-checkout-mobile {
+    padding: 8px 16px;
+    font-size: 13px;
+    white-space: nowrap;
   }
 }
 </style>

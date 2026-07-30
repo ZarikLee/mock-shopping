@@ -1,52 +1,1536 @@
 [
-  {"id":1,"name":"Apple iPhone 15 Pro Max 256GB","category":"手机","categoryId":1,"price":9999,"originalPrice":11999,"sales":185600,"rating":4.8,"image":"https://picsum.photos/400/400?random=101","images":["https://picsum.photos/800/800?random=102","https://picsum.photos/800/800?random=103","https://picsum.photos/800/800?random=104"],"specs":["256GB","深空黑","A17 Pro芯片"],"colors":["深空黑","银色","深蓝色","金色"],"brand":"Apple","shop":"Apple官方旗舰店","shopId":1,"description":"Apple iPhone 15 Pro Max 256GB 深空黑色 支持灵动岛 钛金属设计","stock":5600},
-  {"id":2,"name":"华为 Mate 60 Pro 昆仑玻璃","category":"手机","categoryId":1,"price":6999,"originalPrice":7999,"sales":156800,"rating":4.9,"image":"https://picsum.photos/400/400?random=105","images":["https://picsum.photos/800/800?random=106","https://picsum.photos/800/800?random=107","https://picsum.photos/800/800?random=108"],"specs":["512GB","雅丹黑","卫星通话"],"colors":["雅丹黑","白沙银","雅川青","南糯紫"],"brand":"华为","shop":"华为官方旗舰店","shopId":2,"description":"华为 Mate 60 Pro 512GB 雅丹黑 卫星通话 昆仑玻璃 鸿蒙系统","stock":4300},
-  {"id":3,"name":"小米14 Ultra 徕卡光学","category":"手机","categoryId":1,"price":5999,"originalPrice":6499,"sales":123400,"rating":4.7,"image":"https://picsum.photos/400/400?random=109","images":["https://picsum.photos/800/800?random=110","https://picsum.photos/800/800?random=111","https://picsum.photos/800/800?random=112"],"specs":["512GB","黑色","骁龙8 Gen3"],"colors":["黑色","白色","岩石青"],"brand":"小米","shop":"小米官方旗舰店","shopId":3,"description":"小米14 Ultra 512GB 黑色 骁龙8 Gen3 徕卡光学 Summilux镜头","stock":8200},
-  {"id":4,"name":"OPPO Find X7 Ultra 哈苏影像","category":"手机","categoryId":1,"price":5999,"originalPrice":6799,"sales":98700,"rating":4.6,"image":"https://picsum.photos/400/400?random=113","images":["https://picsum.photos/800/800?random=114","https://picsum.photos/800/800?random=115","https://picsum.photos/800/800?random=116"],"specs":["512GB","海阔天空","哈苏人像"],"colors":["海阔天空","大漠银月","松涛暮色"],"brand":"OPPO","shop":"OPPO官方旗舰店","shopId":4,"description":"OPPO Find X7 Ultra 512GB 海阔天空 哈苏影像 双潜望四摄","stock":6700},
-  {"id":5,"name":"vivo X100 Pro 蔡司镜头","category":"手机","categoryId":1,"price":4999,"originalPrice":5499,"sales":112300,"rating":4.7,"image":"https://picsum.photos/400/400?random=117","images":["https://picsum.photos/800/800?random=118","https://picsum.photos/800/800?random=119","https://picsum.photos/800/800?random=120"],"specs":["512GB","星际蓝","蔡司T*镀膜"],"colors":["星际蓝","日月星辰","白月光"],"brand":"vivo","shop":"vivo官方旗舰店","shopId":5,"description":"vivo X100 Pro 512GB 星际蓝 蔡司超级长焦 蓝海电池","stock":5500},
-  {"id":6,"name":"Apple MacBook Pro 14英寸 M3 Pro","category":"电脑","categoryId":2,"price":14999,"originalPrice":16999,"sales":87600,"rating":4.9,"image":"https://picsum.photos/400/400?random=121","images":["https://picsum.photos/800/800?random=122","https://picsum.photos/800/800?random=123","https://picsum.photos/800/800?random=124"],"specs":["18GB+512GB","银色","M3 Pro"],"colors":["银色","深空灰","深空黑"],"brand":"Apple","shop":"Apple官方旗舰店","shopId":1,"description":"Apple MacBook Pro 14英寸 M3 Pro芯片 18GB统一内存 512GB存储","stock":3200},
-  {"id":7,"name":"联想 ThinkPad X1 Carbon Gen 11","category":"电脑","categoryId":2,"price":10999,"originalPrice":12999,"sales":65400,"rating":4.6,"image":"https://picsum.photos/400/400?random=125","images":["https://picsum.photos/800/800?random=126","https://picsum.photos/800/800?random=127","https://picsum.photos/800/800?random=128"],"specs":["16GB+512GB","黑色","i7-1360P"],"colors":["黑色","银色"],"brand":"联想","shop":"联想官方旗舰店","shopId":6,"description":"联想 ThinkPad X1 Carbon Gen 11 14英寸 商务轻薄本 i7-1360P","stock":2800},
-  {"id":8,"name":"华为 MateBook X Pro 2024","category":"电脑","categoryId":2,"price":11999,"originalPrice":13999,"sales":76500,"rating":4.8,"image":"https://picsum.photos/400/400?random=129","images":["https://picsum.photos/800/800?random=130","https://picsum.photos/800/800?random=131","https://picsum.photos/800/800?random=132"],"specs":["16GB+1TB","砚黑","酷睿Ultra 9"],"colors":["砚黑","皓月银","云锦白"],"brand":"华为","shop":"华为官方旗舰店","shopId":2,"description":"华为 MateBook X Pro 2024 14.2英寸 超轻轻薄本 酷睿Ultra 9","stock":3500},
-  {"id":9,"name":"小米 RedmiBook Pro 16 2024","category":"电脑","categoryId":2,"price":6999,"originalPrice":7999,"sales":143200,"rating":4.5,"image":"https://picsum.photos/400/400?random=133","images":["https://picsum.photos/800/800?random=134","https://picsum.photos/800/800?random=135","https://picsum.photos/800/800?random=136"],"specs":["16GB+512GB","星光银","i7-14650HX"],"colors":["星光银","深空灰"],"brand":"小米","shop":"小米官方旗舰店","shopId":3,"description":"小米 RedmiBook Pro 16 2024 16英寸 高性能轻薄本 i7-14650HX","stock":7200},
-  {"id":10,"name":"联想拯救者 Y9000P 2024","category":"电脑","categoryId":2,"price":9499,"originalPrice":10999,"sales":98700,"rating":4.7,"image":"https://picsum.photos/400/400?random=137","images":["https://picsum.photos/800/800?random=138","https://picsum.photos/800/800?random=139","https://picsum.photos/800/800?random=140"],"specs":["16GB+1TB","钛晶灰","i9-14900HX"],"colors":["钛晶灰","冰魄白"],"brand":"联想","shop":"联想官方旗舰店","shopId":6,"description":"联想拯救者 Y9000P 2024 16英寸 电竞游戏本 i9-14900HX RTX4060","stock":4100},
-  {"id":11,"name":"Sony WH-1000XM5 降噪耳机","category":"数码","categoryId":3,"price":2499,"originalPrice":2999,"sales":165400,"rating":4.8,"image":"https://picsum.photos/400/400?random=141","images":["https://picsum.photos/800/800?random=142","https://picsum.photos/800/800?random=143","https://picsum.photos/800/800?random=144"],"specs":["黑色","头戴式","30小时续航"],"colors":["黑色","铂金银","午夜蓝"],"brand":"Sony","shop":"Sony官方旗舰店","shopId":7,"description":"Sony WH-1000XM5 头戴式无线降噪耳机 高清通话 30小时续航","stock":8900},
-  {"id":12,"name":"小米 Xiaomi 14 Ultra 拍照套装","category":"数码","categoryId":3,"price":899,"originalPrice":999,"sales":87600,"rating":4.5,"image":"https://picsum.photos/400/400?random=145","images":["https://picsum.photos/800/800?random=146","https://picsum.photos/800/800?random=147","https://picsum.photos/800/800?random=148"],"specs":["专业摄影手柄","67mm滤镜转接环"],"colors":["黑色"],"brand":"小米","shop":"小米官方旗舰店","shopId":3,"description":"小米 Xiaomi 14 Ultra 专业摄影套装 手柄+滤镜转接环","stock":4500},
-  {"id":13,"name":"Sony PlayStation 5 光驱版","category":"数码","categoryId":3,"price":3899,"originalPrice":4299,"sales":198700,"rating":4.9,"image":"https://picsum.photos/400/400?random=149","images":["https://picsum.photos/800/800?random=150","https://picsum.photos/800/800?random=151","https://picsum.photos/800/800?random=152"],"specs":["825GB SSD","白色","4K蓝光光驱"],"colors":["白色","黑色"],"brand":"Sony","shop":"Sony官方旗舰店","shopId":7,"description":"Sony PlayStation 5 光驱版 家用游戏主机 825GB SSD 支持4K","stock":12000},
-  {"id":14,"name":"Apple AirPods Pro 第二代 USB-C","category":"数码","categoryId":3,"price":1899,"originalPrice":1999,"sales":234500,"rating":4.7,"image":"https://picsum.photos/400/400?random=153","images":["https://picsum.photos/800/800?random=154","https://picsum.photos/800/800?random=155","https://picsum.photos/800/800?random=156"],"specs":["USB-C","主动降噪","自适应音频"],"colors":["白色"],"brand":"Apple","shop":"Apple官方旗舰店","shopId":1,"description":"Apple AirPods Pro 第二代 USB-C 主动降噪 自适应音频 通透模式","stock":15000},
-  {"id":15,"name":"华为 FreeBuds Pro 3 降噪耳机","category":"数码","categoryId":3,"price":1499,"originalPrice":1699,"sales":123400,"rating":4.6,"image":"https://picsum.photos/400/400?random=157","images":["https://picsum.photos/800/800?random=158","https://picsum.photos/800/800?random=159","https://picsum.photos/800/800?random=160"],"specs":["陶瓷白","主动降噪","星闪连接"],"colors":["陶瓷白","冰霜银","星河蓝"],"brand":"华为","shop":"华为官方旗舰店","shopId":2,"description":"华为 FreeBuds Pro 3 主动降噪真无线蓝牙耳机 星闪连接","stock":7600},
-  {"id":16,"name":"小米 Watch S3 eSIM 智能手表","category":"数码","categoryId":3,"price":999,"originalPrice":1199,"sales":145600,"rating":4.4,"image":"https://picsum.photos/400/400?random=161","images":["https://picsum.photos/800/800?random=162","https://picsum.photos/800/800?random=163","https://picsum.photos/800/800?random=164"],"specs":["eSIM","AMOLED","独立通话"],"colors":["银色","黑色"],"brand":"小米","shop":"小米官方旗舰店","shopId":3,"description":"小米 Watch S3 eSIM版 智能手表 AMOLED屏幕 独立通话","stock":5400},
-  {"id":17,"name":"戴森 V15 Detect 无绳吸尘器","category":"家电","categoryId":4,"price":4999,"originalPrice":5699,"sales":87600,"rating":4.8,"image":"https://picsum.photos/400/400?random=165","images":["https://picsum.photos/800/800?random=166","https://picsum.photos/800/800?random=167","https://picsum.photos/800/800?random=168"],"specs":["金色","激光探测","60分钟续航"],"colors":["金色","蓝色"],"brand":"戴森","shop":"戴森官方旗舰店","shopId":8,"description":"戴森 V15 Detect 无绳吸尘器 激光探测技术 智能灰尘感应","stock":3400},
-  {"id":18,"name":"美的 KFR-35GW 一级能效空调","category":"家电","categoryId":4,"price":3299,"originalPrice":3799,"sales":198700,"rating":4.6,"image":"https://picsum.photos/400/400?random=169","images":["https://picsum.photos/800/800?random=170","https://picsum.photos/800/800?random=171","https://picsum.photos/800/800?random=172"],"specs":["1.5匹","一级能效","变频冷暖"],"colors":["白色"],"brand":"美的","shop":"美的官方旗舰店","shopId":9,"description":"美的 KFR-35GW/N8MHA1 1.5匹 一级能效 变频冷暖 壁挂式空调","stock":9200},
-  {"id":19,"name":"格力 KFR-26GW 云佳 空调","category":"家电","categoryId":4,"price":2699,"originalPrice":2999,"sales":156700,"rating":4.7,"image":"https://picsum.photos/400/400?random=173","images":["https://picsum.photos/800/800?random=174","https://picsum.photos/800/800?random=175","https://picsum.photos/800/800?random=176"],"specs":["1匹","一级能效","自清洁"],"colors":["白色"],"brand":"格力","shop":"格力官方旗舰店","shopId":10,"description":"格力 KFR-26GW/NhGc1B 云佳 1匹 一级能效 变频冷暖 自清洁","stock":8300},
-  {"id":20,"name":"海尔 BCD-500WGHTD 对开门冰箱","category":"家电","categoryId":4,"price":4599,"originalPrice":5299,"sales":123400,"rating":4.7,"image":"https://picsum.photos/400/400?random=177","images":["https://picsum.photos/800/800?random=178","https://picsum.photos/800/800?random=179","https://picsum.photos/800/800?random=180"],"specs":["500升","对开门","风冷无霜"],"colors":["星蕴银"],"brand":"海尔","shop":"海尔官方旗舰店","shopId":11,"description":"海尔 BCD-500WGHTD 500升 对开门冰箱 风冷无霜 双变频","stock":2800},
-  {"id":21,"name":"戴森 Airwrap 多功能美发器","category":"家电","categoryId":4,"price":3699,"originalPrice":4199,"sales":112300,"rating":4.5,"image":"https://picsum.photos/400/400?random=181","images":["https://picsum.photos/800/800?random=182","https://picsum.photos/800/800?random=183","https://picsum.photos/800/800?random=184"],"specs":["镍铜色","康达效应","多风嘴"],"colors":["镍铜色","朱砂红"],"brand":"戴森","shop":"戴森官方旗舰店","shopId":8,"description":"戴森 Airwrap 多功能美发器 康达效应 打造多款造型","stock":5100},
-  {"id":22,"name":"松下 NP-TH1WECN 洗碗机","category":"家电","categoryId":4,"price":2499,"originalPrice":2899,"sales":76500,"rating":4.4,"image":"https://picsum.photos/400/400?random=185","images":["https://picsum.photos/800/800?random=186","https://picsum.photos/800/800?random=187","https://picsum.photos/800/800?random=188"],"specs":["6套","台式","高温除菌"],"colors":["白色"],"brand":"松下","shop":"松下官方旗舰店","shopId":12,"description":"松下 NP-TH1WECN 台式洗碗机 6套容量 高温除菌 节能省水","stock":3900},
-  {"id":23,"name":"苏泊尔 SF40HC88 电饭煲","category":"家电","categoryId":4,"price":599,"originalPrice":799,"sales":234500,"rating":4.5,"image":"https://picsum.photos/400/400?random=189","images":["https://picsum.photos/800/800?random=190","https://picsum.photos/800/800?random=191","https://picsum.photos/800/800?random=192"],"specs":["4L","IH电磁加热","球形内胆"],"colors":["玫瑰金"],"brand":"苏泊尔","shop":"苏泊尔官方旗舰店","shopId":13,"description":"苏泊尔 SF40HC88 IH电磁加热电饭煲 4L 球形内胆 智能预约","stock":14000},
-  {"id":24,"name":"美的 MB-FZ4001 电饭煲","category":"家电","categoryId":4,"price":399,"originalPrice":499,"sales":189700,"rating":4.3,"image":"https://picsum.photos/400/400?random=193","images":["https://picsum.photos/800/800?random=194","https://picsum.photos/800/800?random=195","https://picsum.photos/800/800?random=196"],"specs":["4L","智能预约","不粘内胆"],"colors":["白色"],"brand":"美的","shop":"美的官方旗舰店","shopId":9,"description":"美的 MB-FZ4001 智能电饭煲 4L 不粘内胆 24小时预约","stock":18500},
-  {"id":25,"name":"Nike Air Force 1 经典运动鞋","category":"服饰","categoryId":5,"price":899,"originalPrice":1099,"sales":198700,"rating":4.6,"image":"https://picsum.photos/400/400?random=197","images":["https://picsum.photos/800/800?random=198","https://picsum.photos/800/800?random=199","https://picsum.photos/800/800?random=200"],"specs":["白色","皮革","经典款"],"colors":["白色","黑色","红色"],"brand":"Nike","shop":"Nike官方旗舰店","shopId":14,"description":"Nike Air Force 1 经典运动鞋 白色 皮革鞋面 经典百搭","stock":12000},
-  {"id":26,"name":"Adidas Ultraboost 跑鞋","category":"服饰","categoryId":5,"price":1299,"originalPrice":1599,"sales":154300,"rating":4.7,"image":"https://picsum.photos/400/400?random=201","images":["https://picsum.photos/800/800?random=202","https://picsum.photos/800/800?random=203","https://picsum.photos/800/800?random=204"],"specs":["核心黑","Boost中底","网面"],"colors":["核心黑","云白","灰色"],"brand":"Adidas","shop":"Adidas官方旗舰店","shopId":15,"description":"Adidas Ultraboost 跑鞋 核心黑 经典Boost中底 舒适回弹","stock":9800},
-  {"id":27,"name":"李宁 超轻跑鞋 2024","category":"服饰","categoryId":5,"price":599,"originalPrice":699,"sales":178900,"rating":4.5,"image":"https://picsum.photos/400/400?random=205","images":["https://picsum.photos/800/800?random=206","https://picsum.photos/800/800?random=207","https://picsum.photos/800/800?random=208"],"specs":["标准黑/荧光绿","超轻科技","透气网面"],"colors":["标准黑","荧光绿","云水蓝"],"brand":"李宁","shop":"李宁官方旗舰店","shopId":16,"description":"李宁 超轻跑鞋 2024款 超轻科技 透气网面 缓震回弹","stock":15000},
-  {"id":28,"name":"安踏 C37 软跑鞋","category":"服饰","categoryId":5,"price":449,"originalPrice":549,"sales":213400,"rating":4.4,"image":"https://picsum.photos/400/400?random=209","images":["https://picsum.photos/800/800?random=210","https://picsum.photos/800/800?random=211","https://picsum.photos/800/800?random=212"],"specs":["黑色","C37中底","软弹"],"colors":["黑色","白色","灰蓝色"],"brand":"安踏","shop":"安踏官方旗舰店","shopId":17,"description":"安踏 C37 软跑鞋 黑色 软弹中底 舒适缓震 日常跑步","stock":18000},
-  {"id":29,"name":"优衣库 男装 精纺美利奴羊毛衫","category":"服饰","categoryId":5,"price":299,"originalPrice":399,"sales":176500,"rating":4.3,"image":"https://picsum.photos/400/400?random=213","images":["https://picsum.photos/800/800?random=214","https://picsum.photos/800/800?random=215","https://picsum.photos/800/800?random=216"],"specs":["深灰色","美利奴羊毛","长袖"],"colors":["深灰色","黑色","藏青色","米色"],"brand":"优衣库","shop":"优衣库官方旗舰店","shopId":18,"description":"优衣库 男装 精纺美利奴羊毛衫 柔软触感 修身版型","stock":22000},
-  {"id":30,"name":"优衣库 女装 轻盈羽绒服","category":"服饰","categoryId":5,"price":599,"originalPrice":799,"sales":165400,"rating":4.5,"image":"https://picsum.photos/400/400?random=217","images":["https://picsum.photos/800/800?random=218","https://picsum.photos/800/800?random=219","https://picsum.photos/800/800?random=220"],"specs":["黑色","羽绒","轻便"],"colors":["黑色","白色","红色","米色"],"brand":"优衣库","shop":"优衣库官方旗舰店","shopId":18,"description":"优衣库 女装 高级轻型羽绒服 轻盈保暖 可收纳设计","stock":18500},
-  {"id":31,"name":"Nike Dri-FIT 运动T恤","category":"服饰","categoryId":5,"price":299,"originalPrice":349,"sales":245600,"rating":4.4,"image":"https://picsum.photos/400/400?random=221","images":["https://picsum.photos/800/800?random=222","https://picsum.photos/800/800?random=223","https://picsum.photos/800/800?random=224"],"specs":["黑色","Dri-FIT","速干"],"colors":["黑色","白色","灰色","蓝色"],"brand":"Nike","shop":"Nike官方旗舰店","shopId":14,"description":"Nike Dri-FIT 男子运动T恤 速干面料 舒适透气","stock":28000},
-  {"id":32,"name":"Adidas 三叶草 经典卫衣","category":"服饰","categoryId":5,"price":499,"originalPrice":649,"sales":134500,"rating":4.3,"image":"https://picsum.photos/400/400?random=225","images":["https://picsum.photos/800/800?random=226","https://picsum.photos/800/800?random=227","https://picsum.photos/800/800?random=228"],"specs":["黑色","棉质","三叶草标志"],"colors":["黑色","白色","灰色","绿色"],"brand":"Adidas","shop":"Adidas官方旗舰店","shopId":15,"description":"Adidas 三叶草 经典卫衣 棉质面料 休闲百搭","stock":16500},
-  {"id":33,"name":"李宁 卫衣 国潮系列","category":"服饰","categoryId":5,"price":399,"originalPrice":499,"sales":156700,"rating":4.6,"image":"https://picsum.photos/400/400?random=229","images":["https://picsum.photos/800/800?random=230","https://picsum.photos/800/800?random=231","https://picsum.photos/800/800?random=232"],"specs":["中国红","棉质","国潮印花"],"colors":["中国红","黑色","白色"],"brand":"李宁","shop":"李宁官方旗舰店","shopId":16,"description":"李宁 卫衣 国潮系列 中国红 棉质面料 传统与现代融合","stock":11000},
-  {"id":34,"name":"安踏 速干运动裤","category":"服饰","categoryId":5,"price":249,"originalPrice":299,"sales":187600,"rating":4.2,"image":"https://picsum.photos/400/400?random=233","images":["https://picsum.photos/800/800?random=234","https://picsum.photos/800/800?random=235","https://picsum.photos/800/800?random=236"],"specs":["黑色","速干","弹力"],"colors":["黑色","深灰色","藏青色"],"brand":"安踏","shop":"安踏官方旗舰店","shopId":17,"description":"安踏 速干运动裤 弹力面料 透气速干 适合跑步健身","stock":22000},
-  {"id":35,"name":"SK-II 神仙水 230ml","category":"美妆","categoryId":6,"price":1599,"originalPrice":1899,"sales":198700,"rating":4.9,"image":"https://picsum.photos/400/400?random=237","images":["https://picsum.photos/800/800?random=238","https://picsum.photos/800/800?random=239","https://picsum.photos/800/800?random=240"],"specs":["230ml","精华露","日本进口"],"colors":["透明"],"brand":"SK-II","shop":"SK-II官方旗舰店","shopId":19,"description":"SK-II 神仙水 护肤精华露 230ml 改善肤质 提亮肤色","stock":8700},
-  {"id":36,"name":"雅诗兰黛 小棕瓶精华 50ml","category":"美妆","categoryId":6,"price":1099,"originalPrice":1299,"sales":176500,"rating":4.8,"image":"https://picsum.photos/400/400?random=241","images":["https://picsum.photos/800/800?random=242","https://picsum.photos/800/800?random=243","https://picsum.photos/800/800?random=244"],"specs":["50ml","面部精华","抗老"],"colors":["棕色瓶"],"brand":"雅诗兰黛","shop":"雅诗兰黛官方旗舰店","shopId":20,"description":"雅诗兰黛 小棕瓶精华 50ml 修护肌肤 淡化细纹 抗皱紧致","stock":6200},
-  {"id":37,"name":"欧莱雅 复颜玻尿酸水光充盈导入乳液","category":"美妆","categoryId":6,"price":329,"originalPrice":429,"sales":234500,"rating":4.5,"image":"https://picsum.photos/400/400?random=245","images":["https://picsum.photos/800/800?random=246","https://picsum.photos/800/800?random=247","https://picsum.photos/800/800?random=248"],"specs":["110ml","玻尿酸","保湿"],"colors":["白色"],"brand":"欧莱雅","shop":"欧莱雅官方旗舰店","shopId":21,"description":"欧莱雅 复颜玻尿酸水光充盈导入乳液 110ml 补水保湿 紧致肌肤","stock":15000},
-  {"id":38,"name":"SK-II 小灯泡 美白精华 50ml","category":"美妆","categoryId":6,"price":1899,"originalPrice":2199,"sales":123400,"rating":4.7,"image":"https://picsum.photos/400/400?random=249","images":["https://picsum.photos/800/800?random=250","https://picsum.photos/800/800?random=251","https://picsum.photos/800/800?random=252"],"specs":["50ml","美白","淡斑"],"colors":["白色瓶"],"brand":"SK-II","shop":"SK-II官方旗舰店","shopId":19,"description":"SK-II 小灯泡 光蕴环采钻白精华 50ml 美白淡斑 提亮肤色","stock":4500},
-  {"id":39,"name":"雅诗兰黛 DW持妆粉底液","category":"美妆","categoryId":6,"price":459,"originalPrice":529,"sales":187600,"rating":4.6,"image":"https://picsum.photos/400/400?random=253","images":["https://picsum.photos/800/800?random=254","https://picsum.photos/800/800?random=255","https://picsum.photos/800/800?random=256"],"specs":["30ml","持妆","遮瑕"],"colors":["1W1","2W1","1N1","2N1"],"brand":"雅诗兰黛","shop":"雅诗兰黛官方旗舰店","shopId":20,"description":"雅诗兰黛 DW持妆粉底液 30ml 24小时持妆 高遮瑕 控油","stock":9800},
-  {"id":40,"name":"欧莱雅 男士水能保湿三件套","category":"美妆","categoryId":6,"price":199,"originalPrice":269,"sales":256700,"rating":4.3,"image":"https://picsum.photos/400/400?random=257","images":["https://picsum.photos/800/800?random=258","https://picsum.photos/800/800?random=259","https://picsum.photos/800/800?random=260"],"specs":["洁面+水+乳","保湿","男士"],"colors":["蓝色"],"brand":"欧莱雅","shop":"欧莱雅官方旗舰店","shopId":21,"description":"欧莱雅 男士水能保湿三件套 洁面膏+爽肤水+滋润乳 控油清爽","stock":25000},
-  {"id":41,"name":"三只松鼠 坚果大礼包 2688g","category":"食品","categoryId":7,"price":168,"originalPrice":228,"sales":345600,"rating":4.6,"image":"https://picsum.photos/400/400?random=261","images":["https://picsum.photos/800/800?random=262","https://picsum.photos/800/800?random=263","https://picsum.photos/800/800?random=264"],"specs":["2688g","坚果","年货"],"colors":["红色包装"],"brand":"三只松鼠","shop":"三只松鼠官方旗舰店","shopId":22,"description":"三只松鼠 坚果大礼包 2688g 混合坚果 年货送礼 每日坚果","stock":32000},
-  {"id":42,"name":"良品铺子 零食大礼包 2000g","category":"食品","categoryId":7,"price":138,"originalPrice":188,"sales":287600,"rating":4.5,"image":"https://picsum.photos/400/400?random=265","images":["https://picsum.photos/800/800?random=266","https://picsum.photos/800/800?random=267","https://picsum.photos/800/800?random=268"],"specs":["2000g","混合零食","礼盒"],"colors":["粉色包装"],"brand":"良品铺子","shop":"良品铺子官方旗舰店","shopId":23,"description":"良品铺子 零食大礼包 2000g 混合零食 送礼佳品 休闲零食","stock":28000},
-  {"id":43,"name":"三只松鼠 每日坚果 750g 30袋","category":"食品","categoryId":7,"price":79,"originalPrice":109,"sales":456700,"rating":4.7,"image":"https://picsum.photos/400/400?random=269","images":["https://picsum.photos/800/800?random=270","https://picsum.photos/800/800?random=271","https://picsum.photos/800/800?random=272"],"specs":["750g","30袋","每日坚果"],"colors":["黄色包装"],"brand":"三只松鼠","shop":"三只松鼠官方旗舰店","shopId":22,"description":"三只松鼠 每日坚果 750g 30袋独立包装 混合坚果 健康零食","stock":40000},
-  {"id":44,"name":"良品铺子 肉脯肉干大礼包","category":"食品","categoryId":7,"price":99,"originalPrice":139,"sales":234500,"rating":4.4,"image":"https://picsum.photos/400/400?random=273","images":["https://picsum.photos/800/800?random=274","https://picsum.photos/800/800?random=275","https://picsum.photos/800/800?random=276"],"specs":["500g","肉脯","肉干"],"colors":["红色包装"],"brand":"良品铺子","shop":"良品铺子官方旗舰店","shopId":23,"description":"良品铺子 肉脯肉干大礼包 500g 猪肉脯牛肉干 休闲零食","stock":22000},
-  {"id":45,"name":"良品铺子 有机黑芝麻丸 120g","category":"食品","categoryId":7,"price":39,"originalPrice":49,"sales":198700,"rating":4.3,"image":"https://picsum.photos/400/400?random=277","images":["https://picsum.photos/800/800?random=278","https://picsum.photos/800/800?random=279","https://picsum.photos/800/800?random=280"],"specs":["120g","黑芝麻","独立包装"],"colors":["黑色包装"],"brand":"良品铺子","shop":"良品铺子官方旗舰店","shopId":23,"description":"良品铺子 有机黑芝麻丸 120g 传统芝麻丸 独立包装 即食养生","stock":18000},
-  {"id":46,"name":"小米 智能门锁 Pro 指纹锁","category":"家居","categoryId":8,"price":1699,"originalPrice":1999,"sales":123400,"rating":4.7,"image":"https://picsum.photos/400/400?random=281","images":["https://picsum.photos/800/800?random=282","https://picsum.photos/800/800?random=283","https://picsum.photos/800/800?random=284"],"specs":["指纹+密码+蓝牙","智能联动","安全"],"colors":["黑色","银色"],"brand":"小米","shop":"小米官方旗舰店","shopId":3,"description":"小米 智能门锁 Pro 指纹锁 密码锁 蓝牙解锁 小米智能家居联动","stock":6200},
-  {"id":47,"name":"松下 智能马桶盖 DL-PN30CWS","category":"家居","categoryId":8,"price":2299,"originalPrice":2699,"sales":87600,"rating":4.6,"image":"https://picsum.photos/400/400?random=285","images":["https://picsum.photos/800/800?random=286","https://picsum.photos/800/800?random=287","https://picsum.photos/800/800?random=288"],"specs":["即热式","温水冲洗","暖风烘干"],"colors":["白色"],"brand":"松下","shop":"松下官方旗舰店","shopId":12,"description":"松下 DL-PN30CWS 智能马桶盖 即热式温水冲洗 暖风烘干 除菌","stock":3400},
-  {"id":48,"name":"苏泊尔 不锈钢炒锅 32cm","category":"家居","categoryId":8,"price":299,"originalPrice":399,"sales":234500,"rating":4.4,"image":"https://picsum.photos/400/400?random=289","images":["https://picsum.photos/800/800?random=290","https://picsum.photos/800/800?random=291","https://picsum.photos/800/800?random=292"],"specs":["32cm","不锈钢","无涂层"],"colors":["银色"],"brand":"苏泊尔","shop":"苏泊尔官方旗舰店","shopId":13,"description":"苏泊尔 不锈钢炒锅 32cm 无涂层 不粘 燃气灶电磁炉通用","stock":18000},
-  {"id":49,"name":"海尔 扫地机器人 全能版","category":"家居","categoryId":8,"price":3299,"originalPrice":3999,"sales":98700,"rating":4.5,"image":"https://picsum.photos/400/400?random=293","images":["https://picsum.photos/800/800?random=294","https://picsum.photos/800/800?random=295","https://picsum.photos/800/800?random=296"],"specs":["扫拖一体","自动集尘","激光导航"],"colors":["白色","黑色"],"brand":"海尔","shop":"海尔官方旗舰店","shopId":11,"description":"海尔 扫地机器人 全能版 扫拖一体 自动集尘 激光导航 智能规划","stock":4600},
-  {"id":50,"name":"美的 除湿机 CF22BD/N1-DP7","category":"家居","categoryId":8,"price":1499,"originalPrice":1799,"sales":76500,"rating":4.3,"image":"https://picsum.photos/400/400?random=297","images":["https://picsum.photos/800/800?random=298","https://picsum.photos/800/800?random=299","https://picsum.photos/800/800?random=300"],"specs":["22L/天","除湿","干衣"],"colors":["白色"],"brand":"美的","shop":"美的官方旗舰店","shopId":9,"description":"美的 除湿机 CF22BD/N1-DP7 22L/天 家用除湿 干衣 静音节能","stock":3800}
+  {
+    "id": 1,
+    "name": "Apple iPhone 15 Pro Max 256GB",
+    "category": "手机",
+    "categoryId": 1,
+    "price": 9999,
+    "originalPrice": 11999,
+    "sales": 185600,
+    "rating": 4.8,
+    "image": "https://picsum.photos/seed/AppleiPhone15ProMax20/400/400",
+    "images": [
+      "https://picsum.photos/seed/AppleiPhone15ProMax20_0/800/800",
+      "https://picsum.photos/seed/AppleiPhone15ProMax20_1/800/800",
+      "https://picsum.photos/seed/AppleiPhone15ProMax20_2/800/800",
+      "https://picsum.photos/seed/AppleiPhone15ProMax20_3/800/800"
+    ],
+    "specs": [
+      "256GB",
+      "深空黑",
+      "A17 Pro芯片"
+    ],
+    "colors": [
+      "深空黑",
+      "银色",
+      "深蓝色",
+      "金色"
+    ],
+    "brand": "Apple",
+    "shop": "Apple官方旗舰店",
+    "shopId": 1,
+    "description": "Apple iPhone 15 Pro Max 256GB 深空黑色 支持灵动岛 钛金属设计",
+    "stock": 5600
+  },
+  {
+    "id": 2,
+    "name": "华为 Mate 60 Pro 昆仑玻璃",
+    "category": "手机",
+    "categoryId": 1,
+    "price": 6999,
+    "originalPrice": 7999,
+    "sales": 156800,
+    "rating": 4.9,
+    "image": "https://picsum.photos/seed/华为Mate60Pro昆仑玻璃1/400/400",
+    "images": [
+      "https://picsum.photos/seed/华为Mate60Pro昆仑玻璃1_0/800/800",
+      "https://picsum.photos/seed/华为Mate60Pro昆仑玻璃1_1/800/800",
+      "https://picsum.photos/seed/华为Mate60Pro昆仑玻璃1_2/800/800"
+    ],
+    "specs": [
+      "512GB",
+      "雅丹黑",
+      "卫星通话"
+    ],
+    "colors": [
+      "雅丹黑",
+      "白沙银",
+      "雅川青",
+      "南糯紫"
+    ],
+    "brand": "华为",
+    "shop": "华为官方旗舰店",
+    "shopId": 2,
+    "description": "华为 Mate 60 Pro 512GB 雅丹黑 卫星通话 昆仑玻璃 鸿蒙系统",
+    "stock": 4300
+  },
+  {
+    "id": 3,
+    "name": "小米14 Ultra 徕卡光学",
+    "category": "手机",
+    "categoryId": 1,
+    "price": 5999,
+    "originalPrice": 6499,
+    "sales": 123400,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/小米14Ultra徕卡光学2/400/400",
+    "images": [
+      "https://picsum.photos/seed/小米14Ultra徕卡光学2_0/800/800",
+      "https://picsum.photos/seed/小米14Ultra徕卡光学2_1/800/800",
+      "https://picsum.photos/seed/小米14Ultra徕卡光学2_2/800/800",
+      "https://picsum.photos/seed/小米14Ultra徕卡光学2_3/800/800"
+    ],
+    "specs": [
+      "512GB",
+      "黑色",
+      "骁龙8 Gen3"
+    ],
+    "colors": [
+      "黑色",
+      "白色",
+      "岩石青"
+    ],
+    "brand": "小米",
+    "shop": "小米官方旗舰店",
+    "shopId": 3,
+    "description": "小米14 Ultra 512GB 黑色 骁龙8 Gen3 徕卡光学 Summilux镜头",
+    "stock": 8200
+  },
+  {
+    "id": 4,
+    "name": "OPPO Find X7 Ultra 哈苏影像",
+    "category": "手机",
+    "categoryId": 1,
+    "price": 5999,
+    "originalPrice": 6799,
+    "sales": 98700,
+    "rating": 4.6,
+    "image": "https://picsum.photos/seed/OPPOFindX7Ultra哈苏影像3/400/400",
+    "images": [
+      "https://picsum.photos/seed/OPPOFindX7Ultra哈苏影像3_0/800/800",
+      "https://picsum.photos/seed/OPPOFindX7Ultra哈苏影像3_1/800/800",
+      "https://picsum.photos/seed/OPPOFindX7Ultra哈苏影像3_2/800/800"
+    ],
+    "specs": [
+      "512GB",
+      "海阔天空",
+      "哈苏人像"
+    ],
+    "colors": [
+      "海阔天空",
+      "大漠银月",
+      "松涛暮色"
+    ],
+    "brand": "OPPO",
+    "shop": "OPPO官方旗舰店",
+    "shopId": 4,
+    "description": "OPPO Find X7 Ultra 512GB 海阔天空 哈苏影像 双潜望四摄",
+    "stock": 6700
+  },
+  {
+    "id": 5,
+    "name": "vivo X100 Pro 蔡司镜头",
+    "category": "手机",
+    "categoryId": 1,
+    "price": 4999,
+    "originalPrice": 5499,
+    "sales": 112300,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/vivoX100Pro蔡司镜头4/400/400",
+    "images": [
+      "https://picsum.photos/seed/vivoX100Pro蔡司镜头4_0/800/800",
+      "https://picsum.photos/seed/vivoX100Pro蔡司镜头4_1/800/800",
+      "https://picsum.photos/seed/vivoX100Pro蔡司镜头4_2/800/800",
+      "https://picsum.photos/seed/vivoX100Pro蔡司镜头4_3/800/800"
+    ],
+    "specs": [
+      "512GB",
+      "星际蓝",
+      "蔡司T*镀膜"
+    ],
+    "colors": [
+      "星际蓝",
+      "日月星辰",
+      "白月光"
+    ],
+    "brand": "vivo",
+    "shop": "vivo官方旗舰店",
+    "shopId": 5,
+    "description": "vivo X100 Pro 512GB 星际蓝 蔡司超级长焦 蓝海电池",
+    "stock": 5500
+  },
+  {
+    "id": 6,
+    "name": "Apple MacBook Pro 14英寸 M3 Pro",
+    "category": "电脑",
+    "categoryId": 2,
+    "price": 14999,
+    "originalPrice": 16999,
+    "sales": 87600,
+    "rating": 4.9,
+    "image": "https://picsum.photos/seed/AppleMacBookPro14英寸M5/400/400",
+    "images": [
+      "https://picsum.photos/seed/AppleMacBookPro14英寸M5_0/800/800",
+      "https://picsum.photos/seed/AppleMacBookPro14英寸M5_1/800/800",
+      "https://picsum.photos/seed/AppleMacBookPro14英寸M5_2/800/800",
+      "https://picsum.photos/seed/AppleMacBookPro14英寸M5_3/800/800"
+    ],
+    "specs": [
+      "18GB+512GB",
+      "银色",
+      "M3 Pro"
+    ],
+    "colors": [
+      "银色",
+      "深空灰",
+      "深空黑"
+    ],
+    "brand": "Apple",
+    "shop": "Apple官方旗舰店",
+    "shopId": 1,
+    "description": "Apple MacBook Pro 14英寸 M3 Pro芯片 18GB统一内存 512GB存储",
+    "stock": 3200
+  },
+  {
+    "id": 7,
+    "name": "联想 ThinkPad X1 Carbon Gen 11",
+    "category": "电脑",
+    "categoryId": 2,
+    "price": 10999,
+    "originalPrice": 12999,
+    "sales": 65400,
+    "rating": 4.6,
+    "image": "https://picsum.photos/seed/联想ThinkPadX1CarbonGe6/400/400",
+    "images": [
+      "https://picsum.photos/seed/联想ThinkPadX1CarbonGe6_0/800/800",
+      "https://picsum.photos/seed/联想ThinkPadX1CarbonGe6_1/800/800",
+      "https://picsum.photos/seed/联想ThinkPadX1CarbonGe6_2/800/800",
+      "https://picsum.photos/seed/联想ThinkPadX1CarbonGe6_3/800/800"
+    ],
+    "specs": [
+      "16GB+512GB",
+      "黑色",
+      "i7-1360P"
+    ],
+    "colors": [
+      "黑色",
+      "银色"
+    ],
+    "brand": "联想",
+    "shop": "联想官方旗舰店",
+    "shopId": 6,
+    "description": "联想 ThinkPad X1 Carbon Gen 11 14英寸 商务轻薄本 i7-1360P",
+    "stock": 2800
+  },
+  {
+    "id": 8,
+    "name": "华为 MateBook X Pro 2024",
+    "category": "电脑",
+    "categoryId": 2,
+    "price": 11999,
+    "originalPrice": 13999,
+    "sales": 76500,
+    "rating": 4.8,
+    "image": "https://picsum.photos/seed/华为MateBookXPro20247/400/400",
+    "images": [
+      "https://picsum.photos/seed/华为MateBookXPro20247_0/800/800",
+      "https://picsum.photos/seed/华为MateBookXPro20247_1/800/800",
+      "https://picsum.photos/seed/华为MateBookXPro20247_2/800/800"
+    ],
+    "specs": [
+      "16GB+1TB",
+      "砚黑",
+      "酷睿Ultra 9"
+    ],
+    "colors": [
+      "砚黑",
+      "皓月银",
+      "云锦白"
+    ],
+    "brand": "华为",
+    "shop": "华为官方旗舰店",
+    "shopId": 2,
+    "description": "华为 MateBook X Pro 2024 14.2英寸 超轻轻薄本 酷睿Ultra 9",
+    "stock": 3500
+  },
+  {
+    "id": 9,
+    "name": "小米 RedmiBook Pro 16 2024",
+    "category": "电脑",
+    "categoryId": 2,
+    "price": 6999,
+    "originalPrice": 7999,
+    "sales": 143200,
+    "rating": 4.5,
+    "image": "https://picsum.photos/seed/小米RedmiBookPro1620248/400/400",
+    "images": [
+      "https://picsum.photos/seed/小米RedmiBookPro1620248_0/800/800",
+      "https://picsum.photos/seed/小米RedmiBookPro1620248_1/800/800",
+      "https://picsum.photos/seed/小米RedmiBookPro1620248_2/800/800",
+      "https://picsum.photos/seed/小米RedmiBookPro1620248_3/800/800"
+    ],
+    "specs": [
+      "16GB+512GB",
+      "星光银",
+      "i7-14650HX"
+    ],
+    "colors": [
+      "星光银",
+      "深空灰"
+    ],
+    "brand": "小米",
+    "shop": "小米官方旗舰店",
+    "shopId": 3,
+    "description": "小米 RedmiBook Pro 16 2024 16英寸 高性能轻薄本 i7-14650HX",
+    "stock": 7200
+  },
+  {
+    "id": 10,
+    "name": "联想拯救者 Y9000P 2024",
+    "category": "电脑",
+    "categoryId": 2,
+    "price": 9499,
+    "originalPrice": 10999,
+    "sales": 98700,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/联想拯救者Y9000P20249/400/400",
+    "images": [
+      "https://picsum.photos/seed/联想拯救者Y9000P20249_0/800/800",
+      "https://picsum.photos/seed/联想拯救者Y9000P20249_1/800/800",
+      "https://picsum.photos/seed/联想拯救者Y9000P20249_2/800/800"
+    ],
+    "specs": [
+      "16GB+1TB",
+      "钛晶灰",
+      "i9-14900HX"
+    ],
+    "colors": [
+      "钛晶灰",
+      "冰魄白"
+    ],
+    "brand": "联想",
+    "shop": "联想官方旗舰店",
+    "shopId": 6,
+    "description": "联想拯救者 Y9000P 2024 16英寸 电竞游戏本 i9-14900HX RTX4060",
+    "stock": 4100
+  },
+  {
+    "id": 11,
+    "name": "Sony WH-1000XM5 降噪耳机",
+    "category": "数码",
+    "categoryId": 3,
+    "price": 2499,
+    "originalPrice": 2999,
+    "sales": 165400,
+    "rating": 4.8,
+    "image": "https://picsum.photos/seed/SonyWH1000XM5降噪耳机10/400/400",
+    "images": [
+      "https://picsum.photos/seed/SonyWH1000XM5降噪耳机10_0/800/800",
+      "https://picsum.photos/seed/SonyWH1000XM5降噪耳机10_1/800/800",
+      "https://picsum.photos/seed/SonyWH1000XM5降噪耳机10_2/800/800"
+    ],
+    "specs": [
+      "黑色",
+      "头戴式",
+      "30小时续航"
+    ],
+    "colors": [
+      "黑色",
+      "铂金银",
+      "午夜蓝"
+    ],
+    "brand": "Sony",
+    "shop": "Sony官方旗舰店",
+    "shopId": 7,
+    "description": "Sony WH-1000XM5 头戴式无线降噪耳机 高清通话 30小时续航",
+    "stock": 8900
+  },
+  {
+    "id": 12,
+    "name": "小米 Xiaomi 14 Ultra 拍照套装",
+    "category": "数码",
+    "categoryId": 3,
+    "price": 899,
+    "originalPrice": 999,
+    "sales": 87600,
+    "rating": 4.5,
+    "image": "https://picsum.photos/seed/小米Xiaomi14Ultra拍照套装11/400/400",
+    "images": [
+      "https://picsum.photos/seed/小米Xiaomi14Ultra拍照套装11_0/800/800",
+      "https://picsum.photos/seed/小米Xiaomi14Ultra拍照套装11_1/800/800",
+      "https://picsum.photos/seed/小米Xiaomi14Ultra拍照套装11_2/800/800",
+      "https://picsum.photos/seed/小米Xiaomi14Ultra拍照套装11_3/800/800"
+    ],
+    "specs": [
+      "专业摄影手柄",
+      "67mm滤镜转接环"
+    ],
+    "colors": [
+      "黑色"
+    ],
+    "brand": "小米",
+    "shop": "小米官方旗舰店",
+    "shopId": 3,
+    "description": "小米 Xiaomi 14 Ultra 专业摄影套装 手柄+滤镜转接环",
+    "stock": 4500
+  },
+  {
+    "id": 13,
+    "name": "Sony PlayStation 5 光驱版",
+    "category": "数码",
+    "categoryId": 3,
+    "price": 3899,
+    "originalPrice": 4299,
+    "sales": 198700,
+    "rating": 4.9,
+    "image": "https://picsum.photos/seed/SonyPlayStation5光驱版12/400/400",
+    "images": [
+      "https://picsum.photos/seed/SonyPlayStation5光驱版12_0/800/800",
+      "https://picsum.photos/seed/SonyPlayStation5光驱版12_1/800/800",
+      "https://picsum.photos/seed/SonyPlayStation5光驱版12_2/800/800",
+      "https://picsum.photos/seed/SonyPlayStation5光驱版12_3/800/800"
+    ],
+    "specs": [
+      "825GB SSD",
+      "白色",
+      "4K蓝光光驱"
+    ],
+    "colors": [
+      "白色",
+      "黑色"
+    ],
+    "brand": "Sony",
+    "shop": "Sony官方旗舰店",
+    "shopId": 7,
+    "description": "Sony PlayStation 5 光驱版 家用游戏主机 825GB SSD 支持4K",
+    "stock": 12000
+  },
+  {
+    "id": 14,
+    "name": "Apple AirPods Pro 第二代 USB-C",
+    "category": "数码",
+    "categoryId": 3,
+    "price": 1899,
+    "originalPrice": 1999,
+    "sales": 234500,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/AppleAirPodsPro第二代US13/400/400",
+    "images": [
+      "https://picsum.photos/seed/AppleAirPodsPro第二代US13_0/800/800",
+      "https://picsum.photos/seed/AppleAirPodsPro第二代US13_1/800/800",
+      "https://picsum.photos/seed/AppleAirPodsPro第二代US13_2/800/800"
+    ],
+    "specs": [
+      "USB-C",
+      "主动降噪",
+      "自适应音频"
+    ],
+    "colors": [
+      "白色"
+    ],
+    "brand": "Apple",
+    "shop": "Apple官方旗舰店",
+    "shopId": 1,
+    "description": "Apple AirPods Pro 第二代 USB-C 主动降噪 自适应音频 通透模式",
+    "stock": 15000
+  },
+  {
+    "id": 15,
+    "name": "华为 FreeBuds Pro 3 降噪耳机",
+    "category": "数码",
+    "categoryId": 3,
+    "price": 1499,
+    "originalPrice": 1699,
+    "sales": 123400,
+    "rating": 4.6,
+    "image": "https://picsum.photos/seed/华为FreeBudsPro3降噪耳机14/400/400",
+    "images": [
+      "https://picsum.photos/seed/华为FreeBudsPro3降噪耳机14_0/800/800",
+      "https://picsum.photos/seed/华为FreeBudsPro3降噪耳机14_1/800/800",
+      "https://picsum.photos/seed/华为FreeBudsPro3降噪耳机14_2/800/800"
+    ],
+    "specs": [
+      "陶瓷白",
+      "主动降噪",
+      "星闪连接"
+    ],
+    "colors": [
+      "陶瓷白",
+      "冰霜银",
+      "星河蓝"
+    ],
+    "brand": "华为",
+    "shop": "华为官方旗舰店",
+    "shopId": 2,
+    "description": "华为 FreeBuds Pro 3 主动降噪真无线蓝牙耳机 星闪连接",
+    "stock": 7600
+  },
+  {
+    "id": 16,
+    "name": "小米 Watch S3 eSIM 智能手表",
+    "category": "数码",
+    "categoryId": 3,
+    "price": 999,
+    "originalPrice": 1199,
+    "sales": 145600,
+    "rating": 4.4,
+    "image": "https://picsum.photos/seed/小米WatchS3eSIM智能手表15/400/400",
+    "images": [
+      "https://picsum.photos/seed/小米WatchS3eSIM智能手表15_0/800/800",
+      "https://picsum.photos/seed/小米WatchS3eSIM智能手表15_1/800/800",
+      "https://picsum.photos/seed/小米WatchS3eSIM智能手表15_2/800/800"
+    ],
+    "specs": [
+      "eSIM",
+      "AMOLED",
+      "独立通话"
+    ],
+    "colors": [
+      "银色",
+      "黑色"
+    ],
+    "brand": "小米",
+    "shop": "小米官方旗舰店",
+    "shopId": 3,
+    "description": "小米 Watch S3 eSIM版 智能手表 AMOLED屏幕 独立通话",
+    "stock": 5400
+  },
+  {
+    "id": 17,
+    "name": "戴森 V15 Detect 无绳吸尘器",
+    "category": "家电",
+    "categoryId": 4,
+    "price": 4999,
+    "originalPrice": 5699,
+    "sales": 87600,
+    "rating": 4.8,
+    "image": "https://picsum.photos/seed/戴森V15Detect无绳吸尘器16/400/400",
+    "images": [
+      "https://picsum.photos/seed/戴森V15Detect无绳吸尘器16_0/800/800",
+      "https://picsum.photos/seed/戴森V15Detect无绳吸尘器16_1/800/800",
+      "https://picsum.photos/seed/戴森V15Detect无绳吸尘器16_2/800/800",
+      "https://picsum.photos/seed/戴森V15Detect无绳吸尘器16_3/800/800"
+    ],
+    "specs": [
+      "金色",
+      "激光探测",
+      "60分钟续航"
+    ],
+    "colors": [
+      "金色",
+      "蓝色"
+    ],
+    "brand": "戴森",
+    "shop": "戴森官方旗舰店",
+    "shopId": 8,
+    "description": "戴森 V15 Detect 无绳吸尘器 激光探测技术 智能灰尘感应",
+    "stock": 3400
+  },
+  {
+    "id": 18,
+    "name": "美的 KFR-35GW 一级能效空调",
+    "category": "家电",
+    "categoryId": 4,
+    "price": 3299,
+    "originalPrice": 3799,
+    "sales": 198700,
+    "rating": 4.6,
+    "image": "https://picsum.photos/seed/美的KFR35GW一级能效空调17/400/400",
+    "images": [
+      "https://picsum.photos/seed/美的KFR35GW一级能效空调17_0/800/800",
+      "https://picsum.photos/seed/美的KFR35GW一级能效空调17_1/800/800",
+      "https://picsum.photos/seed/美的KFR35GW一级能效空调17_2/800/800",
+      "https://picsum.photos/seed/美的KFR35GW一级能效空调17_3/800/800"
+    ],
+    "specs": [
+      "1.5匹",
+      "一级能效",
+      "变频冷暖"
+    ],
+    "colors": [
+      "白色"
+    ],
+    "brand": "美的",
+    "shop": "美的官方旗舰店",
+    "shopId": 9,
+    "description": "美的 KFR-35GW/N8MHA1 1.5匹 一级能效 变频冷暖 壁挂式空调",
+    "stock": 9200
+  },
+  {
+    "id": 19,
+    "name": "格力 KFR-26GW 云佳 空调",
+    "category": "家电",
+    "categoryId": 4,
+    "price": 2699,
+    "originalPrice": 2999,
+    "sales": 156700,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/格力KFR26GW云佳空调18/400/400",
+    "images": [
+      "https://picsum.photos/seed/格力KFR26GW云佳空调18_0/800/800",
+      "https://picsum.photos/seed/格力KFR26GW云佳空调18_1/800/800",
+      "https://picsum.photos/seed/格力KFR26GW云佳空调18_2/800/800",
+      "https://picsum.photos/seed/格力KFR26GW云佳空调18_3/800/800"
+    ],
+    "specs": [
+      "1匹",
+      "一级能效",
+      "自清洁"
+    ],
+    "colors": [
+      "白色"
+    ],
+    "brand": "格力",
+    "shop": "格力官方旗舰店",
+    "shopId": 10,
+    "description": "格力 KFR-26GW/NhGc1B 云佳 1匹 一级能效 变频冷暖 自清洁",
+    "stock": 8300
+  },
+  {
+    "id": 20,
+    "name": "海尔 BCD-500WGHTD 对开门冰箱",
+    "category": "家电",
+    "categoryId": 4,
+    "price": 4599,
+    "originalPrice": 5299,
+    "sales": 123400,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/海尔BCD500WGHTD对开门冰箱19/400/400",
+    "images": [
+      "https://picsum.photos/seed/海尔BCD500WGHTD对开门冰箱19_0/800/800",
+      "https://picsum.photos/seed/海尔BCD500WGHTD对开门冰箱19_1/800/800",
+      "https://picsum.photos/seed/海尔BCD500WGHTD对开门冰箱19_2/800/800",
+      "https://picsum.photos/seed/海尔BCD500WGHTD对开门冰箱19_3/800/800"
+    ],
+    "specs": [
+      "500升",
+      "对开门",
+      "风冷无霜"
+    ],
+    "colors": [
+      "星蕴银"
+    ],
+    "brand": "海尔",
+    "shop": "海尔官方旗舰店",
+    "shopId": 11,
+    "description": "海尔 BCD-500WGHTD 500升 对开门冰箱 风冷无霜 双变频",
+    "stock": 2800
+  },
+  {
+    "id": 21,
+    "name": "戴森 Airwrap 多功能美发器",
+    "category": "家电",
+    "categoryId": 4,
+    "price": 3699,
+    "originalPrice": 4199,
+    "sales": 112300,
+    "rating": 4.5,
+    "image": "https://picsum.photos/seed/戴森Airwrap多功能美发器20/400/400",
+    "images": [
+      "https://picsum.photos/seed/戴森Airwrap多功能美发器20_0/800/800",
+      "https://picsum.photos/seed/戴森Airwrap多功能美发器20_1/800/800",
+      "https://picsum.photos/seed/戴森Airwrap多功能美发器20_2/800/800"
+    ],
+    "specs": [
+      "镍铜色",
+      "康达效应",
+      "多风嘴"
+    ],
+    "colors": [
+      "镍铜色",
+      "朱砂红"
+    ],
+    "brand": "戴森",
+    "shop": "戴森官方旗舰店",
+    "shopId": 8,
+    "description": "戴森 Airwrap 多功能美发器 康达效应 打造多款造型",
+    "stock": 5100
+  },
+  {
+    "id": 22,
+    "name": "松下 NP-TH1WECN 洗碗机",
+    "category": "家电",
+    "categoryId": 4,
+    "price": 2499,
+    "originalPrice": 2899,
+    "sales": 76500,
+    "rating": 4.4,
+    "image": "https://picsum.photos/seed/松下NPTH1WECN洗碗机21/400/400",
+    "images": [
+      "https://picsum.photos/seed/松下NPTH1WECN洗碗机21_0/800/800",
+      "https://picsum.photos/seed/松下NPTH1WECN洗碗机21_1/800/800",
+      "https://picsum.photos/seed/松下NPTH1WECN洗碗机21_2/800/800",
+      "https://picsum.photos/seed/松下NPTH1WECN洗碗机21_3/800/800"
+    ],
+    "specs": [
+      "6套",
+      "台式",
+      "高温除菌"
+    ],
+    "colors": [
+      "白色"
+    ],
+    "brand": "松下",
+    "shop": "松下官方旗舰店",
+    "shopId": 12,
+    "description": "松下 NP-TH1WECN 台式洗碗机 6套容量 高温除菌 节能省水",
+    "stock": 3900
+  },
+  {
+    "id": 23,
+    "name": "苏泊尔 SF40HC88 电饭煲",
+    "category": "家电",
+    "categoryId": 4,
+    "price": 599,
+    "originalPrice": 799,
+    "sales": 234500,
+    "rating": 4.5,
+    "image": "https://picsum.photos/seed/苏泊尔SF40HC88电饭煲22/400/400",
+    "images": [
+      "https://picsum.photos/seed/苏泊尔SF40HC88电饭煲22_0/800/800",
+      "https://picsum.photos/seed/苏泊尔SF40HC88电饭煲22_1/800/800",
+      "https://picsum.photos/seed/苏泊尔SF40HC88电饭煲22_2/800/800",
+      "https://picsum.photos/seed/苏泊尔SF40HC88电饭煲22_3/800/800"
+    ],
+    "specs": [
+      "4L",
+      "IH电磁加热",
+      "球形内胆"
+    ],
+    "colors": [
+      "玫瑰金"
+    ],
+    "brand": "苏泊尔",
+    "shop": "苏泊尔官方旗舰店",
+    "shopId": 13,
+    "description": "苏泊尔 SF40HC88 IH电磁加热电饭煲 4L 球形内胆 智能预约",
+    "stock": 14000
+  },
+  {
+    "id": 24,
+    "name": "美的 MB-FZ4001 电饭煲",
+    "category": "家电",
+    "categoryId": 4,
+    "price": 399,
+    "originalPrice": 499,
+    "sales": 189700,
+    "rating": 4.3,
+    "image": "https://picsum.photos/seed/美的MBFZ4001电饭煲23/400/400",
+    "images": [
+      "https://picsum.photos/seed/美的MBFZ4001电饭煲23_0/800/800",
+      "https://picsum.photos/seed/美的MBFZ4001电饭煲23_1/800/800",
+      "https://picsum.photos/seed/美的MBFZ4001电饭煲23_2/800/800",
+      "https://picsum.photos/seed/美的MBFZ4001电饭煲23_3/800/800"
+    ],
+    "specs": [
+      "4L",
+      "智能预约",
+      "不粘内胆"
+    ],
+    "colors": [
+      "白色"
+    ],
+    "brand": "美的",
+    "shop": "美的官方旗舰店",
+    "shopId": 9,
+    "description": "美的 MB-FZ4001 智能电饭煲 4L 不粘内胆 24小时预约",
+    "stock": 18500
+  },
+  {
+    "id": 25,
+    "name": "Nike Air Force 1 经典运动鞋",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 899,
+    "originalPrice": 1099,
+    "sales": 198700,
+    "rating": 4.6,
+    "image": "https://picsum.photos/seed/NikeAirForce1经典运动鞋24/400/400",
+    "images": [
+      "https://picsum.photos/seed/NikeAirForce1经典运动鞋24_0/800/800",
+      "https://picsum.photos/seed/NikeAirForce1经典运动鞋24_1/800/800",
+      "https://picsum.photos/seed/NikeAirForce1经典运动鞋24_2/800/800",
+      "https://picsum.photos/seed/NikeAirForce1经典运动鞋24_3/800/800"
+    ],
+    "specs": [
+      "白色",
+      "皮革",
+      "经典款"
+    ],
+    "colors": [
+      "白色",
+      "黑色",
+      "红色"
+    ],
+    "brand": "Nike",
+    "shop": "Nike官方旗舰店",
+    "shopId": 14,
+    "description": "Nike Air Force 1 经典运动鞋 白色 皮革鞋面 经典百搭",
+    "stock": 12000
+  },
+  {
+    "id": 26,
+    "name": "Adidas Ultraboost 跑鞋",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 1299,
+    "originalPrice": 1599,
+    "sales": 154300,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/AdidasUltraboost跑鞋25/400/400",
+    "images": [
+      "https://picsum.photos/seed/AdidasUltraboost跑鞋25_0/800/800",
+      "https://picsum.photos/seed/AdidasUltraboost跑鞋25_1/800/800",
+      "https://picsum.photos/seed/AdidasUltraboost跑鞋25_2/800/800",
+      "https://picsum.photos/seed/AdidasUltraboost跑鞋25_3/800/800"
+    ],
+    "specs": [
+      "核心黑",
+      "Boost中底",
+      "网面"
+    ],
+    "colors": [
+      "核心黑",
+      "云白",
+      "灰色"
+    ],
+    "brand": "Adidas",
+    "shop": "Adidas官方旗舰店",
+    "shopId": 15,
+    "description": "Adidas Ultraboost 跑鞋 核心黑 经典Boost中底 舒适回弹",
+    "stock": 9800
+  },
+  {
+    "id": 27,
+    "name": "李宁 超轻跑鞋 2024",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 599,
+    "originalPrice": 699,
+    "sales": 178900,
+    "rating": 4.5,
+    "image": "https://picsum.photos/seed/李宁超轻跑鞋202426/400/400",
+    "images": [
+      "https://picsum.photos/seed/李宁超轻跑鞋202426_0/800/800",
+      "https://picsum.photos/seed/李宁超轻跑鞋202426_1/800/800",
+      "https://picsum.photos/seed/李宁超轻跑鞋202426_2/800/800"
+    ],
+    "specs": [
+      "标准黑/荧光绿",
+      "超轻科技",
+      "透气网面"
+    ],
+    "colors": [
+      "标准黑",
+      "荧光绿",
+      "云水蓝"
+    ],
+    "brand": "李宁",
+    "shop": "李宁官方旗舰店",
+    "shopId": 16,
+    "description": "李宁 超轻跑鞋 2024款 超轻科技 透气网面 缓震回弹",
+    "stock": 15000
+  },
+  {
+    "id": 28,
+    "name": "安踏 C37 软跑鞋",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 449,
+    "originalPrice": 549,
+    "sales": 213400,
+    "rating": 4.4,
+    "image": "https://picsum.photos/seed/安踏C37软跑鞋27/400/400",
+    "images": [
+      "https://picsum.photos/seed/安踏C37软跑鞋27_0/800/800",
+      "https://picsum.photos/seed/安踏C37软跑鞋27_1/800/800",
+      "https://picsum.photos/seed/安踏C37软跑鞋27_2/800/800",
+      "https://picsum.photos/seed/安踏C37软跑鞋27_3/800/800"
+    ],
+    "specs": [
+      "黑色",
+      "C37中底",
+      "软弹"
+    ],
+    "colors": [
+      "黑色",
+      "白色",
+      "灰蓝色"
+    ],
+    "brand": "安踏",
+    "shop": "安踏官方旗舰店",
+    "shopId": 17,
+    "description": "安踏 C37 软跑鞋 黑色 软弹中底 舒适缓震 日常跑步",
+    "stock": 18000
+  },
+  {
+    "id": 29,
+    "name": "优衣库 男装 精纺美利奴羊毛衫",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 299,
+    "originalPrice": 399,
+    "sales": 176500,
+    "rating": 4.3,
+    "image": "https://picsum.photos/seed/优衣库男装精纺美利奴羊毛衫28/400/400",
+    "images": [
+      "https://picsum.photos/seed/优衣库男装精纺美利奴羊毛衫28_0/800/800",
+      "https://picsum.photos/seed/优衣库男装精纺美利奴羊毛衫28_1/800/800",
+      "https://picsum.photos/seed/优衣库男装精纺美利奴羊毛衫28_2/800/800",
+      "https://picsum.photos/seed/优衣库男装精纺美利奴羊毛衫28_3/800/800"
+    ],
+    "specs": [
+      "深灰色",
+      "美利奴羊毛",
+      "长袖"
+    ],
+    "colors": [
+      "深灰色",
+      "黑色",
+      "藏青色",
+      "米色"
+    ],
+    "brand": "优衣库",
+    "shop": "优衣库官方旗舰店",
+    "shopId": 18,
+    "description": "优衣库 男装 精纺美利奴羊毛衫 柔软触感 修身版型",
+    "stock": 22000
+  },
+  {
+    "id": 30,
+    "name": "优衣库 女装 轻盈羽绒服",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 599,
+    "originalPrice": 799,
+    "sales": 165400,
+    "rating": 4.5,
+    "image": "https://picsum.photos/seed/优衣库女装轻盈羽绒服29/400/400",
+    "images": [
+      "https://picsum.photos/seed/优衣库女装轻盈羽绒服29_0/800/800",
+      "https://picsum.photos/seed/优衣库女装轻盈羽绒服29_1/800/800",
+      "https://picsum.photos/seed/优衣库女装轻盈羽绒服29_2/800/800"
+    ],
+    "specs": [
+      "黑色",
+      "羽绒",
+      "轻便"
+    ],
+    "colors": [
+      "黑色",
+      "白色",
+      "红色",
+      "米色"
+    ],
+    "brand": "优衣库",
+    "shop": "优衣库官方旗舰店",
+    "shopId": 18,
+    "description": "优衣库 女装 高级轻型羽绒服 轻盈保暖 可收纳设计",
+    "stock": 18500
+  },
+  {
+    "id": 31,
+    "name": "Nike Dri-FIT 运动T恤",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 299,
+    "originalPrice": 349,
+    "sales": 245600,
+    "rating": 4.4,
+    "image": "https://picsum.photos/seed/NikeDriFIT运动T恤30/400/400",
+    "images": [
+      "https://picsum.photos/seed/NikeDriFIT运动T恤30_0/800/800",
+      "https://picsum.photos/seed/NikeDriFIT运动T恤30_1/800/800",
+      "https://picsum.photos/seed/NikeDriFIT运动T恤30_2/800/800",
+      "https://picsum.photos/seed/NikeDriFIT运动T恤30_3/800/800"
+    ],
+    "specs": [
+      "黑色",
+      "Dri-FIT",
+      "速干"
+    ],
+    "colors": [
+      "黑色",
+      "白色",
+      "灰色",
+      "蓝色"
+    ],
+    "brand": "Nike",
+    "shop": "Nike官方旗舰店",
+    "shopId": 14,
+    "description": "Nike Dri-FIT 男子运动T恤 速干面料 舒适透气",
+    "stock": 28000
+  },
+  {
+    "id": 32,
+    "name": "Adidas 三叶草 经典卫衣",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 499,
+    "originalPrice": 649,
+    "sales": 134500,
+    "rating": 4.3,
+    "image": "https://picsum.photos/seed/Adidas三叶草经典卫衣31/400/400",
+    "images": [
+      "https://picsum.photos/seed/Adidas三叶草经典卫衣31_0/800/800",
+      "https://picsum.photos/seed/Adidas三叶草经典卫衣31_1/800/800",
+      "https://picsum.photos/seed/Adidas三叶草经典卫衣31_2/800/800",
+      "https://picsum.photos/seed/Adidas三叶草经典卫衣31_3/800/800"
+    ],
+    "specs": [
+      "黑色",
+      "棉质",
+      "三叶草标志"
+    ],
+    "colors": [
+      "黑色",
+      "白色",
+      "灰色",
+      "绿色"
+    ],
+    "brand": "Adidas",
+    "shop": "Adidas官方旗舰店",
+    "shopId": 15,
+    "description": "Adidas 三叶草 经典卫衣 棉质面料 休闲百搭",
+    "stock": 16500
+  },
+  {
+    "id": 33,
+    "name": "李宁 卫衣 国潮系列",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 399,
+    "originalPrice": 499,
+    "sales": 156700,
+    "rating": 4.6,
+    "image": "https://picsum.photos/seed/李宁卫衣国潮系列32/400/400",
+    "images": [
+      "https://picsum.photos/seed/李宁卫衣国潮系列32_0/800/800",
+      "https://picsum.photos/seed/李宁卫衣国潮系列32_1/800/800",
+      "https://picsum.photos/seed/李宁卫衣国潮系列32_2/800/800",
+      "https://picsum.photos/seed/李宁卫衣国潮系列32_3/800/800"
+    ],
+    "specs": [
+      "中国红",
+      "棉质",
+      "国潮印花"
+    ],
+    "colors": [
+      "中国红",
+      "黑色",
+      "白色"
+    ],
+    "brand": "李宁",
+    "shop": "李宁官方旗舰店",
+    "shopId": 16,
+    "description": "李宁 卫衣 国潮系列 中国红 棉质面料 传统与现代融合",
+    "stock": 11000
+  },
+  {
+    "id": 34,
+    "name": "安踏 速干运动裤",
+    "category": "服饰",
+    "categoryId": 5,
+    "price": 249,
+    "originalPrice": 299,
+    "sales": 187600,
+    "rating": 4.2,
+    "image": "https://picsum.photos/seed/安踏速干运动裤33/400/400",
+    "images": [
+      "https://picsum.photos/seed/安踏速干运动裤33_0/800/800",
+      "https://picsum.photos/seed/安踏速干运动裤33_1/800/800",
+      "https://picsum.photos/seed/安踏速干运动裤33_2/800/800",
+      "https://picsum.photos/seed/安踏速干运动裤33_3/800/800"
+    ],
+    "specs": [
+      "黑色",
+      "速干",
+      "弹力"
+    ],
+    "colors": [
+      "黑色",
+      "深灰色",
+      "藏青色"
+    ],
+    "brand": "安踏",
+    "shop": "安踏官方旗舰店",
+    "shopId": 17,
+    "description": "安踏 速干运动裤 弹力面料 透气速干 适合跑步健身",
+    "stock": 22000
+  },
+  {
+    "id": 35,
+    "name": "SK-II 神仙水 230ml",
+    "category": "美妆",
+    "categoryId": 6,
+    "price": 1599,
+    "originalPrice": 1899,
+    "sales": 198700,
+    "rating": 4.9,
+    "image": "https://picsum.photos/seed/SKII神仙水230ml34/400/400",
+    "images": [
+      "https://picsum.photos/seed/SKII神仙水230ml34_0/800/800",
+      "https://picsum.photos/seed/SKII神仙水230ml34_1/800/800",
+      "https://picsum.photos/seed/SKII神仙水230ml34_2/800/800",
+      "https://picsum.photos/seed/SKII神仙水230ml34_3/800/800"
+    ],
+    "specs": [
+      "230ml",
+      "精华露",
+      "日本进口"
+    ],
+    "colors": [
+      "透明"
+    ],
+    "brand": "SK-II",
+    "shop": "SK-II官方旗舰店",
+    "shopId": 19,
+    "description": "SK-II 神仙水 护肤精华露 230ml 改善肤质 提亮肤色",
+    "stock": 8700
+  },
+  {
+    "id": 36,
+    "name": "雅诗兰黛 小棕瓶精华 50ml",
+    "category": "美妆",
+    "categoryId": 6,
+    "price": 1099,
+    "originalPrice": 1299,
+    "sales": 176500,
+    "rating": 4.8,
+    "image": "https://picsum.photos/seed/雅诗兰黛小棕瓶精华50ml35/400/400",
+    "images": [
+      "https://picsum.photos/seed/雅诗兰黛小棕瓶精华50ml35_0/800/800",
+      "https://picsum.photos/seed/雅诗兰黛小棕瓶精华50ml35_1/800/800",
+      "https://picsum.photos/seed/雅诗兰黛小棕瓶精华50ml35_2/800/800"
+    ],
+    "specs": [
+      "50ml",
+      "面部精华",
+      "抗老"
+    ],
+    "colors": [
+      "棕色瓶"
+    ],
+    "brand": "雅诗兰黛",
+    "shop": "雅诗兰黛官方旗舰店",
+    "shopId": 20,
+    "description": "雅诗兰黛 小棕瓶精华 50ml 修护肌肤 淡化细纹 抗皱紧致",
+    "stock": 6200
+  },
+  {
+    "id": 37,
+    "name": "欧莱雅 复颜玻尿酸水光充盈导入乳液",
+    "category": "美妆",
+    "categoryId": 6,
+    "price": 329,
+    "originalPrice": 429,
+    "sales": 234500,
+    "rating": 4.5,
+    "image": "https://picsum.photos/seed/欧莱雅复颜玻尿酸水光充盈导入乳液36/400/400",
+    "images": [
+      "https://picsum.photos/seed/欧莱雅复颜玻尿酸水光充盈导入乳液36_0/800/800",
+      "https://picsum.photos/seed/欧莱雅复颜玻尿酸水光充盈导入乳液36_1/800/800",
+      "https://picsum.photos/seed/欧莱雅复颜玻尿酸水光充盈导入乳液36_2/800/800"
+    ],
+    "specs": [
+      "110ml",
+      "玻尿酸",
+      "保湿"
+    ],
+    "colors": [
+      "白色"
+    ],
+    "brand": "欧莱雅",
+    "shop": "欧莱雅官方旗舰店",
+    "shopId": 21,
+    "description": "欧莱雅 复颜玻尿酸水光充盈导入乳液 110ml 补水保湿 紧致肌肤",
+    "stock": 15000
+  },
+  {
+    "id": 38,
+    "name": "SK-II 小灯泡 美白精华 50ml",
+    "category": "美妆",
+    "categoryId": 6,
+    "price": 1899,
+    "originalPrice": 2199,
+    "sales": 123400,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/SKII小灯泡美白精华50ml37/400/400",
+    "images": [
+      "https://picsum.photos/seed/SKII小灯泡美白精华50ml37_0/800/800",
+      "https://picsum.photos/seed/SKII小灯泡美白精华50ml37_1/800/800",
+      "https://picsum.photos/seed/SKII小灯泡美白精华50ml37_2/800/800",
+      "https://picsum.photos/seed/SKII小灯泡美白精华50ml37_3/800/800"
+    ],
+    "specs": [
+      "50ml",
+      "美白",
+      "淡斑"
+    ],
+    "colors": [
+      "白色瓶"
+    ],
+    "brand": "SK-II",
+    "shop": "SK-II官方旗舰店",
+    "shopId": 19,
+    "description": "SK-II 小灯泡 光蕴环采钻白精华 50ml 美白淡斑 提亮肤色",
+    "stock": 4500
+  },
+  {
+    "id": 39,
+    "name": "雅诗兰黛 DW持妆粉底液",
+    "category": "美妆",
+    "categoryId": 6,
+    "price": 459,
+    "originalPrice": 529,
+    "sales": 187600,
+    "rating": 4.6,
+    "image": "https://picsum.photos/seed/雅诗兰黛DW持妆粉底液38/400/400",
+    "images": [
+      "https://picsum.photos/seed/雅诗兰黛DW持妆粉底液38_0/800/800",
+      "https://picsum.photos/seed/雅诗兰黛DW持妆粉底液38_1/800/800",
+      "https://picsum.photos/seed/雅诗兰黛DW持妆粉底液38_2/800/800"
+    ],
+    "specs": [
+      "30ml",
+      "持妆",
+      "遮瑕"
+    ],
+    "colors": [
+      "1W1",
+      "2W1",
+      "1N1",
+      "2N1"
+    ],
+    "brand": "雅诗兰黛",
+    "shop": "雅诗兰黛官方旗舰店",
+    "shopId": 20,
+    "description": "雅诗兰黛 DW持妆粉底液 30ml 24小时持妆 高遮瑕 控油",
+    "stock": 9800
+  },
+  {
+    "id": 40,
+    "name": "欧莱雅 男士水能保湿三件套",
+    "category": "美妆",
+    "categoryId": 6,
+    "price": 199,
+    "originalPrice": 269,
+    "sales": 256700,
+    "rating": 4.3,
+    "image": "https://picsum.photos/seed/欧莱雅男士水能保湿三件套39/400/400",
+    "images": [
+      "https://picsum.photos/seed/欧莱雅男士水能保湿三件套39_0/800/800",
+      "https://picsum.photos/seed/欧莱雅男士水能保湿三件套39_1/800/800",
+      "https://picsum.photos/seed/欧莱雅男士水能保湿三件套39_2/800/800"
+    ],
+    "specs": [
+      "洁面+水+乳",
+      "保湿",
+      "男士"
+    ],
+    "colors": [
+      "蓝色"
+    ],
+    "brand": "欧莱雅",
+    "shop": "欧莱雅官方旗舰店",
+    "shopId": 21,
+    "description": "欧莱雅 男士水能保湿三件套 洁面膏+爽肤水+滋润乳 控油清爽",
+    "stock": 25000
+  },
+  {
+    "id": 41,
+    "name": "三只松鼠 坚果大礼包 2688g",
+    "category": "食品",
+    "categoryId": 7,
+    "price": 168,
+    "originalPrice": 228,
+    "sales": 345600,
+    "rating": 4.6,
+    "image": "https://picsum.photos/seed/三只松鼠坚果大礼包2688g40/400/400",
+    "images": [
+      "https://picsum.photos/seed/三只松鼠坚果大礼包2688g40_0/800/800",
+      "https://picsum.photos/seed/三只松鼠坚果大礼包2688g40_1/800/800",
+      "https://picsum.photos/seed/三只松鼠坚果大礼包2688g40_2/800/800",
+      "https://picsum.photos/seed/三只松鼠坚果大礼包2688g40_3/800/800"
+    ],
+    "specs": [
+      "2688g",
+      "坚果",
+      "年货"
+    ],
+    "colors": [
+      "红色包装"
+    ],
+    "brand": "三只松鼠",
+    "shop": "三只松鼠官方旗舰店",
+    "shopId": 22,
+    "description": "三只松鼠 坚果大礼包 2688g 混合坚果 年货送礼 每日坚果",
+    "stock": 32000
+  },
+  {
+    "id": 42,
+    "name": "良品铺子 零食大礼包 2000g",
+    "category": "食品",
+    "categoryId": 7,
+    "price": 138,
+    "originalPrice": 188,
+    "sales": 287600,
+    "rating": 4.5,
+    "image": "https://picsum.photos/seed/良品铺子零食大礼包2000g41/400/400",
+    "images": [
+      "https://picsum.photos/seed/良品铺子零食大礼包2000g41_0/800/800",
+      "https://picsum.photos/seed/良品铺子零食大礼包2000g41_1/800/800",
+      "https://picsum.photos/seed/良品铺子零食大礼包2000g41_2/800/800"
+    ],
+    "specs": [
+      "2000g",
+      "混合零食",
+      "礼盒"
+    ],
+    "colors": [
+      "粉色包装"
+    ],
+    "brand": "良品铺子",
+    "shop": "良品铺子官方旗舰店",
+    "shopId": 23,
+    "description": "良品铺子 零食大礼包 2000g 混合零食 送礼佳品 休闲零食",
+    "stock": 28000
+  },
+  {
+    "id": 43,
+    "name": "三只松鼠 每日坚果 750g 30袋",
+    "category": "食品",
+    "categoryId": 7,
+    "price": 79,
+    "originalPrice": 109,
+    "sales": 456700,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/三只松鼠每日坚果750g30袋42/400/400",
+    "images": [
+      "https://picsum.photos/seed/三只松鼠每日坚果750g30袋42_0/800/800",
+      "https://picsum.photos/seed/三只松鼠每日坚果750g30袋42_1/800/800",
+      "https://picsum.photos/seed/三只松鼠每日坚果750g30袋42_2/800/800"
+    ],
+    "specs": [
+      "750g",
+      "30袋",
+      "每日坚果"
+    ],
+    "colors": [
+      "黄色包装"
+    ],
+    "brand": "三只松鼠",
+    "shop": "三只松鼠官方旗舰店",
+    "shopId": 22,
+    "description": "三只松鼠 每日坚果 750g 30袋独立包装 混合坚果 健康零食",
+    "stock": 40000
+  },
+  {
+    "id": 44,
+    "name": "良品铺子 肉脯肉干大礼包",
+    "category": "食品",
+    "categoryId": 7,
+    "price": 99,
+    "originalPrice": 139,
+    "sales": 234500,
+    "rating": 4.4,
+    "image": "https://picsum.photos/seed/良品铺子肉脯肉干大礼包43/400/400",
+    "images": [
+      "https://picsum.photos/seed/良品铺子肉脯肉干大礼包43_0/800/800",
+      "https://picsum.photos/seed/良品铺子肉脯肉干大礼包43_1/800/800",
+      "https://picsum.photos/seed/良品铺子肉脯肉干大礼包43_2/800/800"
+    ],
+    "specs": [
+      "500g",
+      "肉脯",
+      "肉干"
+    ],
+    "colors": [
+      "红色包装"
+    ],
+    "brand": "良品铺子",
+    "shop": "良品铺子官方旗舰店",
+    "shopId": 23,
+    "description": "良品铺子 肉脯肉干大礼包 500g 猪肉脯牛肉干 休闲零食",
+    "stock": 22000
+  },
+  {
+    "id": 45,
+    "name": "良品铺子 有机黑芝麻丸 120g",
+    "category": "食品",
+    "categoryId": 7,
+    "price": 39,
+    "originalPrice": 49,
+    "sales": 198700,
+    "rating": 4.3,
+    "image": "https://picsum.photos/seed/良品铺子有机黑芝麻丸120g44/400/400",
+    "images": [
+      "https://picsum.photos/seed/良品铺子有机黑芝麻丸120g44_0/800/800",
+      "https://picsum.photos/seed/良品铺子有机黑芝麻丸120g44_1/800/800",
+      "https://picsum.photos/seed/良品铺子有机黑芝麻丸120g44_2/800/800"
+    ],
+    "specs": [
+      "120g",
+      "黑芝麻",
+      "独立包装"
+    ],
+    "colors": [
+      "黑色包装"
+    ],
+    "brand": "良品铺子",
+    "shop": "良品铺子官方旗舰店",
+    "shopId": 23,
+    "description": "良品铺子 有机黑芝麻丸 120g 传统芝麻丸 独立包装 即食养生",
+    "stock": 18000
+  },
+  {
+    "id": 46,
+    "name": "小米 智能门锁 Pro 指纹锁",
+    "category": "家居",
+    "categoryId": 8,
+    "price": 1699,
+    "originalPrice": 1999,
+    "sales": 123400,
+    "rating": 4.7,
+    "image": "https://picsum.photos/seed/小米智能门锁Pro指纹锁45/400/400",
+    "images": [
+      "https://picsum.photos/seed/小米智能门锁Pro指纹锁45_0/800/800",
+      "https://picsum.photos/seed/小米智能门锁Pro指纹锁45_1/800/800",
+      "https://picsum.photos/seed/小米智能门锁Pro指纹锁45_2/800/800"
+    ],
+    "specs": [
+      "指纹+密码+蓝牙",
+      "智能联动",
+      "安全"
+    ],
+    "colors": [
+      "黑色",
+      "银色"
+    ],
+    "brand": "小米",
+    "shop": "小米官方旗舰店",
+    "shopId": 3,
+    "description": "小米 智能门锁 Pro 指纹锁 密码锁 蓝牙解锁 小米智能家居联动",
+    "stock": 6200
+  },
+  {
+    "id": 47,
+    "name": "松下 智能马桶盖 DL-PN30CWS",
+    "category": "家居",
+    "categoryId": 8,
+    "price": 2299,
+    "originalPrice": 2699,
+    "sales": 87600,
+    "rating": 4.6,
+    "image": "https://picsum.photos/seed/松下智能马桶盖DLPN30CWS46/400/400",
+    "images": [
+      "https://picsum.photos/seed/松下智能马桶盖DLPN30CWS46_0/800/800",
+      "https://picsum.photos/seed/松下智能马桶盖DLPN30CWS46_1/800/800",
+      "https://picsum.photos/seed/松下智能马桶盖DLPN30CWS46_2/800/800"
+    ],
+    "specs": [
+      "即热式",
+      "温水冲洗",
+      "暖风烘干"
+    ],
+    "colors": [
+      "白色"
+    ],
+    "brand": "松下",
+    "shop": "松下官方旗舰店",
+    "shopId": 12,
+    "description": "松下 DL-PN30CWS 智能马桶盖 即热式温水冲洗 暖风烘干 除菌",
+    "stock": 3400
+  },
+  {
+    "id": 48,
+    "name": "苏泊尔 不锈钢炒锅 32cm",
+    "category": "家居",
+    "categoryId": 8,
+    "price": 299,
+    "originalPrice": 399,
+    "sales": 234500,
+    "rating": 4.4,
+    "image": "https://picsum.photos/seed/苏泊尔不锈钢炒锅32cm47/400/400",
+    "images": [
+      "https://picsum.photos/seed/苏泊尔不锈钢炒锅32cm47_0/800/800",
+      "https://picsum.photos/seed/苏泊尔不锈钢炒锅32cm47_1/800/800",
+      "https://picsum.photos/seed/苏泊尔不锈钢炒锅32cm47_2/800/800",
+      "https://picsum.photos/seed/苏泊尔不锈钢炒锅32cm47_3/800/800"
+    ],
+    "specs": [
+      "32cm",
+      "不锈钢",
+      "无涂层"
+    ],
+    "colors": [
+      "银色"
+    ],
+    "brand": "苏泊尔",
+    "shop": "苏泊尔官方旗舰店",
+    "shopId": 13,
+    "description": "苏泊尔 不锈钢炒锅 32cm 无涂层 不粘 燃气灶电磁炉通用",
+    "stock": 18000
+  },
+  {
+    "id": 49,
+    "name": "海尔 扫地机器人 全能版",
+    "category": "家居",
+    "categoryId": 8,
+    "price": 3299,
+    "originalPrice": 3999,
+    "sales": 98700,
+    "rating": 4.5,
+    "image": "https://picsum.photos/seed/海尔扫地机器人全能版48/400/400",
+    "images": [
+      "https://picsum.photos/seed/海尔扫地机器人全能版48_0/800/800",
+      "https://picsum.photos/seed/海尔扫地机器人全能版48_1/800/800",
+      "https://picsum.photos/seed/海尔扫地机器人全能版48_2/800/800",
+      "https://picsum.photos/seed/海尔扫地机器人全能版48_3/800/800"
+    ],
+    "specs": [
+      "扫拖一体",
+      "自动集尘",
+      "激光导航"
+    ],
+    "colors": [
+      "白色",
+      "黑色"
+    ],
+    "brand": "海尔",
+    "shop": "海尔官方旗舰店",
+    "shopId": 11,
+    "description": "海尔 扫地机器人 全能版 扫拖一体 自动集尘 激光导航 智能规划",
+    "stock": 4600
+  },
+  {
+    "id": 50,
+    "name": "美的 除湿机 CF22BD/N1-DP7",
+    "category": "家居",
+    "categoryId": 8,
+    "price": 1499,
+    "originalPrice": 1799,
+    "sales": 76500,
+    "rating": 4.3,
+    "image": "https://picsum.photos/seed/美的除湿机CF22BDN1DP749/400/400",
+    "images": [
+      "https://picsum.photos/seed/美的除湿机CF22BDN1DP749_0/800/800",
+      "https://picsum.photos/seed/美的除湿机CF22BDN1DP749_1/800/800",
+      "https://picsum.photos/seed/美的除湿机CF22BDN1DP749_2/800/800",
+      "https://picsum.photos/seed/美的除湿机CF22BDN1DP749_3/800/800"
+    ],
+    "specs": [
+      "22L/天",
+      "除湿",
+      "干衣"
+    ],
+    "colors": [
+      "白色"
+    ],
+    "brand": "美的",
+    "shop": "美的官方旗舰店",
+    "shopId": 9,
+    "description": "美的 除湿机 CF22BD/N1-DP7 22L/天 家用除湿 干衣 静音节能",
+    "stock": 3800
+  }
 ]

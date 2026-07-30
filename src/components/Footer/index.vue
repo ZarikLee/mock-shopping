@@ -77,7 +77,7 @@
           <div class="link-group">
             <h4>关于我们</h4>
             <ul>
-              <li><a href="#">关于模拟商城</a></li>
+              <li><a href="#">关于淘大宝</a></li>
               <li><a href="#">联系我们</a></li>
               <li><a href="#">招贤纳士</a></li>
               <li><a href="#">友情链接</a></li>
@@ -100,8 +100,8 @@
     <!-- 底部版权 -->
     <div class="footer-bottom">
       <div class="container">
-        <p>© 2026 模拟商城 版权所有 | 仅供学习演示使用</p>
-        <p class="tips">本商城为模拟购物网站，所有交易均为虚拟，不涉及真实支付</p>
+        <p>© 2026 淘大宝 版权所有 | 快乐购物体验</p>
+        <p class="tips">淘大宝 - 快乐购物，应有尽有，所有交易均为虚拟</p>
       </div>
     </div>
   </footer>

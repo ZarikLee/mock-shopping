@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" :class="{ 'is-mobile': isMobile }">
     <Header />
     <main class="main-content">
       <router-view />
@@ -11,6 +11,9 @@
 <script setup>
 import Header from './components/Header/index.vue'
 import Footer from './components/Footer/index.vue'
+import { useDevice } from './utils/device.js'
+
+const { isMobile } = useDevice()
 </script>
 
 <style>
@@ -40,6 +43,11 @@ body {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+.is-mobile .main-content {
+  padding-top: 90px;
+  padding-bottom: 60px;
 }
 
 ul, li {

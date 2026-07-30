@@ -99,7 +99,7 @@
           <span class="stock-info">库存 {{ product.库存 || 99 }} 件</span>
         </div>
 
-        <div class="action-buttons">
+        <div class="action-buttons" v-if="!isMobile">
           <el-button
             type="primary"
             size="large"
@@ -188,6 +188,17 @@
         </el-tab-pane>
       </el-tabs>
     </div>
+
+    <!-- Mobile fixed bottom actions -->
+    <div class="mobile-bottom-actions" v-if="isMobile">
+      <button class="mobile-action cart-btn" @click="handleAddToCart">
+        <el-icon :size="20"><ShoppingCart /></el-icon>
+        <span>加入购物车</span>
+      </button>
+      <button class="mobile-action buy-btn" @click="handleBuyNow">
+        立即购买
+      </button>
+    </div>
   </div>
 
   <div class="product-not-found" v-else>
@@ -201,9 +212,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ShoppingCart, CircleCheck, Timer, RefreshRight } from '@element-plus/icons-vue'
 import { useCartStore } from '@/stores/cart'
+import { useDevice } from '@/utils/device'
 import products from '@/data/products.json'
 import ProductReviews from './components/ProductReviews.vue'
 
+const { isMobile } = useDevice()
 const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
@@ -246,10 +259,11 @@ const handleAddToCart = () => {
     name: product.value.name,
     price: product.value.price,
     image: product.value.images?.[0],
-    spec: selectedSpec.value,
-    color: selectedColor.value,
-    quantity: quantity.value
-  })
+    specs: product.value.specs,
+    colors: product.value.colors,
+    shop: product.value.shop,
+    shopId: product.value.shopId
+  }, quantity.value, selectedSpec.value, selectedColor.value)
   ElMessage.success('已加入购物车')
 }
 
@@ -260,10 +274,11 @@ const handleBuyNow = () => {
     name: product.value.name,
     price: product.value.price,
     image: product.value.images?.[0],
-    spec: selectedSpec.value,
-    color: selectedColor.value,
-    quantity: quantity.value
-  })
+    specs: product.value.specs,
+    colors: product.value.colors,
+    shop: product.value.shop,
+    shopId: product.value.shopId
+  }, quantity.value, selectedSpec.value, selectedColor.value)
   router.push('/checkout')
 }
 </script>
@@ -580,7 +595,55 @@ const handleBuyNow = () => {
   margin-top: 20px;
 }
 
+.mobile-bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  padding: 10px 15px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0));
+  gap: 10px;
+}
+
+.mobile-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.mobile-action:active {
+  opacity: 0.8;
+}
+
+.mobile-action.cart-btn {
+  background: #fff5f0;
+  color: #ff4400;
+}
+
+.mobile-action.buy-btn {
+  background: #ff4400;
+  color: #fff;
+}
+
 @media (max-width: 768px) {
+  .product-detail-page {
+    padding: 12px;
+    padding-bottom: 70px;
+  }
+
   .product-main {
     flex-direction: column;
     gap: 20px;
@@ -621,14 +684,13 @@ const handleBuyNow = () => {
     margin-right: 0;
   }
 
-  .action-buttons {
-    flex-direction: column;
-  }
-
   .service-bar {
     flex-direction: column;
     gap: 15px;
   }
 
+  .product-tabs {
+    margin-top: 20px;
+  }
 }
 </style>

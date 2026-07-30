@@ -1,13 +1,9 @@
 <template>
   <div class="home-page">
     <div class="container">
-      <!-- 轮播图 -->
       <Banner />
-      
-      <!-- 分类导航 -->
       <CategoryNav />
-      
-      <!-- 秒杀专区 -->
+
       <section class="section flash-sale">
         <div class="section-header">
           <h2>
@@ -24,8 +20,8 @@
           </div>
         </div>
         <div class="flash-sale-list">
-          <div 
-            v-for="item in flashSaleItems" 
+          <div
+            v-for="item in flashSaleItems"
             :key="item.id"
             class="flash-sale-item"
             @click="goToProduct(item.id)"
@@ -40,8 +36,8 @@
               <span class="current-price">¥{{ item.price }}</span>
               <span class="original-price">¥{{ item.originalPrice }}</span>
             </div>
-            <el-progress 
-              :percentage="Math.round((item.sold / item.total) * 100)" 
+            <el-progress
+              :percentage="Math.round((item.sold / item.total) * 100)"
               :stroke-width="8"
               color="#ff4400"
             />
@@ -49,7 +45,6 @@
         </div>
       </section>
 
-      <!-- 热门推荐 -->
       <section class="section hot-recommend">
         <div class="section-header">
           <h2>
@@ -63,15 +58,14 @@
         </div>
         <SkeletonLoader v-if="loading" type="product-card" :count="4" />
         <div class="product-grid" v-else>
-          <ProductCard 
-            v-for="product in hotProducts" 
-            :key="product.id" 
-            :product="product" 
+          <ProductCard
+            v-for="product in hotProducts"
+            :key="product.id"
+            :product="product"
           />
         </div>
       </section>
 
-      <!-- 新品上市 -->
       <section class="section new-arrivals">
         <div class="section-header">
           <h2>
@@ -85,10 +79,10 @@
         </div>
         <SkeletonLoader v-if="loading" type="product-card" :count="4" />
         <div class="product-grid" v-else>
-          <ProductCard 
-            v-for="product in newArrivals" 
-            :key="product.id" 
-            :product="product" 
+          <ProductCard
+            v-for="product in newArrivals"
+            :key="product.id"
+            :product="product"
           />
         </div>
       </section>
@@ -100,14 +94,15 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Timer, TrendCharts, Star, ArrowRight } from '@element-plus/icons-vue'
+import { useDevice } from '../../utils/device'
 import Banner from '../../components/Banner/index.vue'
 import CategoryNav from '../../components/CategoryNav/index.vue'
 import ProductCard from '../../components/ProductCard/index.vue'
 import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 import products from '../../data/products.json'
 
+const { isMobile } = useDevice()
 const router = useRouter()
-
 const loading = ref(true)
 
 onMounted(() => {
@@ -117,7 +112,6 @@ onMounted(() => {
   }, 500)
 })
 
-// 倒计时
 const hours = ref('02')
 const minutes = ref('30')
 const seconds = ref('00')
@@ -125,7 +119,6 @@ let countdownTimer = null
 
 const startCountdown = () => {
   let totalSeconds = 2 * 3600 + 30 * 60
-  
   countdownTimer = setInterval(() => {
     if (totalSeconds > 0) {
       totalSeconds--
@@ -141,16 +134,12 @@ const startCountdown = () => {
   }, 1000)
 }
 
-onMounted(() => {
-})
-
 onUnmounted(() => {
   if (countdownTimer) {
     clearInterval(countdownTimer)
   }
 })
 
-// 秒杀商品
 const flashSaleItems = ref([
   { id: 1, name: 'iPhone 15', image: 'https://picsum.photos/200/200?random=201', price: 7999, originalPrice: 9999, sold: 856, total: 1000 },
   { id: 2, name: '华为Mate60', image: 'https://picsum.photos/200/200?random=202', price: 5999, originalPrice: 6999, sold: 623, total: 800 },
@@ -159,10 +148,7 @@ const flashSaleItems = ref([
   { id: 5, name: 'Sony耳机', image: 'https://picsum.photos/200/200?random=205', price: 1999, originalPrice: 2499, sold: 892, total: 1200 }
 ])
 
-// 热门推荐
 const hotProducts = ref(products.slice(0, 4))
-
-// 新品上市
 const newArrivals = ref(products.slice(4, 8))
 
 const goToProduct = (id) => {
@@ -215,7 +201,6 @@ const goToProduct = (id) => {
   color: #ff4400;
 }
 
-/* 秒杀专区 */
 .flash-sale {
   background: linear-gradient(135deg, #fff5f0 0%, #fff 100%);
 }
@@ -245,6 +230,13 @@ const goToProduct = (id) => {
   display: flex;
   gap: 20px;
   overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.flash-sale-list::-webkit-scrollbar {
+  display: none;
 }
 
 .flash-sale-item {
@@ -254,6 +246,7 @@ const goToProduct = (id) => {
   padding: 15px;
   cursor: pointer;
   transition: all 0.3s;
+  scroll-snap-align: start;
 }
 
 .flash-sale-item:hover {
@@ -304,7 +297,6 @@ const goToProduct = (id) => {
   text-decoration: line-through;
 }
 
-/* 产品网格 */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -312,17 +304,45 @@ const goToProduct = (id) => {
 }
 
 @media (max-width: 768px) {
-  .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+  .home-page {
+    padding: 12px 0;
   }
-  
+
+  .section {
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 0;
+  }
+
+  .section-header h2 {
+    font-size: 16px;
+  }
+
+  .countdown {
+    font-size: 12px;
+  }
+
+  .countdown .time {
+    padding: 3px 6px;
+    font-size: 12px;
+  }
+
   .flash-sale-list {
     gap: 10px;
   }
-  
+
   .flash-sale-item {
     min-width: 140px;
+    padding: 10px;
+  }
+
+  .current-price {
+    font-size: 15px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 }
 </style>
