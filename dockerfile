@@ -19,7 +19,7 @@ COPY server/package.json ./server/
 COPY server/pnpm-lock.yaml ./server/
 
 WORKDIR /app/server
-RUN corepack enable && pnpm install --prod && pnpm rebuild better-sqlite3
+RUN corepack enable && pnpm install --prod
 
 COPY server/ .
 

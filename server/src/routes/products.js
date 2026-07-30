@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import db from '../db.js';
+import { getDb, queryAll, queryOne, execute, lastInsertRowId } from '../db.js';
 
 const router = Router();
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
+  await getDb();
   const { categoryId, brand, keyword, minPrice, maxPrice, sortBy, order, page = 1, pageSize = 20 } = req.query;
 
   let sql = 'SELECT * FROM products WHERE 1=1';
@@ -39,9 +40,6 @@ router.get('/', (req, res) => {
   sql += ' LIMIT ? OFFSET ?';
   params.push(Number(pageSize), offset);
 
-  const total = db.prepare('SELECT COUNT(*) as count FROM products WHERE 1=1' + (categoryId ? ' AND categoryId = ?' : '') + (brand ? ' AND brand = ?' : '') + (keyword ? ' AND name LIKE ?' : '') + (minPrice ? ' AND price >= ?' : '') + (maxPrice ? ' AND price <= ?' : '')).get(...params.slice(0, -2));
-  
-  // Recalculate total with proper params
   let countSql = 'SELECT COUNT(*) as count FROM products WHERE 1=1';
   const countParams = [];
   if (categoryId) { countSql += ' AND categoryId = ?'; countParams.push(Number(categoryId)); }
@@ -49,9 +47,9 @@ router.get('/', (req, res) => {
   if (keyword) { countSql += ' AND name LIKE ?'; countParams.push(`%${keyword}%`); }
   if (minPrice) { countSql += ' AND price >= ?'; countParams.push(Number(minPrice)); }
   if (maxPrice) { countSql += ' AND price <= ?'; countParams.push(Number(maxPrice)); }
-  const totalCount = db.prepare(countSql).get(...countParams).count;
+  const totalCount = queryOne(countSql, countParams).count;
 
-  const products = db.prepare(sql).all(...params).map(p => ({
+  const products = queryAll(sql, params).map(p => ({
     ...p,
     images: JSON.parse(p.images || '[]'),
     specs: JSON.parse(p.specs || '[]'),
@@ -61,8 +59,9 @@ router.get('/', (req, res) => {
   res.json({ products, total: totalCount, page: Number(page), pageSize: Number(pageSize) });
 });
 
-router.get('/hot', (req, res) => {
-  const products = db.prepare('SELECT * FROM products ORDER BY sales DESC LIMIT 8').all().map(p => ({
+router.get('/hot', async (req, res) => {
+  await getDb();
+  const products = queryAll('SELECT * FROM products ORDER BY sales DESC LIMIT 8').map(p => ({
     ...p,
     images: JSON.parse(p.images || '[]'),
     specs: JSON.parse(p.specs || '[]'),
@@ -71,8 +70,9 @@ router.get('/hot', (req, res) => {
   res.json(products);
 });
 
-router.get('/new', (req, res) => {
-  const products = db.prepare('SELECT * FROM products ORDER BY id DESC LIMIT 8').all().map(p => ({
+router.get('/new', async (req, res) => {
+  await getDb();
+  const products = queryAll('SELECT * FROM products ORDER BY id DESC LIMIT 8').map(p => ({
     ...p,
     images: JSON.parse(p.images || '[]'),
     specs: JSON.parse(p.specs || '[]'),
@@ -81,8 +81,9 @@ router.get('/new', (req, res) => {
   res.json(products);
 });
 
-router.get('/:id', (req, res) => {
-  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(Number(req.params.id));
+router.get('/:id', async (req, res) => {
+  await getDb();
+  const product = queryOne('SELECT * FROM products WHERE id = ?', [Number(req.params.id)]);
   if (!product) return res.status(404).json({ error: 'Product not found' });
   product.images = JSON.parse(product.images || '[]');
   product.specs = JSON.parse(product.specs || '[]');

@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import db from '../db.js';
+import { getDb, queryAll, queryOne, execute, lastInsertRowId } from '../db.js';
 import { authMiddleware } from './auth.js';
 
 const router = Router();
 
-router.post('/', authMiddleware, (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
+  await getDb();
   const { items, address } = req.body;
   if (!items || !items.length) {
     return res.status(400).json({ error: 'No items in order' });
@@ -13,7 +14,7 @@ router.post('/', authMiddleware, (req, res) => {
 
   let totalAmount = 0;
   const orderItems = items.map(item => {
-    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(item.productId);
+    const product = queryOne('SELECT * FROM products WHERE id = ?', [item.productId]);
     if (!product) throw new Error(`Product ${item.productId} not found`);
     const price = item.price || product.price;
     totalAmount += price * item.quantity;
@@ -31,37 +32,32 @@ router.post('/', authMiddleware, (req, res) => {
   const orderNo = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 6).toUpperCase();
   const now = new Date().toISOString();
 
-  const createOrder = db.transaction(() => {
-    const result = db.prepare(`
+  try {
+    execute(`
       INSERT INTO orders (orderNo, userId, totalAmount, discountAmount, payAmount, status, address, createTime)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(orderNo, req.user.id, totalAmount, 0, totalAmount, 0, JSON.stringify(address || {}), now);
+    `, [orderNo, req.user.id, totalAmount, 0, totalAmount, 0, JSON.stringify(address || {}), now]);
 
-    const orderId = result.lastInsertRowid;
-    const insertItem = db.prepare(`
-      INSERT INTO order_items (orderId, productId, name, price, quantity, image, selectedSpec, selectedColor)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+    const orderId = lastInsertRowId();
 
     for (const item of orderItems) {
-      insertItem.run(orderId, item.productId, item.name, item.price, item.quantity, item.image, item.selectedSpec, item.selectedColor);
+      execute(`
+        INSERT INTO order_items (orderId, productId, name, price, quantity, image, selectedSpec, selectedColor)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [orderId, item.productId, item.name, item.price, item.quantity, item.image, item.selectedSpec, item.selectedColor]);
     }
 
-    return orderId;
-  });
-
-  try {
-    const orderId = createOrder();
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
+    const order = queryOne('SELECT * FROM orders WHERE id = ?', [orderId]);
     order.address = JSON.parse(order.address || '{}');
-    const items = db.prepare('SELECT * FROM order_items WHERE orderId = ?').all(orderId);
-    res.json({ ...order, items });
+    const itemsResult = queryAll('SELECT * FROM order_items WHERE orderId = ?', [orderId]);
+    res.json({ ...order, items: itemsResult });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/', authMiddleware, (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
+  await getDb();
   const { status } = req.query;
   let sql = 'SELECT * FROM orders WHERE userId = ?';
   const params = [req.user.id];
@@ -70,60 +66,64 @@ router.get('/', authMiddleware, (req, res) => {
     params.push(Number(status));
   }
   sql += ' ORDER BY createTime DESC';
-  const orders = db.prepare(sql).all(...params).map(o => ({
+  const orders = queryAll(sql, params).map(o => ({
     ...o,
     address: JSON.parse(o.address || '{}'),
     logistics: o.logistics ? JSON.parse(o.logistics) : null,
-    items: db.prepare('SELECT * FROM order_items WHERE orderId = ?').all(o.id),
+    items: queryAll('SELECT * FROM order_items WHERE orderId = ?', [o.id]),
   }));
   res.json(orders);
 });
 
-router.get('/:id', authMiddleware, (req, res) => {
-  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND userId = ?').get(Number(req.params.id), req.user.id);
+router.get('/:id', authMiddleware, async (req, res) => {
+  await getDb();
+  const order = queryOne('SELECT * FROM orders WHERE id = ? AND userId = ?', [Number(req.params.id), req.user.id]);
   if (!order) return res.status(404).json({ error: 'Order not found' });
   order.address = JSON.parse(order.address || '{}');
   order.logistics = order.logistics ? JSON.parse(order.logistics) : null;
-  order.items = db.prepare('SELECT * FROM order_items WHERE orderId = ?').all(order.id);
+  order.items = queryAll('SELECT * FROM order_items WHERE orderId = ?', [order.id]);
   res.json(order);
 });
 
-router.post('/:id/pay', authMiddleware, (req, res) => {
-  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND userId = ?').get(Number(req.params.id), req.user.id);
+router.post('/:id/pay', authMiddleware, async (req, res) => {
+  await getDb();
+  const order = queryOne('SELECT * FROM orders WHERE id = ? AND userId = ?', [Number(req.params.id), req.user.id]);
   if (!order) return res.status(404).json({ error: 'Order not found' });
   if (order.status !== 0) return res.status(400).json({ error: 'Order cannot be paid' });
 
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  const user = queryOne('SELECT * FROM users WHERE id = ?', [req.user.id]);
   if (user.balance < order.payAmount) {
     return res.status(400).json({ error: 'Insufficient balance' });
   }
 
   const now = new Date().toISOString();
-  db.prepare('UPDATE users SET balance = balance - ? WHERE id = ?').run(order.payAmount, req.user.id);
-  db.prepare('UPDATE orders SET status = 1, payTime = ? WHERE id = ?').run(now, order.id);
+  execute('UPDATE users SET balance = balance - ? WHERE id = ?', [order.payAmount, req.user.id]);
+  execute('UPDATE orders SET status = 1, payTime = ? WHERE id = ?', [now, order.id]);
 
-  const updated = db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id);
+  const updated = queryOne('SELECT * FROM orders WHERE id = ?', [order.id]);
   updated.address = JSON.parse(updated.address || '{}');
-  updated.items = db.prepare('SELECT * FROM order_items WHERE orderId = ?').all(updated.id);
+  updated.items = queryAll('SELECT * FROM order_items WHERE orderId = ?', [updated.id]);
   res.json(updated);
 });
 
-router.post('/:id/cancel', authMiddleware, (req, res) => {
-  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND userId = ?').get(Number(req.params.id), req.user.id);
+router.post('/:id/cancel', authMiddleware, async (req, res) => {
+  await getDb();
+  const order = queryOne('SELECT * FROM orders WHERE id = ? AND userId = ?', [Number(req.params.id), req.user.id]);
   if (!order) return res.status(404).json({ error: 'Order not found' });
   if (order.status !== 0) return res.status(400).json({ error: 'Order cannot be cancelled' });
 
-  db.prepare('UPDATE orders SET status = -1 WHERE id = ?').run(order.id);
+  execute('UPDATE orders SET status = -1 WHERE id = ?', [order.id]);
   res.json({ message: 'Order cancelled' });
 });
 
-router.post('/:id/complete', authMiddleware, (req, res) => {
-  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND userId = ?').get(Number(req.params.id), req.user.id);
+router.post('/:id/complete', authMiddleware, async (req, res) => {
+  await getDb();
+  const order = queryOne('SELECT * FROM orders WHERE id = ? AND userId = ?', [Number(req.params.id), req.user.id]);
   if (!order) return res.status(404).json({ error: 'Order not found' });
   if (order.status !== 1) return res.status(400).json({ error: 'Order cannot be completed' });
 
   const now = new Date().toISOString();
-  db.prepare('UPDATE orders SET status = 2, completeTime = ? WHERE id = ?').run(now, order.id);
+  execute('UPDATE orders SET status = 2, completeTime = ? WHERE id = ?', [now, order.id]);
   res.json({ message: 'Order completed' });
 });
 

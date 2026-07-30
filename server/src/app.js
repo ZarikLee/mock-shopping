@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { seed } from './seed.js';
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
@@ -32,9 +31,11 @@ app.use('/api/checkin', checkinRoutes);
 // Serve frontend static files in production
 const distPath = join(__dirname, '..', '..', 'dist');
 app.use(express.static(distPath));
-app.get('*', (req, res) => {
+app.use((req, res, next) => {
   if (!req.path.startsWith('/api')) {
     res.sendFile(join(distPath, 'index.html'));
+  } else {
+    next();
   }
 });
 
@@ -42,7 +43,5 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: err.message || 'Internal server error' });
 });
-
-seed();
 
 export default app;
