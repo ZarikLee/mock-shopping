@@ -16,7 +16,7 @@ COPY --from=builder /app/dist ./dist
 
 # 复制后端代码
 COPY server/package.json ./server/
-COPY server/pnpm-lock.yaml ./server/ 2>/dev/null || true
+COPY server/pnpm-lock.yaml ./server/
 
 WORKDIR /app/server
 RUN corepack enable && pnpm install --prod
