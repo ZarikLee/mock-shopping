@@ -16,8 +16,7 @@
           保存二维码
         </el-button>
       </div>
-      <p class="share-wechat">💬 微信用户：保存二维码或截图，发送给微信好友即可</p>
-      <p class="share-hint">关闭弹窗即视为完成分享，自动发放金币奖励</p>
+      <p class="share-wechat">微信用户：保存二维码或截图，发送给微信好友即可</p>
     </div>
   </el-dialog>
 </template>
@@ -115,14 +114,5 @@ const onClosed = () => {
   color: #52c41a;
   font-size: 12px;
   margin: 0;
-}
-
-.share-hint {
-  color: #999;
-  font-size: 12px;
-  margin: 0;
-  background: #f8f8f8;
-  padding: 6px 12px;
-  border-radius: 6px;
 }
 </style>
