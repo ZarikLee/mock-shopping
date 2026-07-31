@@ -24,7 +24,7 @@
               <h3>商品分类</h3>
               <div class="filter-list">
                 <div
-                  v-for="category in categories"
+                  v-for="category in visibleCategories"
                   :key="category.id"
                   class="filter-item"
                   :class="{ active: selectedCategoryId === category.id }"
@@ -207,7 +207,7 @@
               <h3>商品分类</h3>
               <div class="mobile-filter-chips">
                 <span
-                  v-for="category in categories"
+                  v-for="category in visibleCategories"
                   :key="category.id"
                   class="filter-chip"
                   :class="{ active: selectedCategoryId === category.id }"
@@ -320,6 +320,20 @@ const showFilterPanel = ref(false)
 const showMobileFilter = ref(false)
 const sidebarCollapsed = ref(false)
 
+const currentMarket = ref(route.query.market || 'shop')
+
+const marketCategories = {
+  shop: [1,2,3,4,5,6,7,8],
+  house: [9],
+  car: [10],
+  invest: [11]
+}
+
+const visibleCategories = computed(() => {
+  const allowed = marketCategories[currentMarket.value] || []
+  return categories.filter(c => allowed.includes(c.id))
+})
+
 const quickFilters = [
   { label: '综合', value: 'default' },
   { label: '销量', value: 'sales' },
@@ -358,6 +372,10 @@ const filteredProducts = computed(() => {
   let result = [...products]
   if (selectedCategoryId.value) {
     result = result.filter(p => p.categoryId === selectedCategoryId.value)
+  }
+  if (currentMarket.value && currentMarket.value !== 'all') {
+    const allowed = marketCategories[currentMarket.value] || []
+    result = result.filter(p => allowed.includes(p.categoryId))
   }
   if (selectedBrands.value.length > 0) {
     result = result.filter(p => selectedBrands.value.includes(p.brand))
@@ -456,6 +474,9 @@ watch(() => route.query, (newQuery) => {
   }
   if (newQuery.keyword) {
     selectedCategoryId.value = null
+  }
+  if (newQuery.market) {
+    currentMarket.value = newQuery.market
   }
   currentPage.value = 1
 }, { immediate: true })

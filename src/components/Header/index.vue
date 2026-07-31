@@ -199,10 +199,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Search, ShoppingCart, ArrowDown, Menu, Close } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useAuthStore } from '../../stores/auth'
@@ -294,13 +293,24 @@ const switchCategory = (id) => {
     currentCategoryLabel.value = cat.label
     currentCategoryDesc.value = cat.desc
     localStorage.setItem('taobao_category', id)
-    if (id !== 'shop') {
-      ElMessage.info(`「${cat.label}」即将上线，敬请期待！`)
-    } else {
+    if (id === 'shop') {
       router.push('/')
+    } else {
+      router.push({ path: '/products', query: { market: id } })
     }
   }
 }
+
+watch(() => route.query.market, (market) => {
+  if (market) {
+    const cat = categories.find(c => c.id === market)
+    if (cat) {
+      currentCategory.value = cat.id
+      currentCategoryLabel.value = cat.label
+      currentCategoryDesc.value = cat.desc
+    }
+  }
+})
 
 const savedCat = localStorage.getItem('taobao_category')
 if (savedCat) {

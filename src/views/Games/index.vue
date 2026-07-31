@@ -89,9 +89,10 @@
                 </svg>
               </div>
             </div>
-            <button class="play-btn wheel-btn" :disabled="!userStore.isLoggedIn || spinning" @click="spinWheel">
+            <button class="play-btn wheel-btn" :disabled="!userStore.isLoggedIn || spinning || wheelCooldown > 0" @click="spinWheel">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><path d="M21 3v5h-5"/></svg>
-              {{ spinning ? '转动中...' : '转动转盘' }}
+              <span v-if="wheelCooldown > 0" class="cooldown-text">{{ `冷却中 ${formatCooldown(wheelCooldown)}` }}</span>
+              <span v-else>{{ spinning ? '转动中...' : '转动转盘' }}</span>
             </button>
           </div>
 
@@ -101,6 +102,7 @@
               <span class="card-badge">双倍奖励</span>
             </div>
             <p class="card-desc">下注金币，猜随机数字的大小，猜中赢得双倍金币！</p>
+            <div class="limit-text guess-limit-text cooldown-text">今日剩余次数：{{ guessRemaining }}/{{ guessDailyLimit }}</div>
             <div class="guess-body">
               <div class="bet-area">
                 <span class="bet-label">下注</span>
@@ -123,11 +125,11 @@
                 <button class="play-btn guess-again-btn" @click="resetGuess">再来一局</button>
               </div>
               <div class="guess-buttons" v-else>
-                <button class="guess-btn high" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10" @click="makeGuess('high')">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>高（大于50）
+                <button class="guess-btn high" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10 || guessDailyCount >= guessDailyLimit" @click="makeGuess('high')">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>{{ guessDailyCount >= guessDailyLimit ? '今日次数已用完' : '高（大于50）' }}
                 </button>
-                <button class="guess-btn low" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10" @click="makeGuess('low')">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>低（小于等于50）
+                <button class="guess-btn low" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10 || guessDailyCount >= guessDailyLimit" @click="makeGuess('low')">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>{{ guessDailyCount >= guessDailyLimit ? '今日次数已用完' : '低（小于等于50）' }}
                 </button>
               </div>
             </div>
@@ -139,7 +141,14 @@
               <span class="card-badge">配对有奖</span>
             </div>
             <p class="card-desc">翻开卡片，找到配对的图案！每对奖励20金币。</p>
-            <div class="match-body" v-if="!matchGameOver">
+            <div class="limit-text match-limit-text cooldown-text">今日剩余：{{ matchRemaining }}/{{ matchDailyLimit }}</div>
+            <div class="match-body match-limit-body" v-if="matchDailyCount >= matchDailyLimit && matchCards.length === 0">
+              <div class="match-result">
+                <el-icon :size="48" color="#999" class="match-result-icon"><Clock /></el-icon>
+                <span class="match-result-text">今日次数已用完，明天再来吧！</span>
+              </div>
+            </div>
+            <div class="match-body" v-else-if="!matchGameOver">
               <div class="match-grid">
                 <div v-for="(card, i) in matchCards" :key="i" class="match-card" :class="{ flipped: card.flipped || card.matched, matched: card.matched }" @click="flipCard(i)">
                   <div class="match-card-inner">
@@ -159,7 +168,7 @@
               <div class="match-result">
                 <el-icon :size="48" color="#ff4400" class="match-result-icon"><CircleCheck /></el-icon>
                 <span class="match-result-text">恭喜完成！获得 {{ matchEarned }} 金币</span>
-                <button class="play-btn match-restart-btn" @click="initMatchGame">再来一局</button>
+                <button class="play-btn match-restart-btn" :disabled="matchDailyCount >= matchDailyLimit" @click="initMatchGame">{{ matchDailyCount >= matchDailyLimit ? '今日次数已用完' : '再来一局' }}</button>
               </div>
             </div>
             <button v-if="!matchGameOver && matchEarned > 0" class="play-btn match-claim-btn" @click="claimMatchReward">领取 {{ matchEarned }} 金币</button>
@@ -235,7 +244,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { List, Trophy, ShoppingBag, Coin, CircleCheck } from '@element-plus/icons-vue'
+import { List, Trophy, ShoppingBag, Coin, CircleCheck, Clock } from '@element-plus/icons-vue'
 import { gameApi } from '../../api/games'
 import { authApi } from '../../api/auth'
 import { useUserStore } from '../../stores/user'
@@ -330,6 +339,29 @@ const spinning = ref(false)
 const showPrizeDialog = ref(false)
 const lastPrize = ref(0)
 
+const wheelCooldown = ref(0)
+let wheelCooldownTimer = null
+
+const startWheelCooldown = (seconds = 300) => {
+  wheelCooldown.value = seconds
+  localStorage.setItem('wheel_cooldown_until', Date.now() + seconds * 1000)
+  clearInterval(wheelCooldownTimer)
+  wheelCooldownTimer = setInterval(() => {
+    if (wheelCooldown.value > 0) {
+      wheelCooldown.value--
+    } else {
+      clearInterval(wheelCooldownTimer)
+      wheelCooldownTimer = null
+    }
+  }, 1000)
+}
+
+const formatCooldown = (secs) => {
+  const m = Math.floor(secs / 60)
+  const s = secs % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
 const spinWheel = async () => {
   if (spinning.value) return
   if (!userStore.isLoggedIn) {
@@ -353,6 +385,7 @@ const spinWheel = async () => {
     additional += 5 * 360
     wheelRotation.value += additional
     lastPrize.value = prize
+    startWheelCooldown()
   } catch (e) {
     spinning.value = false
     ElMessage.error(e.error || e.message || '请求失败')
@@ -380,6 +413,18 @@ const randomNumber = ref(0)
 const guessResult = ref('')
 const lastGuessScore = ref(0)
 
+const guessDailyCount = ref(0)
+const guessDailyLimit = 5
+
+const savedGuessCount = localStorage.getItem('guess_daily_count')
+const savedGuessDate = localStorage.getItem('guess_daily_date')
+const today = new Date().toDateString()
+if (savedGuessDate === today) {
+  guessDailyCount.value = parseInt(savedGuessCount || '0')
+}
+
+const guessRemaining = computed(() => Math.max(0, guessDailyLimit - guessDailyCount.value))
+
 const makeGuess = async (guess) => {
   if (guessing.value || guessRevealed.value) return
   if (!userStore.isLoggedIn) {
@@ -398,6 +443,9 @@ const makeGuess = async (guess) => {
     lastGuessScore.value = res.score
     guessRevealed.value = true
     if (res.score > 0) todayEarned.value += res.score
+    guessDailyCount.value++
+    localStorage.setItem('guess_daily_count', String(guessDailyCount.value))
+    localStorage.setItem('guess_daily_date', new Date().toDateString())
     userStore.fetchUserInfo()
     loadRecords()
   } catch (e) {
@@ -425,9 +473,26 @@ const matchGameOver = ref(false)
 const matchClaimed = ref(false)
 const matchLocked = ref(false)
 
+const matchDailyCount = ref(0)
+const matchDailyLimit = 3
+
+const savedMatchCount = localStorage.getItem('match_daily_count')
+const savedMatchDate = localStorage.getItem('match_daily_date')
+if (savedMatchDate === today) {
+  matchDailyCount.value = parseInt(savedMatchCount || '0')
+}
+
+const matchRemaining = computed(() => Math.max(0, matchDailyLimit - matchDailyCount.value))
+
 const matchIcons = ['#ff4400', '#1890ff', '#52c41a', '#faad14']
 
 const initMatchGame = () => {
+  if (matchDailyCount.value >= matchDailyLimit) {
+    matchCards.value = []
+    matchGameOver.value = false
+    matchEarned.value = 0
+    return
+  }
   const deck = [...matchIcons, ...matchIcons]
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -467,6 +532,9 @@ const flipCard = (idx) => {
       matchLocked.value = false
       if (matchPairs.value === 2) {
         matchGameOver.value = true
+        matchDailyCount.value++
+        localStorage.setItem('match_daily_count', String(matchDailyCount.value))
+        localStorage.setItem('match_daily_date', new Date().toDateString())
       }
     } else {
       setTimeout(() => {
@@ -530,6 +598,14 @@ const formatTime = (t) => {
 
 onMounted(() => {
   document.title = '赚米中心 - 淘大宝'
+  const savedCooldown = localStorage.getItem('wheel_cooldown_until')
+  if (savedCooldown) {
+    const remaining = Math.max(0, Math.floor((savedCooldown - Date.now()) / 1000))
+    if (remaining > 0) {
+      wheelCooldown.value = remaining
+      startWheelCooldown(remaining)
+    }
+  }
   if (userStore.isLoggedIn) {
     loadCheckinStatus()
     loadRecords()
@@ -766,6 +842,29 @@ onMounted(() => {
   color: #666;
   font-size: 13px;
   margin: 0 0 16px;
+}
+
+.limit-text {
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.cooldown-text {
+  color: #ff6600;
+  font-weight: 600;
+}
+
+.guess-limit-text,
+.match-limit-text {
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: 8px;
+  padding: 6px 10px;
+  text-align: center;
+}
+
+.match-limit-body .match-result {
+  padding: 30px 0;
 }
 
 .wheel-wrapper {

@@ -11,6 +11,7 @@ import couponRoutes from './routes/coupons.js';
 import gameRoutes from './routes/games.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import checkinRoutes from './routes/checkin.js';
+import stockRoutes from './routes/stocks.js';
 
 const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -27,6 +28,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/checkin', checkinRoutes);
+app.use('/api/stocks', stockRoutes);
 
 const distPath = join(__dirname, '..', '..', 'dist');
 app.use(express.static(distPath));

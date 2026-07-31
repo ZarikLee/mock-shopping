@@ -4,6 +4,7 @@
     "name": "手机",
     "icon": "Smartphone",
     "color": "#ff4400",
+    "market": "shop",
     "subcategories": ["华为", "小米", "Apple", "OPPO", "vivo", "荣耀"]
   },
   {
@@ -11,6 +12,7 @@
     "name": "电脑",
     "icon": "Monitor",
     "color": "#1890ff",
+    "market": "shop",
     "subcategories": ["笔记本", "台式机", "平板电脑", "一体机"]
   },
   {
@@ -18,6 +20,7 @@
     "name": "数码",
     "icon": "Headset",
     "color": "#722ed1",
+    "market": "shop",
     "subcategories": ["耳机", "音箱", "相机", "智能穿戴"]
   },
   {
@@ -25,6 +28,7 @@
     "name": "家电",
     "icon": "HomeFilled",
     "color": "#13c2c2",
+    "market": "shop",
     "subcategories": ["大家电", "厨房电器", "生活电器", "个护健康"]
   },
   {
@@ -32,6 +36,7 @@
     "name": "服饰",
     "icon": "Tickets",
     "color": "#eb2f96",
+    "market": "shop",
     "subcategories": ["男装", "女装", "童装", "鞋靴", "内衣"]
   },
   {
@@ -39,6 +44,7 @@
     "name": "美妆",
     "icon": "MagicStick",
     "color": "#f5222d",
+    "market": "shop",
     "subcategories": ["护肤", "彩妆", "香水", "美容工具"]
   },
   {
@@ -46,6 +52,7 @@
     "name": "食品",
     "icon": "Food",
     "color": "#52c41a",
+    "market": "shop",
     "subcategories": ["零食", "生鲜", "酒水饮料", "粮油调味"]
   },
   {
@@ -53,6 +60,7 @@
     "name": "家居",
     "icon": "Goods",
     "color": "#faad14",
+    "market": "shop",
     "subcategories": ["家具", "家纺", "灯具", "厨具"]
   },
   {
@@ -60,6 +68,7 @@
     "name": "房产",
     "icon": "OfficeBuilding",
     "color": "#722ed1",
+    "market": "house",
     "subcategories": ["新房", "二手房", "别墅", "商铺"]
   },
   {
@@ -67,6 +76,7 @@
     "name": "汽车",
     "icon": "Van",
     "color": "#13c2c2",
+    "market": "car",
     "subcategories": ["轿车", "SUV", "跑车", "新能源"]
   },
   {
@@ -74,6 +84,7 @@
     "name": "投资",
     "icon": "TrendCharts",
     "color": "#52c41a",
+    "market": "invest",
     "subcategories": ["基金", "股票", "理财", "黄金"]
   }
 ]

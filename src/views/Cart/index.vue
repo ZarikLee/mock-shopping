@@ -109,6 +109,10 @@
                 <span class="price-value">{{ cartStore.totalPrice.toFixed(2) }}</span>
               </span>
             </div>
+            <div v-if="cartStore.totalPrice > userStore.balance" class="insufficient-tip">
+              <span>余额不足，还差 ¥{{ (cartStore.totalPrice - userStore.balance).toFixed(2) }}</span>
+              <router-link to="/games" class="earn-link">去赚米中心赚钱 →</router-link>
+            </div>
             <el-button
               type="primary"
               :size="isMobile ? 'default' : 'large'"
@@ -138,6 +142,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ShoppingCart } from '@element-plus/icons-vue'
 import { useCartStore } from '../../stores/cart'
+import { useUserStore } from '../../stores/user'
 import { useDevice } from '../../utils/device'
 import PromotionBar from '../../components/PromotionBar/index.vue'
 import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
@@ -145,6 +150,7 @@ import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 const { isMobile } = useDevice()
 const router = useRouter()
 const cartStore = useCartStore()
+const userStore = useUserStore()
 const loading = ref(true)
 
 onMounted(() => {
@@ -329,6 +335,28 @@ const goToShopping = () => {
 .btn-checkout {
   padding: 12px 40px;
   font-size: 16px;
+}
+
+.insufficient-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  color: #ff4d4f;
+  font-size: 12px;
+}
+
+.earn-link {
+  color: #ff4400;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.earn-link:hover {
+  color: #e63e00;
+  text-decoration: underline;
 }
 
 .cart-empty {

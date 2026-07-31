@@ -60,7 +60,7 @@ body {
 
 .main-content {
   flex: 1;
-  padding-top: 140px;
+  padding-top: 185px;
 }
 
 a {

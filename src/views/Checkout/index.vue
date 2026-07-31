@@ -210,7 +210,7 @@ import { Location, ShoppingBag, Van, CreditCard, Ticket, Coin, Phone, Plus } fro
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useOrderStore } from '../../stores/order'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { addressApi } from '../../api/addresses'
 
 const router = useRouter()
@@ -319,6 +319,18 @@ const submitOrder = async () => {
   }
   if (cartStore.selectedItems.length === 0) {
     ElMessage.warning('请选择商品')
+    return
+  }
+
+  if (userStore.balance < totalAmount.value) {
+    const need = (totalAmount.value - userStore.balance).toFixed(2)
+    ElMessageBox.confirm(
+      `余额不足，还差 ¥${need}。去赚米中心赚金币？`,
+      '余额不足',
+      { confirmButtonText: '去赚米', cancelButtonText: '再看看', type: 'warning' }
+    ).then(() => {
+      router.push('/games')
+    }).catch(() => {})
     return
   }
 
