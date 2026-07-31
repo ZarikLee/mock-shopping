@@ -231,7 +231,7 @@ const styleClass = (style) => {
   return map[style] || 'default'
 }
 
-const chartHeight = computed(() => (isDesktop.value ? 240 : 280))
+const chartHeight = computed(() => (isDesktop.value ? 210 : 260))
 
 function updateViewport() {
   isDesktop.value = window.innerWidth >= 1024
@@ -410,13 +410,13 @@ onUnmounted(() => {
 .stock-detail-page {
   min-height: 100vh;
   background: #f5f5f5;
-  padding: 24px 0 40px;
+  padding: 20px 0 30px;
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1320px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 20px;
 }
 
 .detail-header {
@@ -814,13 +814,13 @@ onUnmounted(() => {
 
 @media (min-width: 1024px) {
   .stock-detail-page {
-    padding: 16px 0 24px;
+    padding: 12px 0 20px;
   }
 
   .detail-grid {
     display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 16px;
+    grid-template-columns: 1fr 320px;
+    gap: 14px;
     align-items: start;
   }
 
@@ -829,31 +829,62 @@ onUnmounted(() => {
   .info-card,
   .chart-card,
   .trade-card {
+    margin-bottom: 10px;
+  }
+
+  .detail-header {
+    padding: 12px 20px;
     margin-bottom: 12px;
+  }
+
+  .quote-card {
+    padding: 12px 20px;
+  }
+
+  .quote-price {
+    font-size: 30px;
   }
 
   .chart-card {
     flex: 1;
     display: flex;
     flex-direction: column;
+    padding: 14px 18px;
   }
 
   .chart-card .card-title {
     flex-shrink: 0;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
   }
 
   .chart-card .kline-wrapper,
   .chart-card :deep(.kline-chart) {
-    height: 260px !important;
+    height: 210px !important;
   }
 
   .info-card {
-    padding: 14px 18px;
+    padding: 10px 16px;
+  }
+
+  .info-grid {
+    gap: 8px;
+    margin-bottom: 8px;
   }
 
   .desc-text {
     font-size: 12px;
     line-height: 1.5;
+    -webkit-line-clamp: 1;
+  }
+
+  .trade-card {
+    padding: 14px 18px;
+  }
+
+  .trade-card .card-title {
+    padding-bottom: 8px;
+    margin-bottom: 8px;
   }
 }
 </style>
