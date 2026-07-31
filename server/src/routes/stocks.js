@@ -23,6 +23,35 @@ function initTrends() {
 }
 initTrends()
 
+// After loading stocks, init history
+function initHistory() {
+  const now = Date.now();
+  stocks.forEach((s, i) => {
+    const history = [];
+    // Generate initial history (e.g., 60 points) based on prevClose with realistic walk
+    let p = s.prevClose;
+    for (let j = 0; j < 60; j++) {
+      history.push({ time: now - (60 - j) * 60000, open: p, high: p * 1.01, low: p * 0.99, close: p, volume: Math.floor(Math.random() * 100000) });
+      p = p * (1 + (Math.random() - 0.5) * 0.02);
+    }
+    s.history = history;
+  });
+}
+initHistory();
+
+function appendHistory(stock) {
+  const last = stock.history[stock.history.length - 1];
+  stock.history.push({
+    time: Date.now(),
+    open: last.close,
+    high: Math.max(last.close, stock.price),
+    low: Math.min(last.close, stock.price),
+    close: stock.price,
+    volume: Math.floor(Math.random() * 100000)
+  });
+  if (stock.history.length > 200) stock.history.shift();
+}
+
 function simulatePrice(stock) {
   // Randomly shift trend occasionally
   if (Math.random() < 0.1) {
@@ -33,6 +62,7 @@ function simulatePrice(stock) {
   stock.price = Math.max(0.01, stock.price * (1 + move))
   stock.changePercent = Math.round(((stock.price - stock.prevClose) / stock.prevClose) * 10000) / 100
   stock.price = Math.round(stock.price * 100) / 100
+  appendHistory(stock);
   return stock
 }
 
@@ -139,6 +169,14 @@ router.get('/stats', authMiddleware, (req, res) => {
   });
 });
 
+router.get('/:symbol/history', (req, res) => {
+  const stock = stocks.find(s => s.symbol === req.params.symbol);
+  if (!stock) return res.status(404).json({ error: 'Stock not found' });
+  simulatePrice(stock);
+  // Return last 100 candles for K-line
+  res.json({ symbol: stock.symbol, name: stock.name, price: stock.price, changePercent: stock.changePercent, history: stock.history.slice(-100) });
+});
+
 router.get('/:symbol/positions', authMiddleware, (req, res) => {
   const stock = stocks.find(s => s.symbol === req.params.symbol);
   if (!stock) return res.status(404).json({ error: 'Stock not found' });
@@ -239,7 +277,16 @@ router.get('/:symbol', (req, res) => {
   const stock = stocks.find(s => s.symbol === req.params.symbol);
   if (!stock) return res.status(404).json({ error: 'Stock not found' });
   simulatePrice(stock);
-  res.json(stock);
+  res.json({
+    symbol: stock.symbol,
+    name: stock.name,
+    style: stock.style,
+    desc: stock.desc,
+    industry: stock.industry,
+    marketCap: stock.marketCap,
+    pe: stock.pe,
+    exchange: stock.exchange,
+  });
 });
 
 export default router;

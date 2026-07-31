@@ -61,7 +61,7 @@
             :data="stocks"
             class="stock-table"
             v-loading="loading"
-            @row-click="openTrading"
+            @row-click="goDetail"
           >
             <el-table-column prop="symbol" label="代码" width="100" />
             <el-table-column prop="name" label="名称" min-width="110" />
@@ -80,6 +80,11 @@
                 <span class="change-amount" :class="trendClass(row)">{{ formatChangeAmount(row) }}</span>
               </template>
             </el-table-column>
+            <el-table-column label="操作" width="80" align="center">
+              <template #default>
+                <span class="view-hint">查看</span>
+              </template>
+            </el-table-column>
           </el-table>
         </div>
 
@@ -94,7 +99,7 @@
                 v-for="h in holdings"
                 :key="h.symbol"
                 class="holding-card"
-                @click="openTradingBySymbol(h.symbol)"
+                @click="goDetailBySymbol(h.symbol)"
               >
                 <div class="holding-top">
                   <div class="holding-name">
@@ -243,6 +248,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { TrendCharts, Wallet, Lock } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
@@ -250,6 +256,7 @@ import { stockApi } from '../../api/stocks'
 import { useUserStore } from '../../stores/user'
 import { useAuthStore } from '../../stores/auth'
 
+const router = useRouter()
 const userStore = useUserStore()
 const authStore = useAuthStore()
 
@@ -340,7 +347,11 @@ async function refreshStats() {
 
 function startAutoRefresh() {
   stopAutoRefresh()
-  refreshTimer = setInterval(() => refreshStocks(true), 5000)
+  refreshTimer = setInterval(() => {
+    refreshStocks(true)
+    refreshStats()
+    refreshHoldings()
+  }, 5000)
 }
 
 function stopAutoRefresh() {
@@ -378,6 +389,14 @@ function openTradingBySymbol(symbol) {
   }
   const stock = stocks.value.find(s => s.symbol === symbol)
   if (stock) openTrading(stock)
+}
+
+function goDetail(row) {
+  router.push(`/stocks/${row.symbol}`)
+}
+
+function goDetailBySymbol(symbol) {
+  router.push(`/stocks/${symbol}`)
 }
 
 const tradingTitle = computed(() =>
@@ -692,6 +711,19 @@ onUnmounted(() => {
 
 :deep(.stock-table .el-table__row) {
   cursor: pointer;
+}
+
+.view-hint {
+  font-size: 12px;
+  color: #ff4400;
+  background: #fff5f0;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+:deep(.stock-table .el-table__row:hover) .view-hint {
+  background: #ff4400;
+  color: #fff;
 }
 
 .up { color: #ff4d4f; }
