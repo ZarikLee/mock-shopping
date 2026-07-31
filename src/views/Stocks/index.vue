@@ -57,9 +57,22 @@
             <span class="title-text">股票行情</span>
             <span class="last-update" v-if="lastUpdate">最近更新 {{ lastUpdate }}</span>
           </div>
+
+          <!-- 排序筛选 -->
+          <div class="sort-toolbar">
+            <span class="sort-label">排序</span>
+            <span
+              v-for="opt in sortOptions"
+              :key="opt.value"
+              class="sort-chip"
+              :class="{ active: currentSort === opt.value }"
+              @click="changeSort(opt.value)"
+            >{{ opt.label }}</span>
+          </div>
+
           <el-table
             v-if="!isMobile"
-            :data="stocks"
+            :data="sortedStocks"
             class="stock-table"
             v-loading="loading"
             @row-click="openTrading"
@@ -93,7 +106,7 @@
 
           <!-- 移动端卡片列表 -->
           <div class="stock-cards" v-if="isMobile" v-loading="loading">
-            <div v-for="s in stocks" :key="s.symbol" class="stock-card" @click="openTrading(s)">
+            <div v-for="s in sortedStocks" :key="s.symbol" class="stock-card" @click="openTrading(s)">
               <div class="sc-main">
                 <div class="sc-name">
                   <span class="sc-stock-name">{{ s.name }}</span>
@@ -293,6 +306,27 @@ const holdingsLoading = ref(false)
 const lastUpdate = ref('')
 const stats = ref(null)
 let refreshTimer = null
+
+// 行情排序筛选
+const currentSort = ref('default')
+const sortOptions = [
+  { label: '默认', value: 'default' },
+  { label: '价格最高', value: 'priceDesc' },
+  { label: '价格最低', value: 'priceAsc' },
+  { label: '涨幅最高', value: 'gainDesc' },
+  { label: '跌幅最大', value: 'gainAsc' },
+]
+const sortedStocks = computed(() => {
+  const list = [...stocks.value]
+  switch (currentSort.value) {
+    case 'priceDesc': list.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0)); break
+    case 'priceAsc': list.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0)); break
+    case 'gainDesc': list.sort((a, b) => (Number(b.changePercent) || 0) - (Number(a.changePercent) || 0)); break
+    case 'gainAsc': list.sort((a, b) => (Number(a.changePercent) || 0) - (Number(b.changePercent) || 0)); break
+  }
+  return list
+})
+const changeSort = (val) => { currentSort.value = val }
 
 const balanceText = computed(() => Number(userStore.balance).toFixed(2))
 
@@ -754,6 +788,41 @@ onUnmounted(() => {
 .last-update {
   font-size: 12px;
   color: #999;
+}
+
+.sort-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+}
+
+.sort-label {
+  font-size: 12px;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.sort-chip {
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #666;
+  background: #f5f5f5;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.sort-chip:hover {
+  color: #ff4400;
+}
+
+.sort-chip.active {
+  background: #ff4400;
+  color: #fff;
 }
 
 .holding-count {
