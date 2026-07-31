@@ -67,7 +67,7 @@
             <el-table-column prop="name" label="名称" min-width="90" />
             <el-table-column label="现价" width="100" align="right">
               <template #default="{ row }">
-                <span class="price-cell" :class="flashClass(row.symbol)">{{ formatPrice(row.price) }}</span>
+                <span class="price-cell" :class="trendClass(row)">{{ formatPrice(row.price) }}</span>
               </template>
             </el-table-column>
             <el-table-column label="涨跌幅" min-width="110" align="right">
@@ -269,8 +269,6 @@ const holdings = ref([])
 const holdingsLoading = ref(false)
 const lastUpdate = ref('')
 const stats = ref(null)
-const flashMap = reactive({})
-const flashTimers = {}
 let refreshTimer = null
 
 const balanceText = computed(() => Number(userStore.balance).toFixed(2))
@@ -295,34 +293,28 @@ const profitClass = (v) => (Number(v) >= 0 ? 'up' : 'down')
 const pnlClass = (v) => (Number(v) > 0 ? 'up' : Number(v) < 0 ? 'down' : 'flat')
 const signedMoney = (v) => (Number(v) > 0 ? '+' : '') + formatMoney(v)
 
-const flashClass = (symbol) => flashMap[symbol] || ''
-
 async function refreshStocks(silent = false) {
   if (!silent) loading.value = true
   try {
     const res = await stockApi.list()
     const list = res.stocks || res || []
-    applyFlash(list)
-    stocks.value = list
+    // 原地更新已有数据，避免整表重渲染
+    const map = {}
+    stocks.value.forEach(s => { map[s.symbol] = s })
+    list.forEach(item => {
+      const existing = map[item.symbol]
+      if (existing) {
+        Object.assign(existing, item)
+      } else {
+        stocks.value.push(item)
+      }
+    })
     lastUpdate.value = new Date().toLocaleTimeString()
   } catch {
     if (!silent) ElMessage.error('获取行情失败')
   } finally {
     loading.value = false
   }
-}
-
-function applyFlash(list) {
-  const prev = {}
-  stocks.value.forEach(s => { prev[s.symbol] = Number(s.price) })
-  list.forEach(s => {
-    const old = prev[s.symbol]
-    if (old !== undefined && Number(s.price) !== old) {
-      flashMap[s.symbol] = Number(s.price) > old ? 'flash-up' : 'flash-down'
-      clearTimeout(flashTimers[s.symbol])
-      flashTimers[s.symbol] = setTimeout(() => { flashMap[s.symbol] = '' }, 1200)
-    }
-  })
 }
 
 async function refreshHoldings() {
@@ -778,7 +770,12 @@ onUnmounted(() => {
   border-radius: 4px;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+  transition: color 0.3s;
 }
+
+.price-cell.up { color: #ff4d4f; }
+.price-cell.down { color: #00b578; }
+.price-cell.flat { color: #333; }
 
 .prev-close-cell {
   font-variant-numeric: tabular-nums;
@@ -804,18 +801,6 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-.flash-up { animation: flash-up 1.2s ease; }
-.flash-down { animation: flash-down 1.2s ease; }
-
-@keyframes flash-up {
-  0% { background: rgba(255, 77, 79, 0.35); }
-  100% { background: transparent; }
-}
-
-@keyframes flash-down {
-  0% { background: rgba(0, 181, 120, 0.35); }
-  100% { background: transparent; }
-}
 
 .holdings-list {
   padding: 8px;
