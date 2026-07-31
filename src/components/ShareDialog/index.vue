@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="showShare" width="420px" title="分享赚金币">
+  <el-dialog v-model="showShare" width="420px" title="分享赚金币" @closed="onClosed">
     <div class="share-body">
       <p class="share-tip">把淘大宝分享给好友，好友也能来玩！</p>
       <div class="share-qr">
@@ -7,38 +7,34 @@
       </div>
       <p class="share-url">{{ shareStore.shareUrl }}</p>
       <div class="share-actions">
-        <el-button type="primary" @click="copyLink">复制链接</el-button>
-        <el-button v-if="canNativeShare" @click="nativeShare">分享给好友</el-button>
+        <el-button type="primary" @click="copyLink">
+          <el-icon><Link /></el-icon>
+          复制链接
+        </el-button>
+        <el-button type="success" @click="saveQr">
+          <el-icon><Download /></el-icon>
+          保存二维码
+        </el-button>
       </div>
-      <p class="share-wechat">💬 微信用户：长按二维码或截图，发送给微信好友</p>
-      <el-button
-        class="share-confirm-btn"
-        type="success"
-        size="large"
-        :disabled="shared"
-        @click="confirmShared"
-      >
-        {{ shared ? '已领取奖励' : '我已分享，领取金币' }}
-      </el-button>
+      <p class="share-wechat">💬 微信用户：保存二维码或截图，发送给微信好友即可</p>
+      <p class="share-hint">关闭弹窗即视为完成分享，自动发放金币奖励</p>
     </div>
   </el-dialog>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Link, Download } from '@element-plus/icons-vue'
 import { useShareStore } from '../../stores/share'
 
 const emit = defineEmits(['shared'])
 const shareStore = useShareStore()
-const shared = ref(false)
 
 const showShare = computed({
   get: () => shareStore.showShare,
   set: (v) => { shareStore.showShare = v }
 })
-
-const canNativeShare = computed(() => typeof navigator !== 'undefined' && !!navigator.share)
 
 const qrUrl = computed(() => `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(shareStore.shareUrl)}&size=200x200`)
 
@@ -51,17 +47,23 @@ const copyLink = async () => {
   }
 }
 
-const nativeShare = async () => {
+const saveQr = async () => {
   try {
-    await navigator.share({ title: '淘大宝', text: '快来淘大宝玩吧！', url: shareStore.shareUrl })
+    const res = await fetch(qrUrl.value)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '淘大宝分享二维码.png'
+    a.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success('二维码已保存')
   } catch {
-    // 用户取消或分享失败，不发放奖励
+    ElMessage.warning('保存失败，请长按二维码保存')
   }
 }
 
-const confirmShared = () => {
-  if (shared.value) return
-  shared.value = true
+const onClosed = () => {
   emit('shared')
 }
 </script>
@@ -115,10 +117,12 @@ const confirmShared = () => {
   margin: 0;
 }
 
-.share-confirm-btn {
-  width: 100%;
-  height: 44px;
-  font-size: 15px;
-  margin-top: 4px;
+.share-hint {
+  color: #999;
+  font-size: 12px;
+  margin: 0;
+  background: #f8f8f8;
+  padding: 6px 12px;
+  border-radius: 6px;
 }
 </style>
