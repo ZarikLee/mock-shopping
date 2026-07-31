@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '../api/auth'
+import { addressApi } from '../api/addresses'
 import { getLevel } from '../data/achievements'
 
 export const useUserStore = defineStore('user', () => {
@@ -24,6 +25,7 @@ export const useUserStore = defineStore('user', () => {
       try {
         const res = await authApi.getMe()
         userInfo.value = res.data || res
+        await loadAddresses(userInfo.value)
         localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
       } catch {
         token.value = ''
@@ -33,11 +35,21 @@ export const useUserStore = defineStore('user', () => {
     })()
   }
 
+  const loadAddresses = async (user) => {
+    if (!user) return
+    try {
+      user.addresses = await addressApi.list()
+    } catch {
+      user.addresses = []
+    }
+  }
+
   const initDefaultUser = async () => {
     if (!token.value) return
     try {
       const res = await authApi.getMe()
       userInfo.value = res.data || res
+      await loadAddresses(userInfo.value)
       localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
     } catch {
       token.value = ''
@@ -51,6 +63,7 @@ export const useUserStore = defineStore('user', () => {
     const data = res.data || res
     token.value = data.token
     userInfo.value = data.user
+    await loadAddresses(userInfo.value)
     localStorage.setItem('token', data.token)
     localStorage.setItem('userInfo', JSON.stringify(data.user))
     return data
@@ -71,6 +84,7 @@ export const useUserStore = defineStore('user', () => {
   const fetchUserInfo = async () => {
     const res = await authApi.getMe()
     userInfo.value = res.data || res
+    await loadAddresses(userInfo.value)
     localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
   }
 

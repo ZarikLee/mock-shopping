@@ -105,37 +105,6 @@
         </div>
       </div>
 
-      <!-- 支付方式 -->
-      <div class="section payment-section">
-        <h2 class="section-title">
-          <el-icon><CreditCard /></el-icon>
-          支付方式
-        </h2>
-        <div class="payment-options">
-          <el-radio-group v-model="paymentType">
-            <el-radio :value="1">
-              <span class="payment-option">
-                <el-icon class="payment-icon"><Coin /></el-icon>
-                <span>余额支付</span>
-                <span class="balance">(可用余额: ¥{{ userStore.balance.toFixed(2) }})</span>
-              </span>
-            </el-radio>
-            <el-radio :value="2">
-              <span class="payment-option">
-                <el-icon class="payment-icon"><CreditCard /></el-icon>
-                <span>模拟支付宝</span>
-              </span>
-            </el-radio>
-            <el-radio :value="3">
-              <span class="payment-option">
-                <el-icon class="payment-icon"><Phone /></el-icon>
-                <span>模拟微信支付</span>
-              </span>
-            </el-radio>
-          </el-radio-group>
-        </div>
-      </div>
-
       <!-- 优惠券 -->
       <div class="section coupon-section">
         <h2 class="section-title">
@@ -207,7 +176,7 @@
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { Location, ShoppingBag, Van, CreditCard, Ticket, Coin, Phone, Plus } from '@element-plus/icons-vue'
+import { Location, ShoppingBag, Van, Ticket, Plus } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
 import AddressPicker from '../../components/AddressPicker/index.vue'
 import { useUserStore } from '../../stores/user'
@@ -227,9 +196,6 @@ const selectedAddressId = ref(defaultAddress?.id || userStore.userInfo?.addresse
 
 // 配送方式
 const deliveryType = ref(1)
-
-// 支付方式
-const paymentType = ref(1)
 
 // 优惠券
 const selectedCouponId = ref(0)
@@ -530,16 +496,14 @@ const submitOrder = async () => {
   color: #999;
 }
 
-/* 配送和支付 */
-.delivery-options,
-.payment-options {
+/* 配送 */
+.delivery-options {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.delivery-option,
-.payment-option {
+.delivery-option {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -553,15 +517,6 @@ const submitOrder = async () => {
 .delivery-price {
   color: #ff4400;
   font-weight: bold;
-}
-
-.payment-icon {
-  display: flex;
-}
-
-.balance {
-  font-size: 12px;
-  color: #999;
 }
 
 /* 优惠券 */

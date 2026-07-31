@@ -15,31 +15,15 @@
           </p>
 
           <div class="payment-methods">
-            <h3>选择支付方式</h3>
+            <h3>支付方式</h3>
             <div class="method-list">
-              <div class="method-item" :class="{ active: selectedMethod === 'balance' }" @click="selectedMethod = 'balance'">
+              <div class="method-item active">
                 <el-icon class="method-icon"><Coin /></el-icon>
                 <div class="method-info">
                   <span class="method-name">余额支付</span>
                   <span class="method-desc">可用余额：¥{{ userStore.balance.toFixed(2) }}</span>
                 </div>
-                <el-icon v-if="selectedMethod === 'balance'" class="check-icon"><CircleCheck /></el-icon>
-              </div>
-              <div class="method-item" :class="{ active: selectedMethod === 'alipay' }" @click="selectedMethod = 'alipay'">
-                <el-icon class="method-icon"><CreditCard /></el-icon>
-                <div class="method-info">
-                  <span class="method-name">模拟支付宝</span>
-                  <span class="method-desc">推荐支付宝用户使用</span>
-                </div>
-                <el-icon v-if="selectedMethod === 'alipay'" class="check-icon"><CircleCheck /></el-icon>
-              </div>
-              <div class="method-item" :class="{ active: selectedMethod === 'wechat' }" @click="selectedMethod = 'wechat'">
-                <el-icon class="method-icon"><Phone /></el-icon>
-                <div class="method-info">
-                  <span class="method-name">模拟微信支付</span>
-                  <span class="method-desc">推荐微信用户使用</span>
-                </div>
-                <el-icon v-if="selectedMethod === 'wechat'" class="check-icon"><CircleCheck /></el-icon>
+                <el-icon class="check-icon"><CircleCheck /></el-icon>
               </div>
             </div>
           </div>
@@ -102,7 +86,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Timer, CircleCheck, Coin, CreditCard, Phone } from '@element-plus/icons-vue'
+import { Timer, CircleCheck, Coin } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useOrderStore } from '../../stores/order'
 import { authApi } from '../../api/auth'
@@ -115,19 +99,12 @@ const route = useRoute()
 const userStore = useUserStore()
 const orderStore = useOrderStore()
 
-const selectedMethod = ref('balance')
 const paying = ref(false)
 const paymentSuccess = ref(false)
 const payDialogVisible = ref(false)
 
-const methodBrands = {
-  alipay: { name: '支付宝', icon: 'Wallet' },
-  wechat: { name: '微信支付', icon: 'ChatDotRound' },
-  balance: { name: '余额支付', icon: 'Coin' }
-}
-
-const payBrandName = computed(() => methodBrands[selectedMethod.value]?.name || '支付')
-const payBrandIcon = computed(() => methodBrands[selectedMethod.value]?.icon || '')
+const payBrandName = '余额支付'
+const payBrandIcon = 'Wallet'
 
 onMounted(() => { document.title = '支付 - 淘大宝' })
 
@@ -136,7 +113,7 @@ const order = computed(() => {
 })
 
 const handlePay = () => {
-  if (selectedMethod.value === 'balance' && userStore.balance < order.value.payAmount) {
+  if (userStore.balance < order.value.payAmount) {
     ElMessage.error('余额不足')
     return
   }
@@ -156,9 +133,7 @@ const handlePasswordConfirm = async (password) => {
     return
   }
 
-  if (selectedMethod.value === 'balance') {
-    userStore.deductBalance(order.value.payAmount)
-  }
+  userStore.deductBalance(order.value.payAmount)
 
   paying.value = true
   payDialogVisible.value = false
