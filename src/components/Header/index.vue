@@ -415,10 +415,12 @@ if (savedCat) {
 }
 
 .logo-text {
+  font-family: 'ZCOOL KuaiLe', 'PingFang SC', sans-serif;
   font-size: 28px;
-  font-weight: bold;
+  font-weight: 400;
   color: #ff4400;
   line-height: 1.2;
+  letter-spacing: 2px;
 }
 
 .logo-slogan {
@@ -483,7 +485,8 @@ if (savedCat) {
 .market-switcher-bar {
   background: #fff;
   border-bottom: 1px solid #f0f0f0;
-  height: 44px;
+  height: 32px;
+  font-size: 12px;
 }
 
 .market-switcher-bar .container {
@@ -509,7 +512,7 @@ if (savedCat) {
   gap: 4px;
   cursor: pointer;
   color: #ff4400;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -527,6 +530,9 @@ if (savedCat) {
   margin-left: 12px;
   padding-left: 12px;
   border-left: 1px solid #e8e8e8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dropdown-item-content {
@@ -601,9 +607,12 @@ if (savedCat) {
 }
 
 .mobile-logo {
+  font-family: 'ZCOOL KuaiLe', 'PingFang SC', sans-serif;
   font-size: 20px;
-  font-weight: bold;
+  font-weight: 400;
   color: #ff4400;
+  white-space: nowrap;
+  letter-spacing: 1px;
 }
 
 .header-actions {

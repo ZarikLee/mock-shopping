@@ -597,8 +597,8 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.up { color: #00b578; }
-.down { color: #ff4d4f; }
+.up { color: #ff4d4f; }
+.down { color: #00b578; }
 .flat { color: #666; }
 
 .price-cell {
@@ -618,8 +618,8 @@ onUnmounted(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.trend-badge.up { color: #00b578; background: rgba(0, 181, 120, 0.1); }
-.trend-badge.down { color: #ff4d4f; background: rgba(255, 77, 79, 0.1); }
+.trend-badge.up { color: #ff4d4f; background: rgba(255, 77, 79, 0.1); }
+.trend-badge.down { color: #00b578; background: rgba(0, 181, 120, 0.1); }
 .trend-badge.flat { color: #666; background: #f5f5f5; }
 
 .change-amount {
