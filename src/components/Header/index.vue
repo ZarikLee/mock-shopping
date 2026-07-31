@@ -80,6 +80,13 @@
             </div>
           </el-badge>
         </div>
+
+        <!-- 常驻全局入口（不随菜单收起） -->
+        <div class="global-links" v-if="!isMobile">
+          <router-link to="/games" class="global-link" :class="{ active: isActiveNav({ path: '/games' }) }">赚米中心</router-link>
+          <router-link to="/leaderboard" class="global-link" :class="{ active: isActiveNav({ path: '/leaderboard' }) }">排行榜</router-link>
+          <router-link to="/activities" class="global-link" :class="{ active: isActiveNav({ path: '/activities' }) }">活动</router-link>
+        </div>
       </div>
     </div>
 
@@ -108,11 +115,6 @@
             <router-link v-for="item in currentNavItems" :key="item.label" :to="item.path" class="nav-item" :class="{ active: isActiveNav(item) }">
               {{ item.label }}<span v-if="item.badge" class="nav-item-badge">{{ item.badge }}</span>
             </router-link>
-          </div>
-          <div class="nav-right">
-            <router-link to="/games" class="nav-item" :class="{ active: isActiveNav({ path: '/games' }) }">赚米中心</router-link>
-            <router-link to="/leaderboard" class="nav-item" :class="{ active: isActiveNav({ path: '/leaderboard' }) }">全服排行榜</router-link>
-            <router-link to="/activities" class="nav-item" :class="{ active: isActiveNav({ path: '/activities' }) }">限时活动</router-link>
           </div>
         </div>
       </div>
@@ -515,7 +517,7 @@ watch(() => route.query.market, syncCategoryFromRoute)
 }
 
 .main-nav-bar.collapsed {
-  max-height: 46px;
+  max-height: 0;
   border-top-width: 0;
   border-bottom-width: 0;
 }
@@ -551,16 +553,35 @@ watch(() => route.query.market, syncCategoryFromRoute)
   min-width: 0;
 }
 
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
 .hide-on-collapse {
   display: none;
+}
+
+.global-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 24px;
+  flex-shrink: 0;
+}
+
+.global-link {
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #333;
+  border-radius: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.global-link:hover {
+  color: #ff4400;
+  background: #fff5f0;
+}
+
+.global-link.active {
+  color: #ff4400;
+  font-weight: 600;
 }
 
 .nav-toggle-float {
