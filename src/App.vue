@@ -1,7 +1,7 @@
 <template>
   <div id="app" :class="{ 'is-mobile': isMobile }">
     <Header />
-    <main class="main-content" :style="{ paddingTop: isMobile ? '56px' : (uiStore.menuCollapsed ? '96px' : '140px') }">
+    <main class="main-content" :class="{ 'menu-collapsed': uiStore.menuCollapsed }">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -62,16 +62,23 @@ body {
 
 .main-content {
   flex: 1;
+  padding-top: 140px;
   transition: padding-top 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-content.menu-collapsed {
+  padding-top: 96px;
+}
+
+.is-mobile .main-content {
+  padding-top: 56px;
+  padding-bottom: 60px;
+  transition: none;
 }
 
 a {
   text-decoration: none;
   color: inherit;
-}
-
-.is-mobile .main-content {
-  padding-bottom: 60px;
 }
 
 .fade-enter-active, .fade-leave-active {
