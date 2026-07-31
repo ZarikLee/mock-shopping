@@ -38,9 +38,7 @@
             </div>
           </div>
           <div class="member-criteria">
-            <span class="mc-label">会员等级（按资产值）</span>
-            <span class="mc-detail">余额 ¥{{ userStore.balance.toFixed(2) }} + 经验 {{ userStore.experience }} + 投资收益 ¥{{ stockPnL.toFixed(2) }} = 资产值 ¥{{ memberScore.toLocaleString() }}</span>
-            <span class="mc-detail" v-if="nextMemberTier">再攒 ¥{{ nextMemberNeed }} 升级为{{ nextMemberTier.name }}</span>
+            <span class="mc-detail" v-if="nextMemberTier">还差 ¥{{ nextMemberNeed }} 总资产升级为{{ nextMemberTier.name }}</span>
             <span class="mc-detail" v-else>已达最高等级</span>
           </div>
           <div class="profile-stats">

@@ -18,11 +18,6 @@
             <el-icon class="mc-arrow"><ArrowRight /></el-icon>
           </div>
 
-          <div class="contacts-btn" @click="openContactsDialog">
-            <el-icon><User /></el-icon>
-            <span>联系人</span>
-          </div>
-
           <div class="conv-list" v-loading="conversationsLoading">
             <div
               v-for="conv in conversations"
@@ -45,7 +40,7 @@
             </div>
             <div v-if="!conversationsLoading && !conversations.length" class="conv-empty">
               <el-icon :size="44"><ChatDotRound /></el-icon>
-              <p>暂无会话，点击"联系人"开始聊天</p>
+              <p>暂无会话，去排行榜找好友聊天吧</p>
             </div>
           </div>
         </aside>
@@ -114,28 +109,6 @@
         <el-button class="send-btn" type="primary" :loading="feedbackSubmitting" @click="submitFeedback">提交反馈</el-button>
       </template>
     </el-dialog>
-
-    <el-dialog v-model="contactsDialogVisible" title="选择联系人" width="420px">
-      <div class="contact-list" v-loading="contactsLoading">
-        <div
-          v-for="u in contacts"
-          :key="u.userId || u.id"
-          class="contact-item"
-          @click="startChatWith(u)"
-        >
-          <img :src="u.avatar || defaultAvatar" alt="avatar" class="contact-avatar" />
-          <div class="contact-info">
-            <span class="contact-name">{{ u.nickname || u.username }}</span>
-            <span class="contact-id">ID: {{ u.userId || u.id }}</span>
-          </div>
-          <el-button type="primary" link>发消息</el-button>
-        </div>
-        <div v-if="!contactsLoading && !contacts.length" class="conv-empty">
-          <el-icon :size="44"><User /></el-icon>
-          <p>暂无其他用户</p>
-        </div>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -176,10 +149,6 @@ const feedbackDialogVisible = ref(false)
 const feedbackType = ref('问题反馈')
 const feedbackContent = ref('')
 const feedbackSubmitting = ref(false)
-
-const contactsDialogVisible = ref(false)
-const contacts = ref([])
-const contactsLoading = ref(false)
 
 const loadConversations = async (silent = false) => {
   if (!silent) conversationsLoading.value = true
@@ -303,26 +272,6 @@ const submitFeedback = async () => {
   } finally {
     feedbackSubmitting.value = false
   }
-}
-
-const openContactsDialog = async () => {
-  contactsDialogVisible.value = true
-  if (contacts.value.length) return
-  contactsLoading.value = true
-  try {
-    const res = await leaderboardApi.getByBalance()
-    const raw = Array.isArray(res) ? res : (res.leaderboard || [])
-    contacts.value = raw.filter(i => Number(i.userId || i.id) !== myId.value)
-  } catch {
-    ElMessage.error('加载联系人失败')
-  } finally {
-    contactsLoading.value = false
-  }
-}
-
-const startChatWith = (u) => {
-  contactsDialogVisible.value = false
-  openConversationByUserId(Number(u.userId || u.id))
 }
 
 const closeMobileChat = () => {
@@ -502,22 +451,6 @@ watch(() => route.query, () => handleRouteQuery())
   opacity: 0.9;
 }
 
-.contacts-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  font-size: 14px;
-  color: #ff4400;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.2s;
-}
-
-.contacts-btn:hover {
-  background: #fff5f0;
-}
-
 .conv-list {
   flex: 1;
   overflow-y: auto;
@@ -666,7 +599,7 @@ watch(() => route.query, () => handleRouteQuery())
   flex: 1;
   overflow-y: auto;
   padding: 20px;
-  background: #f5f5f5;
+  background: #fff;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -707,10 +640,9 @@ watch(() => route.query, () => handleRouteQuery())
 }
 
 .msg-row.theirs .msg-bubble {
-  background: #fff;
+  background: #f5f5f5;
   color: #333;
   border-top-left-radius: 2px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .chat-input-row {
@@ -774,56 +706,6 @@ watch(() => route.query, () => handleRouteQuery())
 
 .feedback-types :deep(.el-radio-button:first-child .el-radio-button__inner) {
   border-left-color: #dcdfe6;
-}
-
-.contact-list {
-  max-height: 420px;
-  overflow-y: auto;
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 8px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-
-.contact-item:hover {
-  background: #fff5f0;
-}
-
-.contact-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.contact-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.contact-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-
-.contact-id {
-  font-size: 12px;
-  color: #999;
-}
-
-.contact-item .el-button {
-  color: #ff4400;
 }
 
 @media (max-width: 768px) {
