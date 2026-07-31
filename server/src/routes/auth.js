@@ -33,13 +33,15 @@ function addExperience(userId, amount) {
 }
 
 router.post('/register', (req, res) => {
-  const { username, password, nickname } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ error: '用户名和密码不能为空' });
+  const { account, username, password, nickname } = req.body;
+  if (!account || !username || !password) {
+    return res.status(400).json({ error: '账号、用户名和密码不能为空' });
   }
-  const account = 'TD' + Date.now() + Math.floor(Math.random() * 1000);
+  if (account.length < 3) {
+    return res.status(400).json({ error: '账号至少3位（数字或字母）' });
+  }
   if (queryOne('users', { account })) {
-    return res.status(409).json({ error: '账号生成冲突，请重试' });
+    return res.status(409).json({ error: '账号已存在' });
   }
   const hashed = bcrypt.hashSync(password, 10);
   const now = new Date().toISOString();

@@ -113,21 +113,20 @@
     <div class="header-nav" v-if="!isMobile">
       <div class="container">
         <div class="nav-list">
-          <router-link to="/" class="nav-item" :class="{ active: route.path === '/' }">首页</router-link>
-          <router-link
-            v-for="item in currentNavItems"
-            :key="item.label"
-            :to="item.path"
-            class="nav-item"
-            :class="{ active: route.path === item.path || route.query.market === currentCategory }"
-          >{{ item.label }}</router-link>
-          <span class="nav-divider"></span>
-          <router-link
-            v-for="item in globalNavItems"
-            :key="item.label"
-            :to="item.path"
-            class="nav-item nav-global"
-          >{{ item.label }}</router-link>
+          <div class="nav-market-items">
+            <router-link
+              v-for="item in currentNavItems"
+              :key="item.label"
+              :to="item.path"
+              class="nav-item"
+            >{{ item.label }}</router-link>
+          </div>
+          <div class="nav-global-items">
+            <router-link to="/games" class="nav-item">赚米中心</router-link>
+            <router-link to="/activities" class="nav-item">限时活动</router-link>
+            <router-link to="/leaderboard" class="nav-item">全服排行榜</router-link>
+            <router-link to="/user" class="nav-item">个人中心</router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -302,31 +301,12 @@ const marketNavItems = {
     { label: '美妆个护', path: '/products?categoryId=6' },
     { label: '家用电器', path: '/products?categoryId=4' },
   ],
-  house: [
-    { label: '全部房源', path: '/products?market=house' },
-    { label: '新房', path: '/products?market=house&subcategory=新房' },
-    { label: '二手房', path: '/products?market=house&subcategory=二手房' },
-    { label: '别墅', path: '/products?market=house&subcategory=别墅' },
-  ],
-  car: [
-    { label: '全部车型', path: '/products?market=car' },
-    { label: '轿车', path: '/products?market=car&subcategory=轿车' },
-    { label: 'SUV', path: '/products?market=car&subcategory=SUV' },
-    { label: '新能源', path: '/products?market=car&subcategory=新能源' },
-  ],
-  invest: [
-    { label: '股票交易', path: '/stocks' },
-    { label: '我的持仓', path: '/stocks#holdings' },
-  ]
+  house: [ { label: '全部房源', path: '/products?market=house' } ],
+  car: [ { label: '全部车型', path: '/products?market=car' } ],
+  invest: [ { label: '股票交易', path: '/stocks' } ]
 }
 
 const currentNavItems = computed(() => marketNavItems[currentCategory.value] || marketNavItems.shop)
-
-const globalNavItems = [
-  { label: '赚米中心', path: '/games' },
-  { label: '限时活动', path: '/activities' },
-  { label: '全服排行榜', path: '/leaderboard' },
-]
 
 const switchCategory = (id) => {
   const cat = categories.find(c => c.id === id)
@@ -577,6 +557,17 @@ if (savedCat) {
 .nav-list {
   display: flex;
   flex: 1;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-market-items {
+  display: flex;
+}
+
+.nav-global-items {
+  display: flex;
+  gap: 4px;
 }
 
 .nav-item {
@@ -589,18 +580,6 @@ if (savedCat) {
 .nav-item:hover {
   color: #ff4400;
   background: #fff5f0;
-}
-
-.nav-divider {
-  width: 1px;
-  height: 20px;
-  background: #e0e0e0;
-  margin: 10px 16px;
-  flex-shrink: 0;
-}
-
-.nav-global {
-  color: #666;
 }
 
 .nav-item.active {

@@ -346,7 +346,9 @@ const quickFilters = [
 ]
 
 const brands = computed(() => {
-  const brandSet = new Set(products.map(p => p.brand))
+  const allowed = marketCategories[currentMarket.value] || []
+  const marketProducts = products.filter(p => allowed.includes(p.categoryId))
+  const brandSet = new Set(marketProducts.map(p => p.brand))
   return Array.from(brandSet)
 })
 

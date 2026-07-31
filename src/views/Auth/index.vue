@@ -62,11 +62,19 @@
         class="auth-form"
         @keyup.enter="handleRegister"
       >
+        <el-form-item label="账号" prop="account">
+          <el-input
+            v-model="registerForm.account"
+            placeholder="设置账号，至少3位（数字或字母）"
+            :prefix-icon="User"
+            size="large"
+          />
+        </el-form-item>
         <el-form-item label="用户名（展示用）" prop="username">
           <el-input
             v-model="registerForm.username"
             placeholder="请输入用户名"
-            :prefix-icon="User"
+            :prefix-icon="EditPen"
             size="large"
           />
         </el-form-item>
@@ -144,6 +152,7 @@ const loginRules = {
 }
 
 const registerForm = reactive({
+  account: '',
   username: '',
   nickname: '',
   password: '',
@@ -159,6 +168,10 @@ const validateConfirmPassword = (rule, value, callback) => {
 }
 
 const registerRules = {
+  account: [
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { min: 3, message: '账号至少3位（数字或字母）', trigger: 'blur' }
+  ],
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
   password: [
@@ -199,7 +212,7 @@ const handleRegister = async () => {
   }
   loading.value = true
   try {
-    const res = await userStore.register(registerForm.username, registerForm.password, registerForm.nickname)
+    const res = await userStore.register(registerForm.account, registerForm.username, registerForm.password, registerForm.nickname)
     const account = res?.account
     ElMessage.success(`注册成功，您的账号是 ${account}，请使用账号登录`)
     isLogin.value = true
