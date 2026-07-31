@@ -84,25 +84,19 @@
       </div>
     </div>
 
-    <div class="header-nav" v-if="!isMobile">
+    <div class="market-switcher-bar" v-if="!isMobile">
       <div class="container">
-        <div class="nav-switcher">
+        <div class="market-switcher">
+          <span class="market-label">当前大盘</span>
           <el-dropdown trigger="click" @command="switchCategory">
-            <span class="nav-switcher-btn">
-              <span class="switcher-icon">{{ currentCategoryIcon }}</span>
+            <span class="market-switcher-btn">
               <span class="switcher-text">{{ currentCategoryLabel }}</span>
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item 
-                  v-for="cat in categories" 
-                  :key="cat.id" 
-                  :command="cat.id"
-                  :class="{ active: currentCategory === cat.id }"
-                >
+                <el-dropdown-item v-for="cat in categories" :key="cat.id" :command="cat.id">
                   <span class="dropdown-item-content">
-                    <span class="dropdown-icon">{{ cat.icon }}</span>
                     <span class="dropdown-label">{{ cat.label }}</span>
                     <span class="dropdown-desc">{{ cat.desc }}</span>
                   </span>
@@ -110,7 +104,13 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
+          <span class="market-current-desc">{{ currentCategoryDesc }}</span>
         </div>
+      </div>
+    </div>
+
+    <div class="header-nav" v-if="!isMobile">
+      <div class="container">
         <div class="nav-list">
           <router-link to="/" class="nav-item">首页</router-link>
           <router-link to="/products" class="nav-item">全部商品</router-link>
@@ -120,6 +120,7 @@
           <router-link to="/products?categoryId=6" class="nav-item">美妆个护</router-link>
           <router-link to="/products?categoryId=4" class="nav-item">家用电器</router-link>
           <router-link to="/games" class="nav-item">赚米中心</router-link>
+          <router-link to="/activities" class="nav-item">限时活动</router-link>
           <router-link to="/leaderboard" class="nav-item">全服排行榜</router-link>
         </div>
       </div>
@@ -160,6 +161,8 @@
             <router-link to="/products?categoryId=5" class="drawer-item" @click="showMobileNav = false">服饰鞋包</router-link>
             <router-link to="/products?categoryId=6" class="drawer-item" @click="showMobileNav = false">美妆个护</router-link>
             <router-link to="/products?categoryId=4" class="drawer-item" @click="showMobileNav = false">家用电器</router-link>
+            <router-link to="/games" class="drawer-item" @click="showMobileNav = false">赚米中心</router-link>
+            <router-link to="/activities" class="drawer-item" @click="showMobileNav = false">限时活动</router-link>
           </div>
           <div class="drawer-footer">
             <router-link to="/user" class="drawer-user-link" @click="showMobileNav = false">个人中心</router-link>
@@ -275,14 +278,13 @@ const toggleMobileSearch = () => {
 
 const currentCategory = ref('shop')
 const currentCategoryLabel = ref('电商购物')
-const currentCategoryIcon = ref('🛒')
+const currentCategoryDesc = ref('服装、数码、家电等商品')
 
 const categories = [
-  { id: 'shop', icon: '🛒', label: '电商购物', desc: '服装、数码、家电等' },
-  { id: 'house', icon: '🏠', label: '房产投资', desc: '模拟房产买卖（即将上线）' },
-  { id: 'car', icon: '🚗', label: '汽车世界', desc: '模拟汽车交易（即将上线）' },
-  { id: 'invest', icon: '📈', label: '金融投资', desc: '模拟股票基金（即将上线）' },
-  { id: 'activity', icon: '🎯', label: '限时活动', desc: '挑战任务，赢取大奖' }
+  { id: 'shop', label: '电商购物', desc: '服装、数码、家电等商品' },
+  { id: 'house', label: '房产投资', desc: '全国房源模拟交易' },
+  { id: 'car', label: '汽车世界', desc: '新车二手车模拟交易' },
+  { id: 'invest', label: '金融投资', desc: '基金理财模拟投资' }
 ]
 
 const switchCategory = (id) => {
@@ -290,11 +292,9 @@ const switchCategory = (id) => {
   if (cat) {
     currentCategory.value = cat.id
     currentCategoryLabel.value = cat.label
-    currentCategoryIcon.value = cat.icon
+    currentCategoryDesc.value = cat.desc
     localStorage.setItem('taobao_category', id)
-    if (id === 'activity') {
-      router.push('/games')
-    } else if (id !== 'shop') {
+    if (id !== 'shop') {
       ElMessage.info(`「${cat.label}」即将上线，敬请期待！`)
     } else {
       router.push('/')
@@ -302,14 +302,13 @@ const switchCategory = (id) => {
   }
 }
 
-// Load saved category
 const savedCat = localStorage.getItem('taobao_category')
 if (savedCat) {
   const cat = categories.find(c => c.id === savedCat)
   if (cat) {
     currentCategory.value = savedCat
     currentCategoryLabel.value = cat.label
-    currentCategoryIcon.value = cat.icon
+    currentCategoryDesc.value = cat.desc
   }
 }
 </script>
@@ -438,45 +437,53 @@ if (savedCat) {
   color: #ff4400;
 }
 
-.header-nav {
+.market-switcher-bar {
   background: #fff;
-  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  height: 44px;
 }
 
-.header-nav .container {
+.market-switcher-bar .container {
   display: flex;
   align-items: center;
+  height: 100%;
 }
 
-.nav-switcher {
-  background: linear-gradient(135deg, #ff4400, #ff6600);
-  color: #fff;
-  width: 200px;
-  flex-shrink: 0;
-}
-
-.nav-switcher-btn {
-  padding: 12px 16px;
+.market-switcher {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.market-label {
+  font-size: 12px;
+  color: #999;
+}
+
+.market-switcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   cursor: pointer;
-  height: 100%;
+  color: #ff4400;
   font-size: 14px;
-  transition: opacity 0.2s;
+  font-weight: 600;
 }
 
-.nav-switcher-btn:hover {
-  opacity: 0.9;
-}
-
-.switcher-icon {
-  font-size: 18px;
+.market-switcher-btn:hover {
+  opacity: 0.8;
 }
 
 .switcher-text {
-  flex: 1;
-  font-weight: 600;
+  white-space: nowrap;
+}
+
+.market-current-desc {
+  font-size: 12px;
+  color: #999;
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 1px solid #e8e8e8;
 }
 
 .dropdown-item-content {
@@ -484,10 +491,6 @@ if (savedCat) {
   flex-direction: column;
   gap: 2px;
   padding: 4px 0;
-}
-
-.dropdown-icon {
-  font-size: 18px;
 }
 
 .dropdown-label {
@@ -500,9 +503,14 @@ if (savedCat) {
   color: #999;
 }
 
-.el-dropdown-menu__item.active {
-  background: #fff5f0;
-  color: #ff4400;
+.header-nav {
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+}
+
+.header-nav .container {
+  display: flex;
+  align-items: center;
 }
 
 .nav-list {

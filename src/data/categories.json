@@ -54,5 +54,26 @@
     "icon": "Goods",
     "color": "#faad14",
     "subcategories": ["家具", "家纺", "灯具", "厨具"]
+  },
+  {
+    "id": 9,
+    "name": "房产",
+    "icon": "OfficeBuilding",
+    "color": "#722ed1",
+    "subcategories": ["新房", "二手房", "别墅", "商铺"]
+  },
+  {
+    "id": 10,
+    "name": "汽车",
+    "icon": "Van",
+    "color": "#13c2c2",
+    "subcategories": ["轿车", "SUV", "跑车", "新能源"]
+  },
+  {
+    "id": 11,
+    "name": "投资",
+    "icon": "TrendCharts",
+    "color": "#52c41a",
+    "subcategories": ["基金", "股票", "理财", "黄金"]
   }
 ]
