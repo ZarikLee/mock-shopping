@@ -23,9 +23,6 @@ RUN corepack enable && pnpm install --prod
 
 COPY server/ .
 
-# 复制商品数据给后端
-COPY --from=builder /app/src/data/products.json ./src/data/products.json
-
 WORKDIR /app/server
 
 # 环境变量

@@ -325,11 +325,16 @@ const sidebarCollapsed = ref(false)
 
 const currentMarket = ref(route.query.market || 'shop')
 
+// 投资大盘不走商品列表，直接去股票交易
+if (currentMarket.value === 'invest') {
+  router.replace('/stocks')
+}
+
 const marketCategories = {
   shop: [1,2,3,4,5,6,7,8],
   house: [9],
   car: [10],
-  invest: [11]
+  invest: []
 }
 
 const visibleCategories = computed(() => {

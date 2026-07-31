@@ -8,7 +8,7 @@ import { authMiddleware } from './auth.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const stocksPath = join(__dirname, '..', '..', '..', 'src', 'data', 'stocks.json');
+const stocksPath = join(__dirname, '..', 'data', 'stocks.json');
 let stocks = [];
 try {
   stocks = JSON.parse(readFileSync(stocksPath, 'utf-8'));

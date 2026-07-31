@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export function seed() {
-  const productsPath = join(__dirname, '..', '..', 'src', 'data', 'products.json');
+  const productsPath = join(__dirname, 'data', 'products.json');
   let productsData = [];
   try {
     productsData = JSON.parse(readFileSync(productsPath, 'utf-8'));

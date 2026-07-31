@@ -317,6 +317,8 @@ const switchCategory = (id) => {
     localStorage.setItem('taobao_category', id)
     if (id === 'shop') {
       router.push('/')
+    } else if (id === 'invest') {
+      router.push('/stocks')
     } else {
       router.push({ path: '/products', query: { market: id } })
     }
