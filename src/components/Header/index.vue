@@ -27,18 +27,16 @@
 
     <div class="header-main">
       <div class="container">
-        <div class="logo" v-if="!isMobile">
-          <router-link to="/">
-            <span class="logo-text">淘大宝</span>
-            <span class="logo-slogan">— 快乐购物，应有尽有 —</span>
-          </router-link>
+        <div class="logo" v-if="!isMobile" @click="goHome" style="cursor:pointer">
+          <span class="logo-text">淘大宝</span>
+          <span class="logo-slogan">— 快乐购物，应有尽有 —</span>
         </div>
 
         <div class="mobile-header-left" v-if="isMobile">
           <el-icon :size="24" @click="showMobileNav = !showMobileNav" class="menu-icon">
             <Menu />
           </el-icon>
-          <router-link to="/" class="mobile-logo">淘大宝</router-link>
+          <span class="mobile-logo" @click="goHome" style="cursor:pointer">淘大宝</span>
         </div>
 
         <div class="search-wrapper" :class="{ 'mobile-expanded': isMobile && showMobileSearch }" v-show="!isMobile || !showMobileSearch">
@@ -178,7 +176,7 @@
     </transition>
 
     <nav class="mobile-bottom-nav" v-if="isMobile">
-      <router-link to="/" class="bottom-nav-item" :class="{ active: route.path === '/' }">
+      <router-link to="/" class="bottom-nav-item" :class="{ active: route.path === '/' }" @click="goHome">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         <span class="nav-label">首页</span>
       </router-link>
@@ -325,26 +323,39 @@ const switchCategory = (id) => {
   }
 }
 
-watch(() => route.query.market, (market) => {
-  if (market) {
-    const cat = categories.find(c => c.id === market)
-    if (cat) {
-      currentCategory.value = cat.id
-      currentCategoryLabel.value = cat.label
-      currentCategoryDesc.value = cat.desc
-    }
-  }
-})
+// 点击 logo/首页：重置为电商大盘并回主页
+const goHome = () => {
+  currentCategory.value = 'shop'
+  currentCategoryLabel.value = '电商购物'
+  currentCategoryDesc.value = '服装、数码、家电等商品'
+  localStorage.setItem('taobao_category', 'shop')
+  router.push('/')
+}
 
-const savedCat = localStorage.getItem('taobao_category')
-if (savedCat) {
-  const cat = categories.find(c => c.id === savedCat)
-  if (cat) {
-    currentCategory.value = savedCat
+// 根据路由自动同步大盘状态
+const syncCategoryFromRoute = () => {
+  const path = route.path
+  const market = route.query.market
+
+  if (path === '/' || (path === '/products' && !market)) {
+    currentCategory.value = 'shop'
+    currentCategoryLabel.value = '电商购物'
+    currentCategoryDesc.value = '服装、数码、家电等商品'
+  } else if (path === '/stocks') {
+    currentCategory.value = 'invest'
+    currentCategoryLabel.value = '金融投资'
+    currentCategoryDesc.value = '基金理财模拟投资'
+  } else if (market && categories.find(c => c.id === market)) {
+    const cat = categories.find(c => c.id === market)
+    currentCategory.value = cat.id
     currentCategoryLabel.value = cat.label
     currentCategoryDesc.value = cat.desc
   }
 }
+
+// 路由变化时同步（首次加载也执行）
+watch(() => route.path, syncCategoryFromRoute, { immediate: true })
+watch(() => route.query.market, syncCategoryFromRoute)
 </script>
 
 <style scoped>
