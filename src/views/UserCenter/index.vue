@@ -11,10 +11,25 @@
             <div class="nickname-row">
               <span class="nickname">{{ userStore.userInfo?.nickname || '未登录' }}</span>
               <el-tag :type="levelType" size="small" effect="dark" class="level-badge">{{ levelName }}</el-tag>
+              <span class="exp-badge">Lv.{{ userStore.level }}</span>
             </div>
             <div class="profile-uid">
               <el-icon><User /></el-icon>
               <span>ID: {{ userStore.userInfo?.id || '——' }}</span>
+            </div>
+            <div class="exp-progress-block">
+              <div class="exp-progress-info">
+                <span>经验值 {{ userStore.experience }} / {{ nextThreshold }}</span>
+                <span class="achievements-count" @click="goAchievements">
+                  <el-icon><Trophy /></el-icon> {{ unlockedCount }}/{{ totalCount }} 成就
+                </span>
+              </div>
+              <el-progress
+                :percentage="levelProgress"
+                :stroke-width="8"
+                color="#ff4400"
+                :show-text="false"
+              />
             </div>
           </div>
           <div class="profile-stats">
@@ -175,6 +190,29 @@
             </div>
           </div>
 
+          <div v-if="currentMenu === 'purchased'" class="section-card">
+            <h3 class="section-title">我的已购商品</h3>
+            <div v-if="purchasedProducts.length" class="purchased-grid">
+              <div
+                v-for="p in purchasedProducts"
+                :key="p.productId + '-' + p.purchaseTime"
+                class="purchased-item"
+                @click="goProduct(p.productId)"
+              >
+                <img :src="p.image" :alt="p.name" class="purchased-image" />
+                <div class="purchased-info">
+                  <span class="purchased-name">{{ p.name }}</span>
+                  <span class="purchased-date">购买日期：{{ formatDate(p.purchaseTime) }}</span>
+                  <span class="purchased-price">¥{{ p.price }}<small> ×{{ p.quantity }}</small></span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="empty-state">
+              <el-icon :size="48"><ShoppingBag /></el-icon>
+              <p>暂无已购商品</p>
+            </div>
+          </div>
+
           <div v-if="currentMenu === 'checkin'" class="section-card checkin-section">
             <h3 class="section-title">每日签到</h3>
             <div class="checkin-content">
@@ -262,13 +300,14 @@ import { useRouter, useRoute } from 'vue-router'
 import {
   User, Edit, ArrowRight, Camera, CircleCheck,
   Wallet, Van, Position, ChatLineSquare, Box,
-  List, Location, Ticket, Star, Check, Delete
+  List, Location, Ticket, Star, Check, Delete, ShoppingBag, Medal
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../../stores/user'
 import { useOrderStore } from '../../stores/order'
 import { useWishlistStore } from '../../stores/wishlist'
 import api from '../../api'
+import { ACHIEVEMENTS, getLevelProgress } from '../../data/achievements'
 
 const router = useRouter()
 const route = useRoute()
@@ -318,11 +357,31 @@ const levelType = computed(() => {
   return t
 })
 
+const levelProgress = computed(() => {
+  return getLevelProgress(userStore.experience).progress
+})
+
+const nextThreshold = computed(() => {
+  return getLevelProgress(userStore.experience).nextThreshold
+})
+
+const unlockedCount = computed(() => {
+  return ACHIEVEMENTS.filter((a) => userStore.achievements.includes(a.id)).length
+})
+
+const totalCount = ACHIEVEMENTS.length
+
+const goAchievements = () => {
+  router.push('/achievements')
+}
+
 const currentMenu = ref('profile')
 
 const menuList = [
   { key: 'profile', label: '个人信息', icon: User },
   { key: 'orders', label: '我的订单', icon: List, link: '/orders' },
+  { key: 'purchased', label: '我的已购商品', icon: ShoppingBag },
+  { key: 'achievements', label: '我的成就', icon: Medal, link: '/achievements' },
   { key: 'address', label: '收货地址', icon: Location },
   { key: 'coupon', label: '我的优惠券', icon: Ticket },
   { key: 'wishlist', label: '我的收藏', icon: Star },
@@ -420,6 +479,36 @@ const saveProfile = () => {
 
 const addresses = computed(() => userStore.userInfo?.addresses || [])
 const coupons = computed(() => userStore.userInfo?.coupons || [])
+
+const purchasedProducts = computed(() => {
+  const orders = orderStore.orders || []
+  const products = []
+  orders
+    .filter(o => o.status && o.status.code >= 1 && o.status.code < 8)
+    .forEach(o => {
+      (o.items || []).forEach(item => {
+        products.push({
+          productId: item.productId,
+          image: item.image,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          purchaseTime: o.payTime || o.createTime,
+        })
+      })
+    })
+  return products
+})
+
+const formatDate = (time) => {
+  if (!time) return ''
+  const d = new Date(time)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const goProduct = (productId) => {
+  router.push(`/product/${productId}`)
+}
 const showAddressDialog = ref(false)
 const editingAddress = ref(null)
 const addressForm = reactive({ name: '', phone: '', province: '', city: '', district: '', detail: '', isDefault: false })
@@ -607,6 +696,42 @@ onMounted(() => {
   flex-shrink: 0;
   border-radius: 10px;
   padding: 0 8px;
+}
+
+.exp-badge {
+  background: linear-gradient(135deg, #ff4400, #ff6600);
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.exp-progress-block {
+  margin-top: 12px;
+  text-align: left;
+}
+
+.exp-progress-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 6px;
+}
+
+.achievements-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #ff4400;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.achievements-count:hover {
+  opacity: 0.8;
 }
 
 .profile-uid {
@@ -1024,6 +1149,68 @@ onMounted(() => {
   color: #999;
 }
 
+.purchased-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.purchased-item {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.purchased-item:hover {
+  border-color: #ff4400;
+  transform: translateY(-2px);
+}
+
+.purchased-image {
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.purchased-info {
+  margin-top: 10px;
+}
+
+.purchased-name {
+  display: block;
+  font-size: 13px;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.purchased-date {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.purchased-price {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ff4400;
+}
+
+.purchased-price small {
+  font-size: 12px;
+  color: #999;
+  font-weight: 400;
+}
+
 .wishlist-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1229,6 +1416,11 @@ onMounted(() => {
   }
 
   .wishlist-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .purchased-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }

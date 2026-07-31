@@ -16,27 +16,41 @@
           <div class="status-text">
             <h2>{{ order.status.text }}</h2>
             <p v-if="order.status.code === 0">请尽快完成支付，超时订单将自动取消</p>
+            <p v-else-if="order.deliveryType === 'on_site'">
+              现场交付订单{{ order.status.code >= 6 ? '，已完成交付' : '，请留意交付进度' }}
+            </p>
             <p v-else-if="order.status.code >= 3 && order.status.code <= 5">
-              预计 {{ deliveryDate }} 送达
+              {{ deliveryText }}
             </p>
             <p v-else-if="order.status.code >= 6">感谢您的购买，期待下次光临</p>
           </div>
         </div>
       </div>
 
-      <!-- 物流信息 -->
-      <div class="section logistics-section" v-if="order.logistics.status.length > 0">
+      <!-- 物流信息/交付进度 -->
+      <div class="section logistics-section" v-if="isOnSite ? onSiteSteps.length > 0 : order.logistics.status.length > 0">
         <h2 class="section-title">
           <el-icon><Van /></el-icon>
-          物流信息
+          {{ isOnSite ? '交付进度' : '物流信息' }}
         </h2>
         <div class="logistics-info">
-          <span class="company">{{ order.logistics.company }}</span>
-          <span class="no">运单号：{{ order.logistics.no }}</span>
+          <span class="company">{{ isOnSite ? '现场交付' : order.logistics.company }}</span>
+          <span class="no" v-if="!isOnSite">运单号：{{ order.logistics.no }}</span>
         </div>
-        <el-timeline>
-          <el-timeline-item 
-            v-for="(log, index) in reversedLogs" 
+        <el-timeline v-if="isOnSite">
+          <el-timeline-item
+            v-for="(step, index) in onSiteSteps"
+            :key="index"
+            :timestamp="formatTime(step.time)"
+            :type="index === 0 ? 'primary' : ''"
+            :hollow="index !== 0"
+          >
+            {{ step.status }}
+          </el-timeline-item>
+        </el-timeline>
+        <el-timeline v-else>
+          <el-timeline-item
+            v-for="(log, index) in reversedLogs"
             :key="index"
             :timestamp="formatTime(log.time)"
             :type="index === 0 ? 'primary' : ''"
@@ -126,6 +140,12 @@
           去支付
         </el-button>
         <el-button v-if="order.status.code === 0" @click="cancelOrder">取消订单</el-button>
+        <el-button v-if="isOnSite && order.status.code >= 1 && order.status.code < 7" type="primary" @click="handleConfirm">
+          确认交付
+        </el-button>
+        <el-button v-else-if="order.status.code >= 5 && order.status.code < 7" type="primary" @click="handleConfirm">
+          确认收货
+        </el-button>
         <el-button @click="router.push('/orders')">返回订单列表</el-button>
       </div>
     </div>
@@ -148,13 +168,17 @@ const order = ref(null)
 onMounted(() => {
   document.title = '订单详情 - 淘大宝'
 })
-onMounted(async () => {
+onMounted(() => {
+  loadOrder()
+})
+
+const loadOrder = async () => {
   try {
     order.value = await orderStore.getOrder(Number(route.params.id))
   } catch {
     ElMessage.error('订单不存在')
   }
-})
+}
 
 const reversedLogs = computed(() => {
   if (!order.value) return []
@@ -167,10 +191,26 @@ const statusGradient = computed(() => {
   return `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`
 })
 
-const deliveryDate = computed(() => {
-  const date = new Date()
-  date.setDate(date.getDate() + 3)
-  return `${date.getMonth() + 1}月${date.getDate()}日`
+const isOnSite = computed(() => order.value?.deliveryType === 'on_site')
+
+const deliveryText = computed(() => {
+  if (!order.value || order.value.deliveryType !== 'express' || !order.value.expectedDeliveryDate) return ''
+  const expected = new Date(order.value.expectedDeliveryDate)
+  const days = Math.max(1, Math.ceil((expected - new Date()) / 86400000))
+  return `预计 ${days} 天后送达（${expected.getMonth() + 1}月${expected.getDate()}日）`
+})
+
+const onSiteSteps = computed(() => {
+  if (!order.value || order.value.deliveryType !== 'on_site' || order.value.status.code === 0) return []
+  const steps = [
+    { status: '订单已支付', time: order.value.payTime },
+    { status: '手续办理中', time: order.value.payTime },
+    { status: '等待现场交付', time: '' },
+  ]
+  if (order.value.status.code >= 7) {
+    steps.push({ status: '已完成交付', time: order.value.completeTime })
+  }
+  return steps
 })
 
 const formatTime = (time) => {
@@ -193,6 +233,21 @@ const cancelOrder = async () => {
     orderStore.cancelOrder(order.value.id)
     ElMessage.success('订单已取消')
   } catch {}
+}
+
+const handleConfirm = async () => {
+  try {
+    await ElMessageBox.confirm(
+      isOnSite.value ? '确认已完成现场交付？' : '确认已收到商品？',
+      isOnSite.value ? '确认交付' : '确认收货',
+      { type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  await orderStore.completeOrder(order.value.id)
+  ElMessage.success('收货成功，经验值已发放！')
+  loadOrder()
 }
 </script>
 

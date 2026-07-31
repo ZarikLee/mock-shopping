@@ -42,11 +42,6 @@
             </div>
           </div>
 
-          <div class="password-input" v-if="selectedMethod === 'balance'">
-            <h3>请输入支付密码</h3>
-            <el-input v-model="payPassword" type="password" placeholder="默认密码：123456" show-password size="large" />
-          </div>
-
           <div class="countdown">
             请在 <span class="time">14:59</span> 内完成支付，超时订单将自动取消
           </div>
@@ -90,6 +85,15 @@
         <el-empty description="订单不存在" />
       </div>
     </div>
+
+    <PaymentDialog
+      :visible="payDialogVisible"
+      :amount="order?.payAmount || 0"
+      :brand-name="payBrandName"
+      :brand-icon="payBrandIcon"
+      @cancel="payDialogVisible = false"
+      @confirm="handlePasswordConfirm"
+    />
   </div>
 </template>
 
@@ -99,7 +103,9 @@ import { useRouter, useRoute } from 'vue-router'
 import { Timer, CircleCheck, Coin, CreditCard, Phone } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useOrderStore } from '../../stores/order'
+import { authApi } from '../../api/auth'
 import { ElMessage } from 'element-plus'
+import PaymentDialog from '../../components/PaymentDialog/index.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -107,9 +113,18 @@ const userStore = useUserStore()
 const orderStore = useOrderStore()
 
 const selectedMethod = ref('balance')
-const payPassword = ref('')
 const paying = ref(false)
 const paymentSuccess = ref(false)
+const payDialogVisible = ref(false)
+
+const methodBrands = {
+  alipay: { name: '支付宝', icon: '💙' },
+  wechat: { name: '微信支付', icon: '💚' },
+  balance: { name: '余额支付', icon: '🧡' }
+}
+
+const payBrandName = computed(() => methodBrands[selectedMethod.value]?.name || '支付')
+const payBrandIcon = computed(() => methodBrands[selectedMethod.value]?.icon || '')
 
 onMounted(() => { document.title = '支付 - 淘大宝' })
 
@@ -117,22 +132,30 @@ const order = computed(() => {
   return orderStore.getOrder(Number(route.params.orderId))
 })
 
-const handlePay = async () => {
+const handlePay = () => {
+  if (selectedMethod.value === 'balance' && userStore.balance < order.value.payAmount) {
+    ElMessage.error('余额不足')
+    return
+  }
+  payDialogVisible.value = true
+}
+
+const handlePasswordConfirm = async (password) => {
+  try {
+    await authApi.verifyPayPassword({ payPassword: password })
+  } catch {
+    ElMessage.error('支付密码错误')
+    return
+  }
+
   if (selectedMethod.value === 'balance') {
-    if (payPassword.value !== '123456') {
-      ElMessage.error('支付密码错误，默认密码为：123456')
-      return
-    }
-    if (userStore.balance < order.value.payAmount) {
-      ElMessage.error('余额不足')
-      return
-    }
     userStore.deductBalance(order.value.payAmount)
   }
 
   paying.value = true
+  payDialogVisible.value = false
   await new Promise(resolve => setTimeout(resolve, 1500))
-  
+
   orderStore.payOrder(order.value.id)
   paymentSuccess.value = true
   paying.value = false
@@ -171,9 +194,6 @@ const continueShopping = () => {
 .method-name { display: block; font-weight: bold; }
 .method-desc { font-size: 12px; color: #999; }
 .check-icon { color: #ff4400; font-size: 20px; }
-
-.password-input { text-align: left; margin-bottom: 20px; }
-.password-input h3 { font-size: 14px; margin-bottom: 10px; }
 
 .countdown { color: #999; font-size: 13px; margin-bottom: 25px; }
 .countdown .time { color: #ff4400; font-weight: bold; }

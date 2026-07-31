@@ -52,6 +52,11 @@ const routes = [
     component: () => import('../views/UserCenter/index.vue')
   },
   {
+    path: '/achievements',
+    name: 'Achievements',
+    component: () => import('../views/Achievements/index.vue')
+  },
+  {
     path: '/games',
     name: 'Games',
     component: () => import('../views/Games/index.vue')
@@ -60,6 +65,11 @@ const routes = [
     path: '/leaderboard',
     name: 'Leaderboard',
     component: () => import('../views/Leaderboard/index.vue')
+  },
+  {
+    path: '/stocks',
+    name: 'Stocks',
+    component: () => import('../views/Stocks/index.vue')
   }
 ]
 

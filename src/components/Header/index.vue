@@ -8,6 +8,7 @@
         <div class="top-right">
           <template v-if="userStore.isLoggedIn">
             <span class="user-name">{{ userStore.userInfo.nickname }}</span>
+            <span class="level-badge" v-if="userStore.isLoggedIn">Lv.{{ userStore.level }}</span>
             <span class="separator">|</span>
             <span class="balance">余额：¥{{ userStore.balance.toFixed(2) }}</span>
             <span class="separator">|</span>
@@ -122,6 +123,7 @@
           <router-link to="/games" class="nav-item">赚米中心</router-link>
           <router-link to="/activities" class="nav-item">限时活动</router-link>
           <router-link to="/leaderboard" class="nav-item">全服排行榜</router-link>
+          <router-link to="/stocks" class="nav-item">股票交易</router-link>
         </div>
       </div>
     </div>
@@ -163,6 +165,7 @@
             <router-link to="/products?categoryId=4" class="drawer-item" @click="showMobileNav = false">家用电器</router-link>
             <router-link to="/games" class="drawer-item" @click="showMobileNav = false">赚米中心</router-link>
             <router-link to="/activities" class="drawer-item" @click="showMobileNav = false">限时活动</router-link>
+            <router-link to="/stocks" class="drawer-item" @click="showMobileNav = false">股票交易</router-link>
           </div>
           <div class="drawer-footer">
             <router-link to="/user" class="drawer-user-link" @click="showMobileNav = false">个人中心</router-link>
@@ -364,6 +367,15 @@ if (savedCat) {
 
 .top-right .balance {
   color: #ff4400;
+}
+
+.level-badge {
+  background: linear-gradient(135deg, #ff4400, #ff6600);
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  margin-left: 6px;
 }
 
 .header-main {

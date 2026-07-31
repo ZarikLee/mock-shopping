@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { queryAll, queryOne, insert, update, getNextId } from '../db.js';
-import { authMiddleware } from './auth.js';
+import { authMiddleware, addExperience } from './auth.js';
+import { checkAchievements } from '../achievements.js';
 
 const router = Router();
 
@@ -22,7 +23,65 @@ function formatOrder(order) {
     ...order,
     status: ORDER_STATUS_MAP[order.status] || ORDER_STATUS_MAP[0],
     logistics: order.logistics || { company: '', no: '', status: [] },
+    deliveryType: order.deliveryType || 'express',
+    deliveryTimeline: order.deliveryTimeline || [],
   };
+}
+
+function getDeliveryInfo(items) {
+  let hasHouse = false;
+  let hasCar = false;
+  for (const item of items) {
+    const product = queryOne('products', { id: item.productId });
+    if (!product) continue;
+    if (product.categoryId === 9) hasHouse = true;
+    if (product.categoryId === 10) hasCar = true;
+  }
+  if (hasHouse) {
+    return { deliveryType: 'on_site', deliveryTimeline: ['手续办理中', '等待现场交付'] };
+  }
+  if (hasCar) {
+    return { deliveryType: 'on_site', deliveryTimeline: ['手续办理中', '等待提车交付'] };
+  }
+  return { deliveryType: 'express', deliveryTimeline: [] };
+}
+
+function getUserStats(userId) {
+  const user = queryOne('users', { id: userId });
+  const orders = queryAll('orders', { userId });
+  let purchase = 0;
+  let house = 0;
+  let car = 0;
+  orders.filter(o => o.status >= 6).forEach(o => {
+    const items = o.items || queryAll('order_items', { orderId: o.id });
+    purchase += o.count != null ? o.count : items.length;
+    for (const item of items) {
+      const product = queryOne('products', { id: item.productId });
+      if (!product) continue;
+      if (product.categoryId === 9) house += 1;
+      if (product.categoryId === 10) car += 1;
+    }
+  });
+  return {
+    purchase,
+    house,
+    car,
+    stock: 0,
+    game: queryAll('game_scores', { userId }).length,
+    checkin: queryAll('checkins', { userId }).length,
+    balance: user ? user.balance || 0 : 0,
+  };
+}
+
+function unlockAchievements(userId) {
+  const user = queryOne('users', { id: userId });
+  if (!user) return [];
+  const stats = getUserStats(userId);
+  const newAchievements = checkAchievements(user, stats);
+  if (newAchievements.length > 0) {
+    update('users', userId, { achievements: user.achievements });
+  }
+  return newAchievements;
 }
 
 router.post('/', authMiddleware, (req, res) => {
@@ -59,6 +118,8 @@ router.post('/', authMiddleware, (req, res) => {
   const orderNo = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 6).toUpperCase();
   const now = new Date().toISOString();
   const orderId = getNextId('orders');
+  const delivery = getDeliveryInfo(orderItems);
+  const count = orderItems.reduce((sum, i) => sum + i.quantity, 0);
 
   const order = insert('orders', {
     id: orderId,
@@ -70,6 +131,9 @@ router.post('/', authMiddleware, (req, res) => {
     status: 0,
     address: address || {},
     createTime: now,
+    count,
+    deliveryType: delivery.deliveryType,
+    deliveryTimeline: delivery.deliveryTimeline,
   });
 
   for (const item of orderItems) {
@@ -127,18 +191,47 @@ router.post('/:id/pay', authMiddleware, (req, res) => {
   const now = new Date().toISOString();
   update('users', req.user.id, { balance: (user.balance || 0) - order.payAmount });
 
+  const expGained = Math.floor(order.payAmount / 100);
+  const xpResult = addExperience(req.user.id, expGained);
+
+  const items = queryAll('order_items', { orderId: order.id });
+  const delivery = getDeliveryInfo(items);
+
+  let expectedDeliveryDate = null;
+  if (delivery.deliveryType === 'express') {
+    const expected = new Date();
+    expected.setDate(expected.getDate() + 3 + Math.floor(Math.random() * 5));
+    expectedDeliveryDate = expected.toISOString();
+  }
+
+  const onSite = delivery.deliveryType === 'on_site';
   const logistics = {
-    company: '模拟物流',
+    company: onSite ? '现场交付' : '模拟物流',
     no: 'SF' + order.orderNo,
     status: [
       { status: '订单已支付', time: now, location: '系统' },
-      { status: '商品已出库', time: now, location: '仓库' },
+      { status: onSite ? '手续办理中' : '商品已出库', time: now, location: onSite ? '系统' : '仓库' },
     ],
   };
 
-  const updated = update('orders', order.id, { status: 1, payTime: now, logistics });
-  const items = queryAll('order_items', { orderId: updated.id });
-  res.json(formatOrder({ ...updated, items }));
+  const updated = update('orders', order.id, {
+    status: onSite ? 1 : 6,
+    payTime: now,
+    logistics,
+    deliveryType: delivery.deliveryType,
+    deliveryTimeline: delivery.deliveryTimeline,
+    expectedDeliveryDate,
+  });
+
+  const newAchievements = unlockAchievements(req.user.id);
+
+  res.json({
+    ...formatOrder({ ...updated, items }),
+    experienceGained: expGained,
+    leveledUp: xpResult.leveledUp,
+    newLevel: xpResult.newLevel,
+    newAchievements,
+  });
 });
 
 router.post('/:id/cancel', authMiddleware, (req, res) => {
@@ -153,11 +246,13 @@ router.post('/:id/cancel', authMiddleware, (req, res) => {
 router.post('/:id/complete', authMiddleware, (req, res) => {
   const order = queryOne('orders', { id: Number(req.params.id), userId: req.user.id });
   if (!order) return res.status(404).json({ error: '订单不存在' });
-  if (order.status !== 1 && order.status !== 2) return res.status(400).json({ error: '当前订单状态不允许确认收货' });
+  // Express orders arrive at status 6 (已送达待签收); on-site orders at status 1 (手续办理中/待现场交付)
+  if (order.status !== 6 && order.status !== 1) return res.status(400).json({ error: '当前订单状态不允许确认收货' });
 
   const now = new Date().toISOString();
   update('orders', order.id, { status: 7, completeTime: now });
-  res.json({ message: '订单已确认收货' });
+  const newAchievements = unlockAchievements(req.user.id);
+  res.json({ message: '订单已确认收货', newAchievements });
 });
 
 export default router;

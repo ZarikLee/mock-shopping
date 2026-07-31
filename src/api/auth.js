@@ -5,5 +5,6 @@ export const authApi = {
   login: (data) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
   checkin: () => api.post('/checkin'),
-  getCheckinStatus: () => api.get('/checkin/status')
+  getCheckinStatus: () => api.get('/checkin/status'),
+  verifyPayPassword: (data) => api.post('/auth/paypassword', data)
 }

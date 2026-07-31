@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '../api/auth'
+import { getLevel } from '../data/achievements'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
@@ -12,6 +13,9 @@ export const useUserStore = defineStore('user', () => {
   }
   const isLoggedIn = computed(() => !!token.value)
   const balance = computed(() => userInfo.value?.balance ?? 0)
+  const experience = computed(() => userInfo.value?.experience ?? 0)
+  const level = computed(() => getLevel(experience.value))
+  const achievements = computed(() => userInfo.value?.achievements || [])
 
   // Auto-fetch user info on startup if token exists
   if (token.value && (!userInfo.value || userInfo.value.balance === undefined)) {
@@ -52,8 +56,8 @@ export const useUserStore = defineStore('user', () => {
     return data
   }
 
-  const register = async (username, password, nickname) => {
-    const res = await authApi.register({ username, password, nickname })
+  const register = async (username, password, nickname, payPassword) => {
+    const res = await authApi.register({ username, password, nickname, payPassword })
     return res.data || res
   }
 
@@ -67,6 +71,12 @@ export const useUserStore = defineStore('user', () => {
   const fetchUserInfo = async () => {
     const res = await authApi.getMe()
     userInfo.value = res.data || res
+    localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+  }
+
+  const deductBalance = (amount) => {
+    if (!userInfo.value) return
+    userInfo.value.balance = (userInfo.value.balance || 0) - amount
     localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
   }
 
@@ -85,11 +95,15 @@ export const useUserStore = defineStore('user', () => {
     userInfo,
     isLoggedIn,
     balance,
+    experience,
+    level,
+    achievements,
     initDefaultUser,
     login,
     register,
     logout,
     fetchUserInfo,
+    deductBalance,
     checkin
   }
 })
