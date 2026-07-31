@@ -11,6 +11,7 @@
             <div class="avatar-overlay"><el-icon :size="20"><Camera /></el-icon></div>
           </div>
           <input ref="avatarInput" type="file" accept="image/*" class="avatar-input" @change="onAvatarFileChange" />
+          <AvatarCropDialog ref="avatarCropRef" @cropped="onAvatarCropped" />
           <div class="profile-header-info">
             <div class="nickname-row">
               <span class="nickname">{{ userStore.userInfo?.nickname || '未登录' }}</span>
@@ -306,6 +307,7 @@ import {
 import { ElMessage } from 'element-plus'
 import BackButton from '../../components/BackButton/index.vue'
 import AddressPicker from '../../components/AddressPicker/index.vue'
+import AvatarCropDialog from '../../components/AvatarCropDialog/index.vue'
 import { useUserStore } from '../../stores/user'
 import { useOrderStore } from '../../stores/order'
 import { useWishlistStore } from '../../stores/wishlist'
@@ -322,8 +324,9 @@ const wishlistStore = useWishlistStore()
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 const avatarInput = ref(null)
+const avatarCropRef = ref(null)
 
-// 点击头像选择本地图片上传
+// 点击头像选择本地图片，进入裁剪
 const triggerAvatarUpload = () => {
   avatarInput.value?.click()
 }
@@ -336,13 +339,21 @@ const onAvatarFileChange = async (e) => {
     ElMessage.warning('请选择图片文件')
     return
   }
-  if (file.size > 5 * 1024 * 1024) {
-    ElMessage.warning('图片不能超过5MB')
+  if (file.size > 10 * 1024 * 1024) {
+    ElMessage.warning('图片不能超过10MB')
     return
   }
+  const reader = new FileReader()
+  reader.onload = (ev) => {
+    avatarCropRef.value?.open(ev.target.result)
+  }
+  reader.readAsDataURL(file)
+}
+
+// 裁剪完成，上传裁剪后的头像
+const onAvatarCropped = async (croppedBase64) => {
   try {
-    const base64 = await compressImage(file)
-    const res = await authApi.uploadAvatar({ image: base64 })
+    const res = await authApi.uploadAvatar({ image: croppedBase64 })
     if (userStore.userInfo) {
       userStore.userInfo.avatar = res.avatar || res.data?.avatar
       localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
@@ -351,33 +362,6 @@ const onAvatarFileChange = async (e) => {
   } catch (err) {
     ElMessage.error(err?.message || '上传失败，请重试')
   }
-}
-
-// 压缩图片为 200x200 的 base64
-const compressImage = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        const size = 150
-        canvas.width = size
-        canvas.height = size
-        const ctx = canvas.getContext('2d')
-        // 居中裁剪为正方形
-        const min = Math.min(img.width, img.height)
-        const sx = (img.width - min) / 2
-        const sy = (img.height - min) / 2
-        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size)
-        resolve(canvas.toDataURL('image/jpeg', 0.8))
-      }
-      img.onerror = reject
-      img.src = e.target.result
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
 }
 
 const levelConfig = [
