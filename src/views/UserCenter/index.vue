@@ -69,6 +69,7 @@
           >
             <el-icon class="menu-icon"><component :is="item.icon" /></el-icon>
             <span class="menu-label">{{ item.label }}</span>
+            <el-badge v-if="item.key === 'messages' && messageUnread > 0" :value="messageUnread" :max="99" class="menu-badge" />
             <el-icon class="menu-arrow"><ArrowRight /></el-icon>
           </div>
         </div>
@@ -308,7 +309,7 @@ import { useRouter, useRoute } from 'vue-router'
 import {
   User, Edit, ArrowRight, Camera, CircleCheck,
   Wallet, Van, Position, ChatLineSquare, Box,
-  List, Location, Ticket, Star, Check, Delete, ShoppingBag, Medal
+  List, Location, Ticket, Star, Check, Delete, ShoppingBag, Medal, Service
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import BackButton from '../../components/BackButton/index.vue'
@@ -320,6 +321,7 @@ import { useWishlistStore } from '../../stores/wishlist'
 import api from '../../api'
 import { addressApi } from '../../api/addresses'
 import { authApi } from '../../api/auth'
+import { messageApi } from '../../api/messages'
 import { stockApi } from '../../api/stocks'
 import { ACHIEVEMENTS, getLevelProgress } from '../../data/achievements'
 
@@ -441,6 +443,8 @@ const currentMenu = ref('profile')
 
 const menuList = [
   { key: 'profile', label: '个人信息', icon: User },
+  { key: 'messages', label: '消息中心', icon: ChatLineSquare, link: '/messages' },
+  { key: 'feedback', label: '系统反馈', icon: Service, link: '/messages?feedback=1' },
   { key: 'orders', label: '我的订单', icon: List, link: '/orders' },
   { key: 'purchased', label: '我的已购商品', icon: ShoppingBag },
   { key: 'achievements', label: '我的成就', icon: Medal, link: '/achievements' },
@@ -450,6 +454,15 @@ const menuList = [
   { key: 'balance', label: '账户余额', icon: Wallet },
   { key: 'checkin', label: '每日签到', icon: Check },
 ]
+
+const messageUnread = ref(0)
+const loadMessageUnread = async () => {
+  try {
+    const res = await messageApi.conversations()
+    const list = Array.isArray(res) ? res : (res.conversations || [])
+    messageUnread.value = list.reduce((sum, c) => sum + (c.unread || 0), 0)
+  } catch { /* ok */ }
+}
 
 const handleMenuClick = (item) => {
   if (item.link) {
@@ -699,6 +712,7 @@ onMounted(() => {
   loadCheckinStatus()
   fetchOrders()
   loadStockPnL()
+  loadMessageUnread()
 })
 </script>
 
@@ -952,6 +966,19 @@ onMounted(() => {
 .menu-label {
   flex: 1;
   font-size: 14px;
+}
+
+.menu-badge {
+  margin-right: 4px;
+}
+
+.menu-badge :deep(.el-badge__content) {
+  border: none;
+  font-size: 11px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 5px;
+  background: #ff4400;
 }
 
 .menu-arrow {

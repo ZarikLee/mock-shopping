@@ -26,9 +26,14 @@
                   {{ formatJoinDate(profile.joinDate) }} 加入
                 </span>
               </div>
-              <el-button v-if="isOwnProfile" type="primary" class="edit-btn" @click="goEditProfile">
-                <el-icon><Edit /></el-icon> 编辑资料
-              </el-button>
+              <div class="profile-actions">
+                <el-button v-if="!isOwnProfile" type="primary" plain class="msg-btn" @click="goMessage">
+                  <el-icon><ChatLineSquare /></el-icon> 发消息
+                </el-button>
+                <el-button v-if="isOwnProfile" type="primary" class="edit-btn" @click="goEditProfile">
+                  <el-icon><Edit /></el-icon> 编辑资料
+                </el-button>
+              </div>
             </div>
           </div>
 
@@ -84,7 +89,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { User, Location, Calendar, Edit, UserFilled, Lock } from '@element-plus/icons-vue'
+import { User, Location, Calendar, Edit, UserFilled, Lock, ChatLineSquare } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
 import { userApi } from '../../api/users'
 import { useUserStore } from '../../stores/user'
@@ -124,6 +129,10 @@ const formatAmount = (val) => {
 
 const goEditProfile = () => {
   router.push('/user?menu=profile')
+}
+
+const goMessage = () => {
+  router.push({ path: '/messages', query: { chat: route.params.id } })
 }
 
 async function fetchProfile() {
@@ -226,6 +235,23 @@ onMounted(() => {
 
 .edit-btn {
   border-radius: 8px;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.msg-btn {
+  border-radius: 8px;
+  color: #ff4400 !important;
+  border-color: #ff4400 !important;
+  background: #fff5f0 !important;
+}
+
+.msg-btn:hover {
+  color: #fff !important;
+  background: #ff4400 !important;
 }
 
 .bio-section {

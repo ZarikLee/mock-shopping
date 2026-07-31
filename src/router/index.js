@@ -57,6 +57,11 @@ const routes = [
     component: () => import('../views/UserProfile/index.vue')
   },
   {
+    path: '/messages',
+    name: 'MessageCenter',
+    component: () => import('../views/MessageCenter/index.vue')
+  },
+  {
     path: '/achievements',
     name: 'Achievements',
     component: () => import('../views/Achievements/index.vue')

@@ -13,6 +13,7 @@ import leaderboardRoutes from './routes/leaderboard.js';
 import userProfileRoutes from './routes/userProfile.js';
 import checkinRoutes from './routes/checkin.js';
 import stockRoutes from './routes/stocks.js';
+import messageRoutes from './routes/messages.js';
 
 const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -31,6 +32,7 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/users', userProfileRoutes);
 app.use('/api/checkin', checkinRoutes);
 app.use('/api/stocks', stockRoutes);
+app.use('/api/messages', messageRoutes);
 
 const distPath = join(__dirname, '..', '..', 'dist');
 app.use(express.static(distPath));

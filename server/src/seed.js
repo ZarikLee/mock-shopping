@@ -24,6 +24,7 @@ export function seed() {
   initTable('coupons', []);
   initTable('game_scores', []);
   initTable('checkins', []);
+  initTable('messages', []);
 
   if (productsData.length > 0) {
     console.log(`Seeded ${productsData.length} products`);

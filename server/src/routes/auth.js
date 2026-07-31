@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { writeFileSync, mkdirSync } from 'fs';
-import { queryOne, insert, update } from '../db.js';
+import { queryAll, queryOne, insert, update } from '../db.js';
 import { getLevel } from '../achievements.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,20 +51,21 @@ router.post('/register', (req, res) => {
   }
   const hashed = bcrypt.hashSync(password, 10);
   const now = new Date().toISOString();
-  insert('users', {
+  const existingCount = queryAll('users').length;
+  const user = insert('users', {
     account,
-    username,
+    username: nickname || username,
     password: hashed,
-    payPassword: null,
     nickname: nickname || username,
     created_at: now,
     points: 0,
     balance: 5000,
     experience: 0,
     achievements: [],
-    avatar: 'https://picsum.photos/seed/default/100/100',
-    bio: '',
-    homeCity: '',
+    stocks: '{}',
+    payPassword: null,
+    avatar: '',
+    isAdmin: existingCount === 0,
   });
   res.json({ account, message: `注册成功，您的账号是 ${account}` });
 });
@@ -79,7 +80,7 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ error: '账号或密码错误' });
   }
   const token = jwt.sign({ id: user.id, account: user.account, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
-  const { password: _, payPassword: __, ...userInfo } = user;
+  const { password: _, payPassword: __, isAdmin: ___, ...userInfo } = user;
   res.json({
     token,
     user: {
@@ -133,7 +134,7 @@ router.put('/profile', authMiddleware, (req, res) => {
   if (bio !== undefined) updates.bio = bio;
   if (homeCity !== undefined) updates.homeCity = homeCity;
   const updated = update('users', user.id, updates);
-  const { password: _, payPassword: __, ...userInfo } = updated;
+  const { password: _, payPassword: __, isAdmin: ___, ...userInfo } = updated;
   res.json({
     ...userInfo,
     experience: updated.experience || 0,
@@ -145,7 +146,7 @@ router.put('/profile', authMiddleware, (req, res) => {
 router.get('/me', authMiddleware, (req, res) => {
   const user = queryOne('users', { id: req.user.id });
   if (!user) return res.status(404).json({ error: '用户不存在' });
-  const { password: _, payPassword: __, ...userInfo } = user;
+  const { password: _, payPassword: __, isAdmin: ___, ...userInfo } = user;
   res.json({
     ...userInfo,
     experience: user.experience || 0,

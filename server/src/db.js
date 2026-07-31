@@ -9,7 +9,7 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-const tables = ['users', 'orders', 'order_items', 'reviews', 'addresses', 'coupons', 'game_scores', 'checkins'];
+const tables = ['users', 'orders', 'order_items', 'reviews', 'addresses', 'coupons', 'game_scores', 'checkins', 'messages'];
 
 const data = {};
 
