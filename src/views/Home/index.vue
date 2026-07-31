@@ -274,6 +274,7 @@ const goToProduct = (id) => {
 
 .flash-sale-item {
   min-width: 200px;
+  flex-shrink: 0;
   background: #fff;
   border-radius: 8px;
   padding: 15px;
@@ -452,10 +453,12 @@ const goToProduct = (id) => {
 
   .flash-sale-list {
     gap: 10px;
+    margin: 0 -15px;
+    padding: 0 15px 4px;
   }
 
   .flash-sale-item {
-    min-width: 140px;
+    min-width: 130px;
     padding: 10px;
   }
 

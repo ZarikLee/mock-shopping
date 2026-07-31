@@ -40,6 +40,13 @@
   --spacing-xl: 32px;
 }
 
+/* 防止移动端横向滚动 */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* 容器 */
 .container {
   width: 100%;
@@ -110,8 +117,16 @@
   .container {
     padding: 0 12px;
   }
-  
+
   .main-content {
     padding-top: 100px;
+  }
+}
+
+/* 移动端对话框宽度适配，避免固定宽度弹窗溢出 */
+@media (max-width: 768px) {
+  .el-dialog {
+    --el-dialog-width: calc(100% - 24px) !important;
+    --el-dialog-margin-top: 6vh;
   }
 }

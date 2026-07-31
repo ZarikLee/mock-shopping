@@ -14,6 +14,11 @@
             <span class="separator">|</span>
             <router-link to="/user" class="link">个人中心</router-link>
             <span class="separator">|</span>
+            <router-link to="/messages" class="link msg-link">
+              消息
+              <span v-if="unreadCount > 0" class="msg-dot">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+            </router-link>
+            <span class="separator">|</span>
             <span class="link logout" @click="handleLogout">退出</span>
           </template>
           <template v-else>
@@ -65,6 +70,10 @@
           <el-icon :size="22" class="action-icon" @click="toggleMobileSearch">
             <Search />
           </el-icon>
+          <router-link to="/messages" class="mobile-msg-icon">
+            <el-icon :size="22" class="action-icon"><ChatDotRound /></el-icon>
+            <span v-if="unreadCount > 0" class="msg-dot">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </router-link>
           <el-badge :value="cartStore.itemCount" :hidden="cartStore.itemCount === 0" class="cart-badge-mobile">
             <el-icon :size="22" class="action-icon" @click="goToCart">
               <ShoppingCart />
@@ -208,7 +217,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Search, ShoppingCart, ArrowDown, ArrowUp, Menu, Close, Trophy, TrendCharts, Lightning } from '@element-plus/icons-vue'
+import { Search, ShoppingCart, ArrowDown, ArrowUp, Menu, Close, Trophy, TrendCharts, Lightning, ChatDotRound } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useAuthStore } from '../../stores/auth'
@@ -216,6 +225,7 @@ import { useUiStore } from '../../stores/ui'
 import { useDevice } from '../../utils/device'
 import SearchSuggestions from '../SearchSuggestions/index.vue'
 import LoginDialog from '../LoginDialog/index.vue'
+import { messageApi } from '../../api/messages'
 
 const router = useRouter()
 const route = useRoute()
@@ -229,6 +239,29 @@ const searchKeyword = ref('')
 const showSuggestions = ref(false)
 const showMobileSearch = ref(false)
 const showMobileNav = ref(false)
+const unreadCount = ref(0)
+
+// 轮询未读消息数
+let unreadTimer = null
+const loadUnread = async () => {
+  if (!userStore.isLoggedIn) { unreadCount.value = 0; return }
+  try {
+    const res = await messageApi.conversations()
+    const list = Array.isArray(res) ? res : (res.conversations || [])
+    unreadCount.value = list.reduce((s, c) => s + (c.unread || 0), 0)
+  } catch { /* ignore */ }
+}
+
+onMounted(() => {
+  loadUnread()
+  unreadTimer = setInterval(loadUnread, 10000)
+  window.addEventListener('focus', loadUnread)
+})
+
+onUnmounted(() => {
+  if (unreadTimer) clearInterval(unreadTimer)
+  window.removeEventListener('focus', loadUnread)
+})
 
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
@@ -416,6 +449,40 @@ watch(() => route.query.market, syncCategoryFromRoute)
 
 .top-right .balance {
   color: #ff4400;
+}
+
+.msg-link {
+  position: relative;
+}
+
+.msg-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #ff4d4f;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-left: 3px;
+  vertical-align: middle;
+  line-height: 16px;
+}
+
+.mobile-msg-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mobile-msg-icon .msg-dot {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  margin-left: 0;
 }
 
 .level-badge {

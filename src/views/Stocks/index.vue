@@ -58,6 +58,7 @@
             <span class="last-update" v-if="lastUpdate">最近更新 {{ lastUpdate }}</span>
           </div>
           <el-table
+            v-if="!isMobile"
             :data="stocks"
             class="stock-table"
             v-loading="loading"
@@ -89,6 +90,26 @@
               </template>
             </el-table-column>
           </el-table>
+
+          <!-- 移动端卡片列表 -->
+          <div class="stock-cards" v-if="isMobile" v-loading="loading">
+            <div v-for="s in stocks" :key="s.symbol" class="stock-card" @click="openTrading(s)">
+              <div class="sc-main">
+                <div class="sc-name">
+                  <span class="sc-stock-name">{{ s.name }}</span>
+                  <span class="sc-symbol">{{ s.symbol }}</span>
+                </div>
+                <div class="sc-price" :class="trendClass(s)">{{ formatPrice(s.price) }}</div>
+              </div>
+              <div class="sc-sub">
+                <span class="sc-change" :class="trendClass(s)">{{ formatPercent(s.changePercent) }}</span>
+                <span class="sc-actions">
+                  <span class="sc-btn trade" @click.stop="openTrading(s)">交易</span>
+                  <span class="sc-btn detail" @click.stop="goDetail(s)">详情</span>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="holdings-panel">
@@ -258,7 +279,9 @@ import BackButton from '../../components/BackButton/index.vue'
 import { stockApi } from '../../api/stocks'
 import { useUserStore } from '../../stores/user'
 import { useAuthStore } from '../../stores/auth'
+import { useDevice } from '../../utils/device'
 
+const { isMobile } = useDevice()
 const router = useRouter()
 const userStore = useUserStore()
 const authStore = useAuthStore()
@@ -747,6 +770,122 @@ onUnmounted(() => {
 
 :deep(.stock-table .el-table__row) {
   cursor: pointer;
+}
+
+.stock-cards {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stock-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stock-card:hover {
+  border-color: #ff4400;
+  box-shadow: 0 2px 8px rgba(255, 68, 0, 0.1);
+}
+
+.sc-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.sc-name {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sc-stock-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sc-symbol {
+  font-size: 11px;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.sc-price {
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.sc-price.up {
+  color: #ff4d4f;
+}
+
+.sc-price.down {
+  color: #00b578;
+}
+
+.sc-price.flat {
+  color: #333;
+}
+
+.sc-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.sc-change {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sc-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sc-btn {
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.sc-btn.trade {
+  background: #ff4400;
+  color: #fff;
+}
+
+.sc-btn.trade:hover {
+  background: #ff6600;
+}
+
+.sc-btn.detail {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.sc-btn.detail:hover {
+  background: #e0e0e0;
 }
 
 .view-hint {

@@ -1065,6 +1065,41 @@ watch(() => route.query, () => handleRouteQuery())
     display: none;
   }
 
+  .conv-item {
+    padding: 12px 14px;
+  }
+
+  .chat-header {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .chat-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+  }
+
+  .chat-actions {
+    flex-shrink: 0;
+    gap: 6px;
+  }
+
+  .chat-actions :deep(.el-button--small) {
+    padding: 5px 10px;
+  }
+
+  .chat-body {
+    padding: 12px;
+  }
+
+  .chat-input-row {
+    padding: 8px 10px;
+  }
+
   .msg-bubble {
     max-width: 80%;
   }

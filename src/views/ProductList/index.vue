@@ -185,7 +185,7 @@
               v-model:page-size="pageSize"
               :page-sizes="[12, 24, 36, 48]"
               :total="filteredProducts.length"
-              layout="total, sizes, prev, pager, next, jumper"
+              :layout="paginationLayout"
               @size-change="handleSizeChange"
               @current-change="handleCurrentChange"
             />
@@ -372,6 +372,10 @@ const sortOptions = [
 ]
 
 const hasActiveFilters = computed(() => selectedBrands.value.length > 0 || priceRange.value.min || priceRange.value.max)
+
+const paginationLayout = computed(() =>
+  isMobile.value ? 'prev, pager, next' : 'total, sizes, prev, pager, next, jumper'
+)
 
 const priceSortIcon = computed(() => {
   if (currentSort.value !== 'price') return null
@@ -985,9 +989,15 @@ watch(() => route.query, (newQuery) => {
 
   .sort-bar {
     flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
     padding: 10px 12px;
     margin: 0 12px 0;
     border-radius: 8px;
+  }
+
+  .sort-actions {
+    margin-left: auto;
   }
 
   .sort-option {

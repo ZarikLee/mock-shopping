@@ -528,12 +528,12 @@ onMounted(() => {
   }
 
   .rank-row {
-    padding: 10px 14px;
-    gap: 10px;
+    padding: 10px 12px;
+    gap: 8px;
   }
 
   .rank-col {
-    width: 32px;
+    width: 30px;
   }
 
   .medal-badge {
@@ -547,25 +547,51 @@ onMounted(() => {
   }
 
   .user-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .rank-top-1 .user-avatar {
     width: 36px;
     height: 36px;
   }
 
-  .rank-top-1 .user-avatar {
-    width: 38px;
-    height: 38px;
+  .avatar-col {
+    width: 36px;
+    height: 36px;
+  }
+
+  .info-col {
+    gap: 1px;
+    min-width: 0;
   }
 
   .username {
     font-size: 13px;
   }
 
+  .userid {
+    font-size: 10px;
+  }
+
+  .value-col {
+    max-width: 42%;
+    overflow: hidden;
+  }
+
   .value-num {
-    font-size: 14px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .rank-top-1 .value-num {
-    font-size: 16px;
+    font-size: 15px;
+  }
+
+  .value-label {
+    font-size: 10px;
   }
 
   .leaderboard-stats {
