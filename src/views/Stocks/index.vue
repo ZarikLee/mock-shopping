@@ -23,6 +23,34 @@
         </div>
       </div>
 
+      <div class="stats-bar" v-if="userStore.isLoggedIn">
+        <div class="stats-main">
+          <div class="stat-item main-item">
+            <span class="stat-label">总盈亏</span>
+            <span class="stat-value main-value" :class="pnlClass(stats?.totalPnL)">
+              {{ signedMoney(stats?.totalPnL) }}
+            </span>
+            <span class="stat-sub" :class="pnlClass(stats?.pnlPercent)">收益率 {{ formatPercent(stats?.pnlPercent) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">当前持仓市值</span>
+            <span class="stat-value">¥{{ formatMoney(stats?.currentValue) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">已实现盈亏</span>
+            <span class="stat-value" :class="pnlClass(stats?.realizedPnL)">{{ signedMoney(stats?.realizedPnL) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">未实现盈亏</span>
+            <span class="stat-value" :class="pnlClass(stats?.unrealizedPnL)">{{ signedMoney(stats?.unrealizedPnL) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">累计交易次数</span>
+            <span class="stat-value">{{ stats?.tradeCount ?? 0 }} 次</span>
+          </div>
+        </div>
+      </div>
+
       <div class="stocks-body">
         <div class="market-panel">
           <div class="panel-title">
@@ -230,6 +258,7 @@ const loading = ref(false)
 const holdings = ref([])
 const holdingsLoading = ref(false)
 const lastUpdate = ref('')
+const stats = ref(null)
 const flashMap = reactive({})
 const flashTimers = {}
 let refreshTimer = null
@@ -252,6 +281,9 @@ const trendClass = (row) => {
 }
 
 const profitClass = (v) => (Number(v) >= 0 ? 'up' : 'down')
+
+const pnlClass = (v) => (Number(v) > 0 ? 'up' : Number(v) < 0 ? 'down' : 'flat')
+const signedMoney = (v) => (Number(v) > 0 ? '+' : '') + formatMoney(v)
 
 const flashClass = (symbol) => flashMap[symbol] || ''
 
@@ -293,6 +325,16 @@ async function refreshHoldings() {
     holdings.value = []
   } finally {
     holdingsLoading.value = false
+  }
+}
+
+async function refreshStats() {
+  if (!userStore.isLoggedIn) return
+  try {
+    const res = await stockApi.stats()
+    stats.value = res || null
+  } catch {
+    stats.value = null
   }
 }
 
@@ -387,6 +429,7 @@ function applyTradeResult(res) {
   tradingVisible.value = false
   refreshHoldings()
   refreshStocks(true)
+  refreshStats()
 }
 
 async function submitTrade() {
@@ -426,13 +469,17 @@ async function submitTrade() {
 }
 
 watch(() => userStore.isLoggedIn, (val) => {
-  if (val) refreshHoldings()
+  if (val) {
+    refreshHoldings()
+    refreshStats()
+  }
 })
 
 onMounted(() => {
   document.title = '模拟股票交易 - 淘大宝'
   refreshStocks()
   refreshHoldings()
+  refreshStats()
   startAutoRefresh()
 })
 
@@ -535,6 +582,56 @@ onUnmounted(() => {
   font-size: 22px;
   font-weight: 700;
   color: #ff4d4f;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-bar {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.stats-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 110px;
+}
+
+.main-item {
+  padding-right: 24px;
+  border-right: 1px solid #f0f0f0;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #999;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  font-variant-numeric: tabular-nums;
+}
+
+.main-value {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.stat-sub {
+  font-size: 13px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -955,6 +1052,22 @@ onUnmounted(() => {
 
   .balance-value {
     font-size: 18px;
+  }
+
+  .stats-bar {
+    padding: 14px 16px;
+  }
+
+  .stats-main {
+    gap: 20px;
+  }
+
+  .main-item {
+    padding-right: 16px;
+  }
+
+  .main-value {
+    font-size: 24px;
   }
 }
 </style>

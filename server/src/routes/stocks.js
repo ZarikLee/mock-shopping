@@ -16,12 +16,24 @@ try {
   console.log('No stocks.json found at', stocksPath);
 }
 
+function initTrends() {
+  stocks.forEach(s => {
+    if (s.trend === undefined) s.trend = (Math.random() * 2 - 1) * 0.3
+  })
+}
+initTrends()
+
 function simulatePrice(stock) {
-  // Simulate small price movement
-  stock.price = Math.max(0.01, stock.price * (1 + (Math.random() - 0.5) * 0.002));
-  stock.changePercent = ((stock.price - stock.prevClose) / stock.prevClose * 100);
-  stock.price = Math.round(stock.price * 100) / 100;
-  stock.changePercent = Math.round(stock.changePercent * 100) / 100;
+  // Randomly shift trend occasionally
+  if (Math.random() < 0.1) {
+    stock.trend = Math.max(-0.8, Math.min(0.8, stock.trend + (Math.random() * 2 - 1) * 0.3))
+  }
+  // Price moves with momentum + random noise, ±2-4%
+  const move = stock.trend * 0.02 + (Math.random() - 0.5) * 0.03
+  stock.price = Math.max(0.01, stock.price * (1 + move))
+  stock.changePercent = Math.round(((stock.price - stock.prevClose) / stock.prevClose) * 10000) / 100
+  stock.price = Math.round(stock.price * 100) / 100
+  return stock
 }
 
 function parseHoldings(user) {
@@ -69,6 +81,62 @@ router.get('/holdings', authMiddleware, (req, res) => {
     };
   });
   res.json(result);
+});
+
+router.get('/stats', authMiddleware, (req, res) => {
+  const user = queryOne('users', { id: req.user.id });
+  if (!user) return res.status(404).json({ error: '用户不存在' });
+
+  const transactions = parseTransactions(user);
+  const holdings = parseHoldings(user);
+
+  // Total buy spend (cost + fee)
+  let totalBuySpend = 0;
+  let totalBuyCost = 0;
+  // Total sell net (proceeds - fee)
+  let totalSellNet = 0;
+  // Total fees
+  let totalFees = 0;
+
+  transactions.forEach(t => {
+    if (t.type === 'buy') { totalBuySpend += t.total || 0; totalBuyCost += t.cost || 0; }
+    if (t.type === 'sell') { totalSellNet += t.net || 0; }
+    if (t.type === '交易手续费' || (t.fee)) { totalFees += t.fee || t.amount || 0; }
+  });
+
+  // Current holdings value
+  let currentValue = 0;
+  let holdingCost = 0;
+  stocks.forEach(stock => {
+    const pos = holdings[stock.symbol];
+    if (pos) {
+      currentValue += pos.shares * stock.price;
+      holdingCost += pos.shares * pos.avgCost;
+    }
+  });
+  currentValue = Math.round(currentValue * 100) / 100;
+  holdingCost = Math.round(holdingCost * 100) / 100;
+
+  // P&L calculations
+  const realizedPnL = Math.round((totalSellNet - (totalBuyCost - holdingCost)) * 100) / 100;
+  const unrealizedPnL = Math.round((currentValue - holdingCost) * 100) / 100;
+  const totalPnL = Math.round((realizedPnL + unrealizedPnL) * 100) / 100;
+  const invested = Math.round((totalBuySpend - totalSellNet) * 100) / 100;
+  const pnlPercent = invested !== 0 ? Math.round((totalPnL / Math.abs(invested)) * 10000) / 100 : 0;
+
+  res.json({
+    totalBuySpend: Math.round(totalBuySpend * 100) / 100,
+    totalSellNet: Math.round(totalSellNet * 100) / 100,
+    totalFees: Math.round(totalFees * 100) / 100,
+    currentValue,
+    holdingCost,
+    realizedPnL,
+    unrealizedPnL,
+    totalPnL,
+    invested,
+    pnlPercent,
+    tradeCount: transactions.filter(t => t.type === 'buy' || t.type === 'sell').length
+  });
 });
 
 router.get('/:symbol/positions', authMiddleware, (req, res) => {
