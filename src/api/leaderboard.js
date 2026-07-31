@@ -2,6 +2,6 @@ import api from './index'
 
 export const leaderboardApi = {
   getByBalance: () => api.get('/leaderboard'),
-  getByPoints: () => api.get('/leaderboard/points'),
-  getBySpending: () => api.get('/leaderboard/spending')
+  getBySpending: () => api.get('/leaderboard/spending'),
+  getByStocks: () => api.get('/leaderboard/stocks')
 }

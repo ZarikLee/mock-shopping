@@ -60,7 +60,7 @@
                 <span class="userid">ID: {{ item.userId || item.id }}</span>
               </div>
               <div class="value-col">
-                <span class="value-num">{{ formatValue(item) }}</span>
+                <span class="value-num" :class="formatValue(item).cls">{{ formatValue(item).text }}</span>
                 <span class="value-label">{{ valueLabel }}</span>
               </div>
             </div>
@@ -78,7 +78,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Trophy, Wallet, ShoppingCart, DataAnalysis } from '@element-plus/icons-vue'
+import { Trophy, Wallet, ShoppingCart, DataAnalysis, TrendCharts } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
 import { useUserStore } from '../../stores/user'
 import { leaderboardApi } from '../../api/leaderboard'
@@ -90,7 +90,8 @@ const currentUserId = computed(() => userStore.userInfo?.id)
 
 const tabs = [
   { key: 'balance', label: '财富榜', icon: 'Wallet' },
-  { key: 'spending', label: '消费榜', icon: 'ShoppingCart' }
+  { key: 'spending', label: '消费榜', icon: 'ShoppingCart' },
+  { key: 'stocks', label: '股票盈亏榜', icon: 'TrendCharts' }
 ]
 
 const activeTab = ref('balance')
@@ -98,18 +99,24 @@ const list = ref([])
 const loading = ref(false)
 
 const valueLabel = computed(() => {
-  const map = { balance: '余额', spending: '总消费' }
+  const map = { balance: '余额', spending: '总消费', stocks: '股票盈亏' }
   return map[activeTab.value] || ''
 })
 
 const currentUserRank = computed(() => {
-  const found = list.value.find(item => item.userId === currentUserId.value)
+  const found = list.value.find(item => (item.userId || item.id) === currentUserId.value)
   return found ? found.rank : null
 })
 
 function formatValue(item) {
-  const val = activeTab.value === 'balance' ? item.balance : item.totalSpent
-  return '¥' + (val !== undefined ? Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00')
+  let val
+  if (activeTab.value === 'balance') val = item.balance
+  else if (activeTab.value === 'spending') val = item.totalSpent
+  else val = item.stockPnL
+  if (val === undefined || val === null) val = 0
+  const num = Number(val)
+  const cls = activeTab.value === 'stocks' ? (num >= 0 ? 'up' : 'down') : ''
+  return { text: (num >= 0 && activeTab.value === 'stocks' ? '+' : '') + '¥' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), cls }
 }
 
 async function fetchData() {
@@ -117,10 +124,13 @@ async function fetchData() {
   try {
     const apiMap = {
       balance: leaderboardApi.getByBalance,
-      spending: leaderboardApi.getBySpending
+      spending: leaderboardApi.getBySpending,
+      stocks: leaderboardApi.getByStocks
     }
     const res = await apiMap[activeTab.value]()
-    list.value = (res.leaderboard || []).map((item, idx) => ({
+    // 兼容数组或 {leaderboard: []} 两种返回格式
+    const raw = Array.isArray(res) ? res : (res.leaderboard || [])
+    list.value = raw.map((item, idx) => ({
       ...item,
       rank: item.rank || idx + 1
     }))
@@ -447,6 +457,9 @@ onMounted(() => {
   color: #333;
   font-feature-settings: 'tnum';
 }
+
+.value-num.up { color: #ff4d4f; }
+.value-num.down { color: #00b578; }
 
 .rank-top-1 .value-num {
   font-size: 19px;
