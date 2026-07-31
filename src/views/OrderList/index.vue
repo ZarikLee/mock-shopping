@@ -1,6 +1,8 @@
 <template>
   <div class="order-list-page">
     <div class="container">
+      <BackButton />
+
       <h1 class="page-title">我的订单</h1>
 
       <!-- 订单状态筛选 -->
@@ -91,6 +93,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Document } from '@element-plus/icons-vue'
 import { useOrderStore } from '../../stores/order'
+import BackButton from '../../components/BackButton/index.vue'
 import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 

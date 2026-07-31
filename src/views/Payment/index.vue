@@ -1,6 +1,8 @@
 <template>
   <div class="payment-page">
     <div class="container">
+      <BackButton />
+
       <div class="payment-card" v-if="order">
         <div class="payment-status" v-if="!paymentSuccess">
           <div class="status-icon">
@@ -105,6 +107,7 @@ import { useUserStore } from '../../stores/user'
 import { useOrderStore } from '../../stores/order'
 import { authApi } from '../../api/auth'
 import { ElMessage } from 'element-plus'
+import BackButton from '../../components/BackButton/index.vue'
 import PaymentDialog from '../../components/PaymentDialog/index.vue'
 
 const router = useRouter()

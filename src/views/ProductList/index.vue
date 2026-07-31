@@ -1,6 +1,8 @@
 <template>
   <div class="product-list-page">
     <div class="container">
+      <BackButton />
+
       <div class="breadcrumb">
         <router-link to="/">首页</router-link>
         <span class="separator">/</span>
@@ -299,6 +301,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Check, Box, ArrowUp, ArrowDown, Close, Filter, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 import { useDevice } from '../../utils/device'
+import BackButton from '../../components/BackButton/index.vue'
 import ProductCard from '../../components/ProductCard/index.vue'
 import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 import products from '../../data/products.json'

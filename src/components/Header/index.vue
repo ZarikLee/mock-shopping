@@ -113,17 +113,21 @@
     <div class="header-nav" v-if="!isMobile">
       <div class="container">
         <div class="nav-list">
-          <router-link to="/" class="nav-item">首页</router-link>
-          <router-link to="/products" class="nav-item">全部商品</router-link>
-          <router-link to="/products?categoryId=1" class="nav-item">手机数码</router-link>
-          <router-link to="/products?categoryId=2" class="nav-item">电脑办公</router-link>
-          <router-link to="/products?categoryId=5" class="nav-item">服饰鞋包</router-link>
-          <router-link to="/products?categoryId=6" class="nav-item">美妆个护</router-link>
-          <router-link to="/products?categoryId=4" class="nav-item">家用电器</router-link>
-          <router-link to="/games" class="nav-item">赚米中心</router-link>
-          <router-link to="/activities" class="nav-item">限时活动</router-link>
-          <router-link to="/leaderboard" class="nav-item">全服排行榜</router-link>
-          <router-link to="/stocks" class="nav-item">股票交易</router-link>
+          <router-link to="/" class="nav-item" :class="{ active: route.path === '/' }">首页</router-link>
+          <router-link
+            v-for="item in currentNavItems"
+            :key="item.label"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: route.path === item.path || route.query.market === currentCategory }"
+          >{{ item.label }}</router-link>
+          <span class="nav-divider"></span>
+          <router-link
+            v-for="item in globalNavItems"
+            :key="item.label"
+            :to="item.path"
+            class="nav-item nav-global"
+          >{{ item.label }}</router-link>
         </div>
       </div>
     </div>
@@ -202,7 +206,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Search, ShoppingCart, ArrowDown, Menu, Close } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
@@ -287,6 +291,41 @@ const categories = [
   { id: 'house', label: '房产投资', desc: '全国房源模拟交易' },
   { id: 'car', label: '汽车世界', desc: '新车二手车模拟交易' },
   { id: 'invest', label: '金融投资', desc: '基金理财模拟投资' }
+]
+
+const marketNavItems = {
+  shop: [
+    { label: '全部商品', path: '/products' },
+    { label: '手机数码', path: '/products?categoryId=1' },
+    { label: '电脑办公', path: '/products?categoryId=2' },
+    { label: '服饰鞋包', path: '/products?categoryId=5' },
+    { label: '美妆个护', path: '/products?categoryId=6' },
+    { label: '家用电器', path: '/products?categoryId=4' },
+  ],
+  house: [
+    { label: '全部房源', path: '/products?market=house' },
+    { label: '新房', path: '/products?market=house&subcategory=新房' },
+    { label: '二手房', path: '/products?market=house&subcategory=二手房' },
+    { label: '别墅', path: '/products?market=house&subcategory=别墅' },
+  ],
+  car: [
+    { label: '全部车型', path: '/products?market=car' },
+    { label: '轿车', path: '/products?market=car&subcategory=轿车' },
+    { label: 'SUV', path: '/products?market=car&subcategory=SUV' },
+    { label: '新能源', path: '/products?market=car&subcategory=新能源' },
+  ],
+  invest: [
+    { label: '股票交易', path: '/stocks' },
+    { label: '我的持仓', path: '/stocks#holdings' },
+  ]
+}
+
+const currentNavItems = computed(() => marketNavItems[currentCategory.value] || marketNavItems.shop)
+
+const globalNavItems = [
+  { label: '赚米中心', path: '/games' },
+  { label: '限时活动', path: '/activities' },
+  { label: '全服排行榜', path: '/leaderboard' },
 ]
 
 const switchCategory = (id) => {
@@ -550,6 +589,23 @@ if (savedCat) {
 .nav-item:hover {
   color: #ff4400;
   background: #fff5f0;
+}
+
+.nav-divider {
+  width: 1px;
+  height: 20px;
+  background: #e0e0e0;
+  margin: 10px 16px;
+  flex-shrink: 0;
+}
+
+.nav-global {
+  color: #666;
+}
+
+.nav-item.active {
+  color: #ff4400;
+  font-weight: 600;
 }
 
 .mobile-header-left {

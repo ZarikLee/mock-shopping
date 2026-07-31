@@ -2,6 +2,8 @@
   <div class="earn-center">
     <div class="top-section">
       <div class="container">
+        <BackButton />
+
         <div class="points-card">
           <div class="points-info">
             <span class="points-label">我的余额</span>
@@ -245,6 +247,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { List, Trophy, ShoppingBag, Coin, CircleCheck, Clock } from '@element-plus/icons-vue'
+import BackButton from '../../components/BackButton/index.vue'
 import { gameApi } from '../../api/games'
 import { authApi } from '../../api/auth'
 import { useUserStore } from '../../stores/user'

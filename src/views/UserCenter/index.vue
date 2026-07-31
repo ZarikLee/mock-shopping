@@ -1,5 +1,8 @@
 <template>
   <div class="user-center-page">
+    <div class="user-back">
+      <BackButton />
+    </div>
     <div class="user-layout">
       <aside class="user-sidebar">
         <div class="profile-card">
@@ -303,6 +306,7 @@ import {
   List, Location, Ticket, Star, Check, Delete, ShoppingBag, Medal
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import BackButton from '../../components/BackButton/index.vue'
 import { useUserStore } from '../../stores/user'
 import { useOrderStore } from '../../stores/order'
 import { useWishlistStore } from '../../stores/wishlist'
@@ -616,6 +620,12 @@ onMounted(() => {
   min-height: 100vh;
   background: #f5f5f5;
   padding: 20px 0;
+}
+
+.user-back {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
 .user-layout {

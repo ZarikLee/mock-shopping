@@ -1,6 +1,8 @@
 <template>
   <div class="cart-page">
     <div class="container">
+      <BackButton />
+
       <div class="cart-header">
         <h1>我的购物车</h1>
         <span class="total-count">共 <span class="count">{{ cartStore.itemCount }}</span> 件商品</span>
@@ -144,6 +146,7 @@ import { ShoppingCart } from '@element-plus/icons-vue'
 import { useCartStore } from '../../stores/cart'
 import { useUserStore } from '../../stores/user'
 import { useDevice } from '../../utils/device'
+import BackButton from '../../components/BackButton/index.vue'
 import PromotionBar from '../../components/PromotionBar/index.vue'
 import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
 

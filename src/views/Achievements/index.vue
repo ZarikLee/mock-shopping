@@ -1,6 +1,8 @@
 <template>
   <div class="achievements-page">
     <div class="container">
+      <BackButton />
+
       <div class="page-header">
         <h2 class="page-title">我的成就</h2>
         <span class="page-count">{{ unlockedCount }} / {{ ACHIEVEMENTS.length }} 已解锁</span>
@@ -39,6 +41,7 @@
 
 <script setup>
 import { computed, onMounted } from 'vue'
+import BackButton from '../../components/BackButton/index.vue'
 import { useUserStore } from '../../stores/user'
 import { authApi } from '../../api/auth'
 import { ACHIEVEMENTS, getLevelProgress } from '../../data/achievements'

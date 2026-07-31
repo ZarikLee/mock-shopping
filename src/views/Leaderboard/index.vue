@@ -1,6 +1,8 @@
 <template>
   <div class="leaderboard-page">
     <div class="container">
+      <BackButton />
+
       <div class="leaderboard-header">
         <div class="header-icon">
           <el-icon :size="40" color="#ff4400"><Trophy /></el-icon>
@@ -76,6 +78,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { Trophy, Wallet, ShoppingCart, DataAnalysis } from '@element-plus/icons-vue'
+import BackButton from '../../components/BackButton/index.vue'
 import { useUserStore } from '../../stores/user'
 import { leaderboardApi } from '../../api/leaderboard'
 

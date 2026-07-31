@@ -1,6 +1,8 @@
 <template>
   <div class="order-detail-page" v-if="order">
     <div class="container">
+      <BackButton />
+
       <div class="breadcrumb">
         <router-link to="/">首页</router-link>
         <span class="separator">/</span>
@@ -156,6 +158,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { CircleCheck, Van, Location, ShoppingBag } from '@element-plus/icons-vue'
+import BackButton from '../../components/BackButton/index.vue'
 import { useOrderStore } from '../../stores/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
 

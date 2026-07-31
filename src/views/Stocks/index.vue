@@ -1,6 +1,8 @@
 <template>
   <div class="stocks-page">
     <div class="container">
+      <BackButton />
+
       <div class="stocks-header">
         <div class="header-left">
           <el-icon :size="34" color="#ff4400"><TrendCharts /></el-icon>
@@ -215,6 +217,7 @@
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { TrendCharts, Wallet, Lock } from '@element-plus/icons-vue'
+import BackButton from '../../components/BackButton/index.vue'
 import { stockApi } from '../../api/stocks'
 import { useUserStore } from '../../stores/user'
 import { useAuthStore } from '../../stores/auth'

@@ -1,6 +1,8 @@
 <template>
   <div class="checkout-page">
     <div class="container">
+      <BackButton />
+
       <h1 class="page-title">确认订单</h1>
 
       <!-- 收货地址 -->
@@ -207,6 +209,7 @@
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { Location, ShoppingBag, Van, CreditCard, Ticket, Coin, Phone, Plus } from '@element-plus/icons-vue'
+import BackButton from '../../components/BackButton/index.vue'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useOrderStore } from '../../stores/order'
