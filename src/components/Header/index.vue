@@ -72,20 +72,26 @@
           </el-badge>
         </div>
 
-        <div class="cart-box" v-if="!isMobile" @click="goToCart">
-          <el-badge :value="cartStore.itemCount" :hidden="cartStore.itemCount === 0">
-            <div class="cart-icon">
-              <el-icon :size="24"><ShoppingCart /></el-icon>
-              <span>我的购物车</span>
-            </div>
-          </el-badge>
-        </div>
-
-        <!-- 常驻全局入口（不随菜单收起） -->
-        <div class="global-links" v-if="!isMobile">
-          <router-link to="/games" class="global-link" :class="{ active: isActiveNav({ path: '/games' }) }">赚米中心</router-link>
-          <router-link to="/leaderboard" class="global-link" :class="{ active: isActiveNav({ path: '/leaderboard' }) }">排行榜</router-link>
-          <router-link to="/activities" class="global-link" :class="{ active: isActiveNav({ path: '/activities' }) }">活动</router-link>
+        <!-- 顶部统一操作按钮（购物车+常驻入口） -->
+        <div class="header-actions-bar" v-if="!isMobile">
+          <div class="action-btn cart-action" @click="goToCart">
+            <el-badge :value="cartStore.itemCount" :hidden="cartStore.itemCount === 0">
+              <el-icon :size="16"><ShoppingCart /></el-icon>
+            </el-badge>
+            <span>购物车</span>
+          </div>
+          <router-link to="/games" class="action-btn" :class="{ active: isActiveNav({ path: '/games' }) }">
+            <el-icon :size="16"><Trophy /></el-icon>
+            <span>赚米中心</span>
+          </router-link>
+          <router-link to="/leaderboard" class="action-btn" :class="{ active: isActiveNav({ path: '/leaderboard' }) }">
+            <el-icon :size="16"><TrendCharts /></el-icon>
+            <span>全服排行榜</span>
+          </router-link>
+          <router-link to="/activities" class="action-btn" :class="{ active: isActiveNav({ path: '/activities' }) }">
+            <el-icon :size="16"><Lightning /></el-icon>
+            <span>限时活动</span>
+          </router-link>
         </div>
       </div>
     </div>
@@ -202,7 +208,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Search, ShoppingCart, ArrowDown, ArrowUp, Menu, Close } from '@element-plus/icons-vue'
+import { Search, ShoppingCart, ArrowDown, ArrowUp, Menu, Close, Trophy, TrendCharts, Lightning } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useAuthStore } from '../../stores/auth'
@@ -485,23 +491,43 @@ watch(() => route.query.market, syncCategoryFromRoute)
   background: #ff6600;
 }
 
-.cart-box {
-  cursor: pointer;
-}
-
-.cart-icon {
+.header-actions-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
-  transition: all 0.3s;
+  gap: 6px;
+  margin-left: 20px;
+  flex-shrink: 0;
 }
 
-.cart-icon:hover {
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.action-btn:hover {
   border-color: #ff4400;
   color: #ff4400;
+}
+
+.action-btn.active {
+  border-color: #ff4400;
+  color: #ff4400;
+  background: #fff5f0;
+}
+
+.action-btn .el-badge {
+  line-height: 1;
 }
 
 .main-nav-bar {
@@ -555,33 +581,6 @@ watch(() => route.query.market, syncCategoryFromRoute)
 
 .hide-on-collapse {
   display: none;
-}
-
-.global-links {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 24px;
-  flex-shrink: 0;
-}
-
-.global-link {
-  padding: 6px 12px;
-  font-size: 14px;
-  color: #333;
-  border-radius: 6px;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.global-link:hover {
-  color: #ff4400;
-  background: #fff5f0;
-}
-
-.global-link.active {
-  color: #ff4400;
-  font-weight: 600;
 }
 
 .nav-toggle-float {
