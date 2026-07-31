@@ -5,11 +5,17 @@ import { authApi } from '../api/auth'
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
   const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || 'null'))
+  // Fix: if userInfo exists but balance is undefined (old users from before currency change)
+  if (userInfo.value && userInfo.value.balance === undefined) {
+    userInfo.value.balance = 5000
+    localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+  }
   const isLoggedIn = computed(() => !!token.value)
-  const balance = computed(() => userInfo.value?.balance || 0)
+  const balance = computed(() => userInfo.value?.balance ?? 0)
 
   // Auto-fetch user info on startup if token exists
-  if (token.value) {
+  if (token.value && (!userInfo.value || userInfo.value.balance === undefined)) {
+    // Fetch from server to get latest balance
     ;(async () => {
       try {
         const res = await authApi.getMe()

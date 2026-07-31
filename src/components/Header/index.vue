@@ -86,9 +86,30 @@
 
     <div class="header-nav" v-if="!isMobile">
       <div class="container">
-        <div class="nav-all" @click="router.push('/products')">
-          <span>全部商品分类</span>
-          <el-icon><ArrowDown /></el-icon>
+        <div class="nav-switcher">
+          <el-dropdown trigger="click" @command="switchCategory">
+            <span class="nav-switcher-btn">
+              <span class="switcher-icon">{{ currentCategoryIcon }}</span>
+              <span class="switcher-text">{{ currentCategoryLabel }}</span>
+              <el-icon><ArrowDown /></el-icon>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item 
+                  v-for="cat in categories" 
+                  :key="cat.id" 
+                  :command="cat.id"
+                  :class="{ active: currentCategory === cat.id }"
+                >
+                  <span class="dropdown-item-content">
+                    <span class="dropdown-icon">{{ cat.icon }}</span>
+                    <span class="dropdown-label">{{ cat.label }}</span>
+                    <span class="dropdown-desc">{{ cat.desc }}</span>
+                  </span>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
         <div class="nav-list">
           <router-link to="/" class="nav-item">首页</router-link>
@@ -178,6 +199,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Search, ShoppingCart, ArrowDown, Menu, Close } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useAuthStore } from '../../stores/auth'
@@ -248,6 +270,46 @@ const toggleMobileSearch = () => {
     setTimeout(() => {
       document.querySelector('.mobile-input')?.focus()
     }, 100)
+  }
+}
+
+const currentCategory = ref('shop')
+const currentCategoryLabel = ref('电商购物')
+const currentCategoryIcon = ref('🛒')
+
+const categories = [
+  { id: 'shop', icon: '🛒', label: '电商购物', desc: '服装、数码、家电等' },
+  { id: 'house', icon: '🏠', label: '房产投资', desc: '模拟房产买卖（即将上线）' },
+  { id: 'car', icon: '🚗', label: '汽车世界', desc: '模拟汽车交易（即将上线）' },
+  { id: 'invest', icon: '📈', label: '金融投资', desc: '模拟股票基金（即将上线）' },
+  { id: 'activity', icon: '🎯', label: '限时活动', desc: '挑战任务，赢取大奖' }
+]
+
+const switchCategory = (id) => {
+  const cat = categories.find(c => c.id === id)
+  if (cat) {
+    currentCategory.value = cat.id
+    currentCategoryLabel.value = cat.label
+    currentCategoryIcon.value = cat.icon
+    localStorage.setItem('taobao_category', id)
+    if (id === 'activity') {
+      router.push('/games')
+    } else if (id !== 'shop') {
+      ElMessage.info(`「${cat.label}」即将上线，敬请期待！`)
+    } else {
+      router.push('/')
+    }
+  }
+}
+
+// Load saved category
+const savedCat = localStorage.getItem('taobao_category')
+if (savedCat) {
+  const cat = categories.find(c => c.id === savedCat)
+  if (cat) {
+    currentCategory.value = savedCat
+    currentCategoryLabel.value = cat.label
+    currentCategoryIcon.value = cat.icon
   }
 }
 </script>
@@ -386,15 +448,61 @@ const toggleMobileSearch = () => {
   align-items: center;
 }
 
-.nav-all {
-  background: #333;
+.nav-switcher {
+  background: linear-gradient(135deg, #ff4400, #ff6600);
   color: #fff;
-  padding: 12px 20px;
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.nav-switcher-btn {
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  width: 200px;
+  height: 100%;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.nav-switcher-btn:hover {
+  opacity: 0.9;
+}
+
+.switcher-icon {
+  font-size: 18px;
+}
+
+.switcher-text {
+  flex: 1;
+  font-weight: 600;
+}
+
+.dropdown-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+}
+
+.dropdown-icon {
+  font-size: 18px;
+}
+
+.dropdown-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.dropdown-desc {
+  font-size: 11px;
+  color: #999;
+}
+
+.el-dropdown-menu__item.active {
+  background: #fff5f0;
+  color: #ff4400;
 }
 
 .nav-list {

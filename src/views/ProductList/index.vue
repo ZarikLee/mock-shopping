@@ -10,56 +10,67 @@
 
       <div class="main-content">
         <div class="sidebar" v-if="!isMobile">
-          <div class="filter-section">
-            <h3>商品分类</h3>
-            <div class="filter-list">
-              <div
-                v-for="category in categories"
-                :key="category.id"
-                class="filter-item"
-                :class="{ active: selectedCategoryId === category.id }"
-                @click="selectCategory(category.id)"
-              >
-                <span class="icon">{{ category.icon }}</span>
-                <span class="name">{{ category.name }}</span>
+          <div class="sidebar-header">
+            <h3 v-show="!sidebarCollapsed">筛选条件</h3>
+            <el-button text size="small" @click="sidebarCollapsed = !sidebarCollapsed" class="sidebar-toggle-btn">
+              <template v-if="!sidebarCollapsed">
+                收起 <el-icon><ArrowLeft /></el-icon>
+              </template>
+              <el-icon v-else><ArrowRight /></el-icon>
+            </el-button>
+          </div>
+          <div v-show="!sidebarCollapsed" class="sidebar-body">
+            <div class="filter-section">
+              <h3>商品分类</h3>
+              <div class="filter-list">
+                <div
+                  v-for="category in categories"
+                  :key="category.id"
+                  class="filter-item"
+                  :class="{ active: selectedCategoryId === category.id }"
+                  @click="selectCategory(category.id)"
+                >
+                  <span class="icon">{{ category.icon }}</span>
+                  <span class="name">{{ category.name }}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="filter-section">
-            <h3>价格区间</h3>
-            <div class="price-filter">
-              <input
-                v-model="priceRange.min"
-                type="number"
-                placeholder="最低价"
-                class="price-input"
-              />
-              <span class="separator">-</span>
-              <input
-                v-model="priceRange.max"
-                type="number"
-                placeholder="最高价"
-                class="price-input"
-              />
-              <el-button type="primary" size="small" @click="applyPriceFilter">
-                确定
-              </el-button>
+            <div class="filter-section">
+              <h3>价格区间</h3>
+              <div class="price-filter">
+                <input
+                  v-model="priceRange.min"
+                  type="number"
+                  placeholder="最低价"
+                  class="price-input"
+                />
+                <span class="separator">-</span>
+                <input
+                  v-model="priceRange.max"
+                  type="number"
+                  placeholder="最高价"
+                  class="price-input"
+                />
+                <el-button type="primary" size="small" @click="applyPriceFilter">
+                  确定
+                </el-button>
+              </div>
             </div>
-          </div>
 
-          <div class="filter-section">
-            <h3>品牌</h3>
-            <div class="filter-list">
-              <div
-                v-for="brand in brands"
-                :key="brand"
-                class="filter-item checkbox"
-                :class="{ active: selectedBrands.includes(brand) }"
-                @click="toggleBrand(brand)"
-              >
-                <el-icon v-if="selectedBrands.includes(brand)"><Check /></el-icon>
-                <span class="name">{{ brand }}</span>
+            <div class="filter-section">
+              <h3>品牌</h3>
+              <div class="filter-list">
+                <div
+                  v-for="brand in brands"
+                  :key="brand"
+                  class="filter-item checkbox"
+                  :class="{ active: selectedBrands.includes(brand) }"
+                  @click="toggleBrand(brand)"
+                >
+                  <el-icon v-if="selectedBrands.includes(brand)"><Check /></el-icon>
+                  <span class="name">{{ brand }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -83,12 +94,71 @@
             </div>
             <div class="sort-actions">
               <el-button v-if="isMobile" size="small" class="filter-toggle-btn" @click="showFilterPanel = true">
-                <el-icon><component :is="'Filter'"/></el-icon>
+                <el-icon><Filter /></el-icon>
                 筛选
               </el-button>
               <span class="result-count" v-if="!isMobile">
                 共 <span class="count">{{ filteredProducts.length }}</span> 件商品
               </span>
+            </div>
+          </div>
+
+          <div class="quick-filters" v-if="isMobile">
+            <div class="filter-chips">
+              <el-tag
+                v-for="chip in quickFilters"
+                :key="chip.value"
+                :type="currentSort === chip.value ? 'danger' : 'info'"
+                :effect="currentSort === chip.value ? 'dark' : 'plain'"
+                @click="changeSort(chip.value)"
+              >
+                {{ chip.label }}
+                <el-icon v-if="chip.value === 'price' && currentSort === 'price'">
+                  <ArrowUp v-if="sortDirection === 'asc'" />
+                  <ArrowDown v-else />
+                </el-icon>
+              </el-tag>
+            </div>
+            <el-button :icon="Filter" @click="showMobileFilter = !showMobileFilter" :type="hasActiveFilters ? 'danger' : 'default'" size="small">
+              筛选
+            </el-button>
+          </div>
+
+          <div class="count-banner" v-if="filteredProducts.length > 0">
+            <span class="count-label">共 <em>{{ filteredProducts.length }}</em> 件商品</span>
+            <div class="active-tags" v-if="hasActiveFilters">
+              <el-tag
+                v-if="selectedCategoryId && currentCategory"
+                closable
+                size="small"
+                type="danger"
+                effect="light"
+                @close="selectedCategoryId = null"
+              >
+                {{ currentCategory.name }}
+              </el-tag>
+              <el-tag
+                v-for="brand in selectedBrands"
+                :key="brand"
+                closable
+                size="small"
+                type="danger"
+                effect="light"
+                @close="toggleBrand(brand)"
+              >
+                {{ brand }}
+              </el-tag>
+              <el-tag
+                v-if="priceRange.min || priceRange.max"
+                closable
+                size="small"
+                type="danger"
+                effect="light"
+                @close="priceRange = { min: '', max: '' }"
+              >
+                ¥{{ priceRange.min || '0' }} - ¥{{ priceRange.max || '不限' }}
+              </el-tag>
+              <el-button text size="small" @click="resetFilters" class="clear-all-btn">清除全部</el-button>
             </div>
           </div>
 
@@ -122,7 +192,7 @@
       </div>
     </div>
 
-    <!-- Mobile filter drawer -->
+    <!-- Mobile filter drawer (full) -->
     <transition name="slide-up">
       <div class="filter-overlay" v-if="isMobile && showFilterPanel" @click="showFilterPanel = false">
         <div class="filter-panel" @click.stop>
@@ -180,13 +250,54 @@
         </div>
       </div>
     </transition>
+
+    <!-- Mobile filter quick drawer -->
+    <transition name="slide-up">
+      <div class="mobile-filter-overlay" v-if="isMobile && showMobileFilter" @click="showMobileFilter = false">
+        <div class="mobile-filter-panel" @click.stop>
+          <div class="mobile-filter-header">
+            <h3>筛选</h3>
+            <el-button text @click="resetFilters">重置</el-button>
+          </div>
+          <div class="mobile-filter-body">
+            <div class="mobile-filter-section">
+              <h4>价格区间</h4>
+              <div class="mobile-price-filter">
+                <el-input v-model="priceRange.min" placeholder="最低价" size="small" />
+                <span class="separator">-</span>
+                <el-input v-model="priceRange.max" placeholder="最高价" size="small" />
+                <el-button type="primary" size="small" @click="applyPriceFilter">确定</el-button>
+              </div>
+            </div>
+            <div class="mobile-filter-section">
+              <h4>品牌</h4>
+              <div class="mobile-brand-list">
+                <el-tag
+                  v-for="brand in brands"
+                  :key="brand"
+                  :type="selectedBrands.includes(brand) ? 'danger' : 'info'"
+                  :effect="selectedBrands.includes(brand) ? 'dark' : 'plain'"
+                  @click="toggleBrand(brand)"
+                >
+                  {{ brand }}
+                </el-tag>
+              </div>
+            </div>
+          </div>
+          <div class="mobile-filter-footer">
+            <el-button @click="showMobileFilter = false">取消</el-button>
+            <el-button type="primary" @click="showMobileFilter = false">完成</el-button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Check, Box, ArrowUp, ArrowDown, Close } from '@element-plus/icons-vue'
+import { Check, Box, ArrowUp, ArrowDown, Close, Filter, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 import { useDevice } from '../../utils/device'
 import ProductCard from '../../components/ProductCard/index.vue'
 import SkeletonLoader from '../../components/SkeletonLoader/index.vue'
@@ -206,6 +317,16 @@ const loading = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(12)
 const showFilterPanel = ref(false)
+const showMobileFilter = ref(false)
+const sidebarCollapsed = ref(false)
+
+const quickFilters = [
+  { label: '综合', value: 'default' },
+  { label: '销量', value: 'sales' },
+  { label: '价格', value: 'price' },
+  { label: '评分', value: 'rating' },
+  { label: '新品', value: 'new' }
+]
 
 const brands = computed(() => {
   const brandSet = new Set(products.map(p => p.brand))
@@ -225,6 +346,8 @@ const sortOptions = [
   { label: '价格', value: 'price' },
   { label: '评分', value: 'rating' }
 ]
+
+const hasActiveFilters = computed(() => selectedBrands.value.length > 0 || priceRange.value.min || priceRange.value.max)
 
 const priceSortIcon = computed(() => {
   if (currentSort.value !== 'price') return null
@@ -263,6 +386,8 @@ const filteredProducts = computed(() => {
     })
   } else if (currentSort.value === 'rating') {
     result.sort((a, b) => b.rating - a.rating)
+  } else if (currentSort.value === 'new') {
+    result.sort((a, b) => b.id - a.id)
   }
   return result
 })
@@ -368,6 +493,35 @@ watch(() => route.query, (newQuery) => {
 .sidebar {
   width: 220px;
   flex-shrink: 0;
+  transition: width 0.25s ease;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 12px;
+  margin-bottom: 4px;
+}
+
+.sidebar-header h3 {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  white-space: nowrap;
+}
+
+.sidebar-toggle-btn {
+  color: #999;
+  font-size: 13px;
+}
+
+.sidebar-toggle-btn:hover {
+  color: #ff4400;
+}
+
+.sidebar-body {
+  overflow: hidden;
 }
 
 .filter-section {
@@ -497,6 +651,70 @@ watch(() => route.query, (newQuery) => {
   font-weight: bold;
 }
 
+.quick-filters {
+  display: none;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.count-banner {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.count-label {
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.count-label em {
+  font-style: normal;
+  color: #ff4400;
+  font-weight: bold;
+  font-size: 18px;
+  margin: 0 2px;
+}
+
+.active-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.clear-all-btn {
+  color: #999;
+  font-size: 12px;
+}
+
+.clear-all-btn:hover {
+  color: #ff4400;
+}
+
 .product-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -586,6 +804,13 @@ watch(() => route.query, (newQuery) => {
   margin-bottom: 10px;
 }
 
+.mobile-filter-section h4 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
 .mobile-filter-chips {
   display: flex;
   flex-wrap: wrap;
@@ -625,6 +850,67 @@ watch(() => route.query, (newQuery) => {
 }
 
 .filter-panel-footer .el-button {
+  flex: 1;
+}
+
+.mobile-filter-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1001;
+  display: flex;
+  align-items: flex-end;
+}
+
+.mobile-filter-panel {
+  width: 100%;
+  max-height: 60vh;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mobile-filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.mobile-filter-header h3 {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.mobile-filter-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.mobile-filter-body .mobile-filter-section:last-child {
+  margin-bottom: 0;
+}
+
+.mobile-brand-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mobile-filter-footer {
+  display: flex;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.mobile-filter-footer .el-button {
   flex: 1;
 }
 
@@ -669,7 +955,7 @@ watch(() => route.query, (newQuery) => {
   .sort-bar {
     flex-direction: row;
     padding: 10px 12px;
-    margin: 0 12px 12px;
+    margin: 0 12px 0;
     border-radius: 8px;
   }
 
@@ -686,6 +972,18 @@ watch(() => route.query, (newQuery) => {
     flex-wrap: wrap;
     justify-content: center;
     font-size: 12px;
+  }
+
+  .quick-filters {
+    display: flex;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .count-banner {
+    margin-left: 12px;
+    margin-right: 12px;
+    padding: 10px 14px;
   }
 }
 </style>
