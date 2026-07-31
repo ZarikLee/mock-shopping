@@ -62,6 +62,7 @@ body {
 
 .main-content {
   flex: 1;
+  transition: padding-top 0.75s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 a {

@@ -507,10 +507,10 @@ watch(() => route.query.market, syncCategoryFromRoute)
   border-top: 1px solid #f0f0f0;
   border-bottom: 1px solid #f0f0f0;
   transition:
-    max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.35s ease,
-    border-width 0.35s ease,
-    padding 0.35s ease;
+    max-height 0.75s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.75s ease,
+    border-width 0.75s ease,
+    padding 0.75s ease;
   overflow: hidden;
   max-height: 100px;
   will-change: max-height;
