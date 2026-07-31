@@ -1,7 +1,7 @@
 <template>
   <el-dialog :model-value="visible" width="420px" title="分享赚金币" @close="close">
     <div class="share-body">
-      <p class="share-tip">分享给好友，好友点击你的链接赚金币，你也得奖励！</p>
+      <p class="share-tip">把淘大宝分享给好友，好友也能来玩！</p>
       <div class="share-qr">
         <img :src="qrUrl" alt="分享二维码" />
       </div>
@@ -10,7 +10,16 @@
         <el-button type="primary" @click="copyLink">复制链接</el-button>
         <el-button v-if="canNativeShare" @click="nativeShare">分享给好友</el-button>
       </div>
-      <p class="share-wechat">💬 微信用户：长按二维码或截图发送给好友</p>
+      <p class="share-wechat">💬 微信用户：长按二维码或截图，发送给微信好友</p>
+      <el-button
+        class="share-confirm-btn"
+        type="success"
+        size="large"
+        :disabled="shared"
+        @click="confirmShared"
+      >
+        {{ shared ? '已领取奖励' : '我已分享，领取金币' }}
+      </el-button>
     </div>
   </el-dialog>
 </template>
@@ -23,6 +32,7 @@ const emit = defineEmits(['shared'])
 
 const visible = ref(false)
 const shareUrl = ref('')
+const shared = ref(false)
 
 const canNativeShare = computed(() => typeof navigator !== 'undefined' && !!navigator.share)
 
@@ -30,6 +40,7 @@ const qrUrl = computed(() => `https://api.qrserver.com/v1/create-qr-code/?data=$
 
 const open = (url) => {
   shareUrl.value = url
+  shared.value = false
   visible.value = true
 }
 
@@ -40,19 +51,25 @@ const close = () => {
 const copyLink = async () => {
   try {
     await navigator.clipboard.writeText(shareUrl.value)
-  } catch {}
-  ElMessage.success('链接已复制')
-  emit('shared')
+    ElMessage.success('链接已复制，快去分享吧')
+  } catch {
+    ElMessage.warning('复制失败，请手动复制链接')
+  }
 }
 
 const nativeShare = async () => {
   try {
     await navigator.share({ title: '淘大宝', text: '快来淘大宝玩吧！', url: shareUrl.value })
-    emit('shared')
-  } catch {}
+  } catch {
+    // 用户取消或分享失败，不发放奖励
+  }
 }
 
-defineExpose({ open })
+const confirmShared = () => {
+  if (shared.value) return
+  shared.value = true
+  emit('shared')
+}
 </script>
 
 <style scoped>
@@ -102,5 +119,12 @@ defineExpose({ open })
   color: #52c41a;
   font-size: 12px;
   margin: 0;
+}
+
+.share-confirm-btn {
+  width: 100%;
+  height: 44px;
+  font-size: 15px;
+  margin-top: 4px;
 }
 </style>
