@@ -61,33 +61,31 @@
             :data="stocks"
             class="stock-table"
             v-loading="loading"
-            @row-click="goDetail"
+            @row-click="openTrading"
           >
-            <el-table-column prop="symbol" label="代码" width="100" />
-            <el-table-column prop="name" label="名称" min-width="110" />
-            <el-table-column label="昨收" width="90" align="right">
-              <template #default="{ row }">
-                <span class="prev-close-cell">{{ formatPrice(row.prevClose) }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="现价" width="120" align="right">
+            <el-table-column prop="symbol" label="代码" width="80" />
+            <el-table-column prop="name" label="名称" min-width="90" />
+            <el-table-column label="现价" width="100" align="right">
               <template #default="{ row }">
                 <span class="price-cell" :class="flashClass(row.symbol)">{{ formatPrice(row.price) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="涨跌幅(较昨收)" min-width="140" align="right">
+            <el-table-column label="涨跌幅" min-width="110" align="right">
               <template #default="{ row }">
                 <span class="trend-badge" :class="trendClass(row)">{{ formatPercent(row.changePercent) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="涨跌额" width="110" align="right">
+            <el-table-column label="昨收" width="80" align="right">
               <template #default="{ row }">
-                <span class="change-amount" :class="trendClass(row)">{{ formatChangeAmount(row) }}</span>
+                <span class="prev-close-cell">{{ formatPrice(row.prevClose) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="80" align="center">
-              <template #default>
-                <span class="view-hint">查看</span>
+            <el-table-column label="操作" width="150" align="center">
+              <template #default="{ row }">
+                <div class="row-actions">
+                  <span class="row-btn trade" @click.stop="openTrading(row)">交易</span>
+                  <span class="row-btn detail" @click.stop="goDetail(row)">详情</span>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -104,7 +102,7 @@
                 v-for="h in holdings"
                 :key="h.symbol"
                 class="holding-card"
-                @click="goDetailBySymbol(h.symbol)"
+                @click="openTradingBySymbol(h.symbol)"
               >
                 <div class="holding-top">
                   <div class="holding-name">
@@ -663,6 +661,45 @@ onUnmounted(() => {
   display: flex;
   gap: 16px;
   align-items: flex-start;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.row-btn {
+  padding: 3px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.row-btn.trade {
+  background: #ff4400;
+  color: #fff;
+}
+
+.row-btn.trade:hover {
+  background: #ff6600;
+}
+
+.row-btn.detail {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.row-btn.detail:hover {
+  background: #e0e0e0;
+}
+
+@media (max-width: 900px) {
+  .stocks-body {
+    flex-direction: column;
+  }
 }
 
 .market-panel,
