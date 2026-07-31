@@ -18,10 +18,11 @@
           @touchstart.prevent="startDrag($event)"
         >
           <div class="crop-grid"></div>
-          <div class="crop-handle corner tl"></div>
-          <div class="crop-handle corner tr"></div>
-          <div class="crop-handle corner bl"></div>
-          <div class="crop-handle corner br"></div>
+          <div class="crop-handle corner tl" @mousedown.prevent="startResize($event, 'tl')" @touchstart.prevent="startResize($event, 'tl')"></div>
+          <div class="crop-handle corner tr" @mousedown.prevent="startResize($event, 'tr')" @touchstart.prevent="startResize($event, 'tr')"></div>
+          <div class="crop-handle corner bl" @mousedown.prevent="startResize($event, 'bl')" @touchstart.prevent="startResize($event, 'bl')"></div>
+          <div class="crop-handle corner br" @mousedown.prevent="startResize($event, 'br')" @touchstart.prevent="startResize($event, 'br')"></div>
+          <div class="crop-size-label">{{ Math.round(boxSize / scale) }}px</div>
         </div>
       </div>
       <p class="crop-tip">拖动方框选择头像区域</p>
@@ -48,13 +49,19 @@ const imgRef = ref(null)
 // 显示的图片尺寸（按容器适配后）
 const imgW = ref(0)
 const imgH = ref(0)
-// 裁剪框大小（容器像素）
-const boxSize = 180
+// 裁剪框大小（容器像素，可缩放）
+const boxSize = ref(180)
 const boxPos = ref({ x: 0, y: 0 })
 
+const scale = computed(() => {
+  const img = imgRef.value
+  if (!img || !imgW.value) return 1
+  return img.naturalWidth / imgW.value
+})
+
 const boxStyle = computed(() => ({
-  width: boxSize + 'px',
-  height: boxSize + 'px',
+  width: boxSize.value + 'px',
+  height: boxSize.value + 'px',
   transform: `translate(${boxPos.value.x}px, ${boxPos.value.y}px)`
 }))
 
@@ -73,10 +80,11 @@ const onImgLoad = () => {
   if (!img) return
   imgW.value = img.offsetWidth || img.clientWidth
   imgH.value = img.offsetHeight || img.clientHeight
-  // 初始方框居中
+  // 初始方框居中，占显示宽度一半
+  boxSize.value = Math.round(Math.min(imgW.value, imgH.value) * 0.6)
   boxPos.value = {
-    x: Math.max(0, Math.round((imgW.value - boxSize) / 2)),
-    y: Math.max(0, Math.round((imgH.value - boxSize) / 2))
+    x: Math.max(0, Math.round((imgW.value - boxSize.value) / 2)),
+    y: Math.max(0, Math.round((imgH.value - boxSize.value) / 2))
   }
 }
 
@@ -85,49 +93,97 @@ const preventDrag = (e) => e.preventDefault()
 let dragging = false
 let startMouse = { x: 0, y: 0 }
 let startBox = { x: 0, y: 0 }
+let startSize = 0
+let resizeCorner = null
+
+const MIN_SIZE = 60
+const MAX_SIZE = () => Math.min(imgW.value, imgH.value)
 
 const startDrag = (e) => {
   dragging = true
+  resizeCorner = null
   const point = e.touches ? e.touches[0] : e
   startMouse = { x: point.clientX, y: point.clientY }
   startBox = { ...boxPos.value }
-  document.addEventListener('mousemove', onDrag)
+  bindMoveEvents()
+}
+
+const startResize = (e, corner) => {
+  dragging = true
+  resizeCorner = corner
+  const point = e.touches ? e.touches[0] : e
+  startMouse = { x: point.clientX, y: point.clientY }
+  startBox = { ...boxPos.value }
+  startSize = boxSize.value
+  bindMoveEvents()
+}
+
+const bindMoveEvents = () => {
+  document.addEventListener('mousemove', onMove)
   document.addEventListener('mouseup', endDrag)
-  document.addEventListener('touchmove', onDrag, { passive: false })
+  document.addEventListener('touchmove', onMove, { passive: false })
   document.addEventListener('touchend', endDrag)
 }
 
-const onDrag = (e) => {
+const onMove = (e) => {
   if (!dragging) return
   e.preventDefault()
   const point = e.touches ? e.touches[0] : e
   const dx = point.clientX - startMouse.x
   const dy = point.clientY - startMouse.y
-  let nx = startBox.x + dx
-  let ny = startBox.y + dy
-  // 限制在图片范围内
-  nx = Math.max(0, Math.min(imgW.value - boxSize, nx))
-  ny = Math.max(0, Math.min(imgH.value - boxSize, ny))
-  boxPos.value = { x: nx, y: ny }
+
+  if (resizeCorner) {
+    // 缩放裁剪框（保持正方形）
+    let delta = Math.max(Math.abs(dx), Math.abs(dy))
+    // 根据角落方向调整正负
+    if (resizeCorner === 'tr' || resizeCorner === 'br') {
+      delta = dx >= 0 ? delta : -delta
+    } else {
+      delta = dx <= 0 ? delta : -delta
+    }
+    let newSize = startSize + delta
+    newSize = Math.max(MIN_SIZE, Math.min(MAX_SIZE(), newSize))
+    boxSize.value = newSize
+
+    // 调整位置，保持对角的锚点不动
+    let nx = startBox.x
+    let ny = startBox.y
+    if (resizeCorner === 'tr' || resizeCorner === 'br') {
+      // 右边固定，左边移动
+      nx = startBox.x + (startSize - newSize)
+    }
+    if (resizeCorner === 'bl' || resizeCorner === 'br') {
+      // 下边固定，上边移动
+      ny = startBox.y + (startSize - newSize)
+    }
+    nx = Math.max(0, Math.min(imgW.value - newSize, nx))
+    ny = Math.max(0, Math.min(imgH.value - newSize, ny))
+    boxPos.value = { x: nx, y: ny }
+  } else {
+    // 拖动移动
+    let nx = startBox.x + dx
+    let ny = startBox.y + dy
+    nx = Math.max(0, Math.min(imgW.value - boxSize.value, nx))
+    ny = Math.max(0, Math.min(imgH.value - boxSize.value, ny))
+    boxPos.value = { x: nx, y: ny }
+  }
 }
 
 const endDrag = () => {
   dragging = false
-  document.removeEventListener('mousemove', onDrag)
+  resizeCorner = null
+  document.removeEventListener('mousemove', onMove)
   document.removeEventListener('mouseup', endDrag)
-  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('touchmove', onMove)
   document.removeEventListener('touchend', endDrag)
 }
 
 const confirm = () => {
   const img = imgRef.value
   if (!img) return
-  const naturalW = img.naturalWidth
-  const naturalH = img.naturalHeight
-  const scale = naturalW / imgW.value
-  const sx = boxPos.value.x * scale
-  const sy = boxPos.value.y * scale
-  const size = boxSize * scale
+  const sx = boxPos.value.x * scale.value
+  const sy = boxPos.value.y * scale.value
+  const size = boxSize.value * scale.value
 
   const canvas = document.createElement('canvas')
   const out = 150
@@ -195,18 +251,32 @@ defineExpose({ open })
 
 .crop-handle {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: #fff;
   border: 2px solid #ff4400;
   border-radius: 3px;
-  pointer-events: none;
+  cursor: nwse-resize;
 }
 
-.crop-handle.tl { top: -8px; left: -8px; }
-.crop-handle.tr { top: -8px; right: -8px; }
-.crop-handle.bl { bottom: -8px; left: -8px; }
-.crop-handle.br { bottom: -8px; right: -8px; }
+.crop-handle.tl { top: -8px; left: -8px; cursor: nwse-resize; }
+.crop-handle.tr { top: -8px; right: -8px; cursor: nesw-resize; }
+.crop-handle.bl { bottom: -8px; left: -8px; cursor: nesw-resize; }
+.crop-handle.br { bottom: -8px; right: -8px; cursor: nwse-resize; }
+
+.crop-size-label {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+}
 
 .crop-tip {
   color: #999;

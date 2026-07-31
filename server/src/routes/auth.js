@@ -167,7 +167,7 @@ router.post('/avatar', authMiddleware, (req, res) => {
   const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
   const base64Data = match[2];
   const buffer = Buffer.from(base64Data, 'base64');
-  const avatarDir = join(__dirname, '..', 'data', 'avatars');
+  const avatarDir = join(__dirname, '..', '..', 'data', 'avatars');
   mkdirSync(avatarDir, { recursive: true });
   const fileName = `user_${req.user.id}.${ext}`;
   writeFileSync(join(avatarDir, fileName), buffer);

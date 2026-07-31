@@ -355,7 +355,9 @@ const onAvatarCropped = async (croppedBase64) => {
   try {
     const res = await authApi.uploadAvatar({ image: croppedBase64 })
     if (userStore.userInfo) {
-      userStore.userInfo.avatar = res.avatar || res.data?.avatar
+      // 加时间戳避免浏览器缓存旧图
+      const url = (res.avatar || res.data?.avatar) + '?t=' + Date.now()
+      userStore.userInfo.avatar = url
       localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
     }
     ElMessage.success('头像已更新')
