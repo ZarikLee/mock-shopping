@@ -34,6 +34,8 @@ app.use('/api/stocks', stockRoutes);
 
 const distPath = join(__dirname, '..', '..', 'dist');
 app.use(express.static(distPath));
+// Serve uploaded files (avatars etc) from the data volume
+app.use('/uploads/avatars', express.static(join(__dirname, '..', 'data', 'avatars')));
 app.use((req, res, next) => {
   if (!req.path.startsWith('/api')) {
     res.sendFile(join(distPath, 'index.html'));

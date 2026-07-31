@@ -1,8 +1,14 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { writeFileSync, mkdirSync } from 'fs';
 import { queryOne, insert, update } from '../db.js';
 import { getLevel } from '../achievements.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'taodaibao-secret-key';
@@ -146,6 +152,29 @@ router.get('/me', authMiddleware, (req, res) => {
     level: getLevel(user.experience || 0),
     achievements: user.achievements || [],
   });
+});
+
+// 上传头像（base64 dataURL）
+router.post('/avatar', authMiddleware, (req, res) => {
+  const { image } = req.body;
+  if (!image || !image.startsWith('data:image')) {
+    return res.status(400).json({ error: '图片数据无效' });
+  }
+  const match = image.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,(.+)$/);
+  if (!match) {
+    return res.status(400).json({ error: '不支持的图片格式' });
+  }
+  const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+  const base64Data = match[2];
+  const buffer = Buffer.from(base64Data, 'base64');
+  const avatarDir = join(__dirname, '..', 'data', 'avatars');
+  mkdirSync(avatarDir, { recursive: true });
+  const fileName = `user_${req.user.id}.${ext}`;
+  writeFileSync(join(avatarDir, fileName), buffer);
+
+  const avatarUrl = `/uploads/avatars/${fileName}`;
+  update('users', req.user.id, { avatar: avatarUrl });
+  res.json({ avatar: avatarUrl, message: '头像已更新' });
 });
 
 export { authMiddleware, addExperience };

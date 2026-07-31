@@ -6,10 +6,11 @@
     <div class="user-layout">
       <aside class="user-sidebar">
         <div class="profile-card">
-          <div class="avatar-wrapper" @click="cycleAvatar">
+          <div class="avatar-wrapper" @click="triggerAvatarUpload">
             <img :src="userStore.userInfo?.avatar || defaultAvatar" alt="avatar" />
             <div class="avatar-overlay"><el-icon :size="20"><Camera /></el-icon></div>
           </div>
+          <input ref="avatarInput" type="file" accept="image/*" class="avatar-input" @change="onAvatarFileChange" />
           <div class="profile-header-info">
             <div class="nickname-row">
               <span class="nickname">{{ userStore.userInfo?.nickname || '未登录' }}</span>
@@ -232,11 +233,11 @@
 
     <el-dialog v-model="showEditDialog" title="编辑资料" width="520px" :close-on-click-modal="false" destroy-on-close>
       <div class="edit-avatar-row">
-        <div class="edit-avatar" @click="cycleAvatar">
+        <div class="edit-avatar" @click="triggerAvatarUpload">
           <img :src="userStore.userInfo?.avatar || defaultAvatar" alt="avatar" />
           <div class="edit-avatar-overlay"><el-icon :size="20"><Camera /></el-icon></div>
         </div>
-        <span class="edit-avatar-hint">点击头像切换</span>
+        <span class="edit-avatar-hint">点击头像上传本地图片</span>
       </div>
       <el-form :model="editForm" label-width="80px" class="edit-form">
         <el-form-item label="昵称">
@@ -320,22 +321,63 @@ const orderStore = useOrderStore()
 const wishlistStore = useWishlistStore()
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
-const avatarList = [
-  'https://picsum.photos/id/1/200',
-  'https://picsum.photos/id/20/200',
-  'https://picsum.photos/id/30/200',
-  'https://picsum.photos/id/40/200',
-  'https://picsum.photos/id/50/200',
-  'https://picsum.photos/id/60/200',
-]
-let avatarIndex = 0
+const avatarInput = ref(null)
 
-const cycleAvatar = () => {
-  avatarIndex = (avatarIndex + 1) % avatarList.length
-  if (userStore.userInfo) {
-    userStore.userInfo.avatar = avatarList[avatarIndex]
-    localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
+// 点击头像选择本地图片上传
+const triggerAvatarUpload = () => {
+  avatarInput.value?.click()
+}
+
+const onAvatarFileChange = async (e) => {
+  const file = e.target.files?.[0]
+  e.target.value = ''
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    ElMessage.warning('请选择图片文件')
+    return
   }
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.warning('图片不能超过5MB')
+    return
+  }
+  try {
+    const base64 = await compressImage(file)
+    const res = await authApi.uploadAvatar({ image: base64 })
+    if (userStore.userInfo) {
+      userStore.userInfo.avatar = res.avatar || res.data?.avatar
+      localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
+    }
+    ElMessage.success('头像已更新')
+  } catch (err) {
+    ElMessage.error(err?.message || '上传失败，请重试')
+  }
+}
+
+// 压缩图片为 200x200 的 base64
+const compressImage = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const size = 200
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        // 居中裁剪为正方形
+        const min = Math.min(img.width, img.height)
+        const sx = (img.width - min) / 2
+        const sy = (img.height - min) / 2
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size)
+        resolve(canvas.toDataURL('image/jpeg', 0.85))
+      }
+      img.onerror = reject
+      img.src = e.target.result
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 
 const levelConfig = [
@@ -687,6 +729,10 @@ onMounted(() => {
   border-radius: 50%;
   border: 3px solid #ff4400;
   overflow: hidden;
+}
+
+.avatar-input {
+  display: none;
 }
 
 .avatar-wrapper img {
