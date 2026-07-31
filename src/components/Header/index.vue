@@ -83,50 +83,45 @@
       </div>
     </div>
 
-    <div class="market-switcher-bar" v-if="!isMobile">
+    <div class="main-nav-bar" v-if="!isMobile" :class="{ collapsed: uiStore.menuCollapsed }">
       <div class="container">
-        <div class="market-switcher">
-          <span class="market-label">当前大盘</span>
-          <el-dropdown trigger="click" @command="switchCategory">
-            <span class="market-switcher-btn">
-              <span class="switcher-text">{{ currentCategoryLabel }}</span>
-              <el-icon><ArrowDown /></el-icon>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item v-for="cat in categories" :key="cat.id" :command="cat.id">
-                  <span class="dropdown-item-content">
-                    <span class="dropdown-label">{{ cat.label }}</span>
-                    <span class="dropdown-desc">{{ cat.desc }}</span>
-                  </span>
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <span class="market-current-desc">{{ currentCategoryDesc }}</span>
+        <div class="nav-bar-inner" :class="{ collapsed: uiStore.menuCollapsed }">
+          <div class="nav-left">
+            <el-dropdown trigger="click" @command="switchCategory">
+              <span class="market-switcher-btn">
+                <span class="switcher-text">{{ currentCategoryLabel }}</span>
+                <el-icon><ArrowDown /></el-icon>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item v-for="cat in categories" :key="cat.id" :command="cat.id">
+                    <span class="dropdown-item-content">
+                      <span class="dropdown-label">{{ cat.label }}</span>
+                      <span class="dropdown-desc">{{ cat.desc }}</span>
+                    </span>
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+          <div class="nav-center">
+            <router-link v-for="item in currentNavItems" :key="item.label" :to="item.path" class="nav-item" :class="{ active: isActiveNav(item) }">
+              {{ item.label }}<span v-if="item.badge" class="nav-item-badge">{{ item.badge }}</span>
+            </router-link>
+          </div>
+          <div class="nav-right">
+            <router-link to="/games" class="nav-item" :class="{ active: isActiveNav({ path: '/games' }) }">赚米中心</router-link>
+            <router-link to="/leaderboard" class="nav-item" :class="{ active: isActiveNav({ path: '/leaderboard' }) }">全服排行榜</router-link>
+            <router-link to="/activities" class="nav-item" :class="{ active: isActiveNav({ path: '/activities' }) }">限时活动</router-link>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="header-nav" v-if="!isMobile">
-      <div class="container">
-        <div class="nav-list">
-          <div class="nav-market-items">
-            <router-link
-              v-for="item in currentNavItems"
-              :key="item.label"
-              :to="item.path"
-              class="nav-item"
-            >{{ item.label }}<span v-if="item.badge" class="nav-item-badge">{{ item.badge }}</span></router-link>
-          </div>
-          <div class="nav-global-items">
-            <router-link to="/games" class="nav-item">赚米中心</router-link>
-            <router-link to="/activities" class="nav-item">限时活动</router-link>
-            <router-link to="/leaderboard" class="nav-item">全服排行榜</router-link>
-            <router-link to="/user" class="nav-item">个人中心</router-link>
-          </div>
-        </div>
-      </div>
+    <div class="nav-toggle-btn" v-if="!isMobile" @click="uiStore.toggleMenu()">
+      <el-icon v-if="!uiStore.menuCollapsed"><ArrowUp /></el-icon>
+      <el-icon v-else><ArrowDown /></el-icon>
+      <span>{{ uiStore.menuCollapsed ? '展开菜单' : '收起菜单' }}</span>
     </div>
 
     <transition name="slide-down">
@@ -205,10 +200,11 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Search, ShoppingCart, ArrowDown, Menu, Close } from '@element-plus/icons-vue'
+import { Search, ShoppingCart, ArrowDown, ArrowUp, Menu, Close } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useAuthStore } from '../../stores/auth'
+import { useUiStore } from '../../stores/ui'
 import { useDevice } from '../../utils/device'
 import SearchSuggestions from '../SearchSuggestions/index.vue'
 import LoginDialog from '../LoginDialog/index.vue'
@@ -218,6 +214,7 @@ const route = useRoute()
 const userStore = useUserStore()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 const { isMobile } = useDevice()
 
 const searchKeyword = ref('')
@@ -305,6 +302,18 @@ const marketNavItems = {
 }
 
 const currentNavItems = computed(() => marketNavItems[currentCategory.value] || marketNavItems.shop)
+
+const isActiveNav = (item) => {
+  const [path, queryStr] = item.path.split('?')
+  let active = route.path === path
+  if (queryStr) {
+    const params = new URLSearchParams(queryStr)
+    params.forEach((value, key) => {
+      if (route.query[key] !== value) active = false
+    })
+  }
+  return active
+}
 
 const switchCategory = (id) => {
   const cat = categories.find(c => c.id === id)
@@ -493,28 +502,77 @@ watch(() => route.query.market, syncCategoryFromRoute)
   color: #ff4400;
 }
 
-.market-switcher-bar {
+.main-nav-bar {
   background: #fff;
+  border-top: 1px solid #f0f0f0;
   border-bottom: 1px solid #f0f0f0;
-  height: 32px;
-  font-size: 12px;
+  transition: max-height 0.3s, opacity 0.3s;
+  overflow: hidden;
+  max-height: 60px;
 }
 
-.market-switcher-bar .container {
+.main-nav-bar.collapsed {
+  max-height: 0;
+  opacity: 0;
+  border-top-width: 0;
+  border-bottom-width: 0;
+}
+
+.main-nav-bar .container {
   display: flex;
   align-items: center;
-  height: 100%;
 }
 
-.market-switcher {
+.nav-bar-inner {
   display: flex;
   align-items: center;
-  gap: 8px;
+  height: 44px;
 }
 
-.market-label {
+.nav-left {
+  display: flex;
+  align-items: center;
+  min-width: 150px;
+  flex-shrink: 0;
+}
+
+.nav-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.nav-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: -11px;
+  z-index: 1002;
+  background: #fff;
+  border: 1px solid #ff4400;
+  color: #ff4400;
+  border-radius: 20px;
+  padding: 3px 14px;
   font-size: 12px;
-  color: #999;
+  line-height: 1.6;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+}
+
+.nav-toggle-btn:hover {
+  background: #fff5f0;
 }
 
 .market-switcher-btn {
@@ -523,8 +581,9 @@ watch(() => route.query.market, syncCategoryFromRoute)
   gap: 4px;
   cursor: pointer;
   color: #ff4400;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
+  padding: 0 20px;
 }
 
 .market-switcher-btn:hover {
@@ -532,17 +591,6 @@ watch(() => route.query.market, syncCategoryFromRoute)
 }
 
 .switcher-text {
-  white-space: nowrap;
-}
-
-.market-current-desc {
-  font-size: 12px;
-  color: #999;
-  margin-left: 12px;
-  padding-left: 12px;
-  border-left: 1px solid #e8e8e8;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -563,36 +611,11 @@ watch(() => route.query.market, syncCategoryFromRoute)
   color: #999;
 }
 
-.header-nav {
-  background: #fff;
-  border-top: 1px solid #f0f0f0;
-}
-
-.header-nav .container {
-  display: flex;
-  align-items: center;
-}
-
-.nav-list {
-  display: flex;
-  flex: 1;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.nav-market-items {
-  display: flex;
-}
-
-.nav-global-items {
-  display: flex;
-  gap: 4px;
-}
-
 .nav-item {
-  padding: 12px 20px;
+  padding: 12px 16px;
   font-size: 14px;
   color: #333;
+  white-space: nowrap;
   transition: all 0.3s;
 }
 

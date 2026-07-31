@@ -1,7 +1,7 @@
 <template>
   <div id="app" :class="{ 'is-mobile': isMobile }">
     <Header />
-    <main class="main-content">
+    <main class="main-content" :style="{ paddingTop: isMobile ? '56px' : (uiStore.menuCollapsed ? '96px' : '140px') }">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -23,10 +23,12 @@ import { useDevice } from './utils/device.js'
 import { onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 import { useUserStore } from './stores/user'
+import { useUiStore } from './stores/ui'
 
 const { isMobile } = useDevice()
 const authStore = useAuthStore()
 const userStore = useUserStore()
+const uiStore = useUiStore()
 
 onMounted(() => {
   const hasVisited = localStorage.getItem('taobao_has_visited')
@@ -60,7 +62,6 @@ body {
 
 .main-content {
   flex: 1;
-  padding-top: 173px;
 }
 
 a {
@@ -69,7 +70,6 @@ a {
 }
 
 .is-mobile .main-content {
-  padding-top: 56px;
   padding-bottom: 60px;
 }
 
