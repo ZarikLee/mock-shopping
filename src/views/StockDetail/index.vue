@@ -18,141 +18,147 @@
           </div>
         </div>
 
-        <div class="quote-card">
-          <div class="quote-left">
-            <span class="quote-price" :class="trendClass">{{ formatPrice(quote.price) }}</span>
-            <span class="quote-change" :class="trendClass">{{ formatPercent(quote.changePercent) }}</span>
-          </div>
-          <div class="quote-stats" v-if="userStore.isLoggedIn">
-            <div class="q-stat">
-              <span class="q-label">持仓</span>
-              <span class="q-value">{{ holding?.shares ?? 0 }} 股</span>
-            </div>
-            <div class="q-stat">
-              <span class="q-label">成本价</span>
-              <span class="q-value">{{ formatPrice(holding?.avgCost) }}</span>
-            </div>
-            <div class="q-stat">
-              <span class="q-label">浮动盈亏</span>
-              <span class="q-value" :class="profitClass(holding?.profit)">{{ signedMoney(holding?.profit) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-card">
-          <div class="card-title">股票信息</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-label">所属行业</span>
-              <span class="info-value">{{ stock.industry || '-' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">总市值</span>
-              <span class="info-value">{{ stock.marketCap || '-' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">市盈率</span>
-              <span class="info-value">{{ stock.pe ? stock.pe.toFixed(2) : '-' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">交易所</span>
-              <span class="info-value">{{ stock.exchange || '-' }}</span>
-            </div>
-          </div>
-          <div class="desc-block">
-            <span class="info-label">公司简介</span>
-            <p class="desc-text">{{ stock.desc || '暂无简介' }}</p>
-          </div>
-        </div>
-
-        <div class="chart-card">
-          <div class="card-title">
-            <span>K线走势</span>
-            <span class="chart-sub">最近 80 根 · 5 秒刷新</span>
-          </div>
-          <KLineChart :data="history" :height="320" />
-        </div>
-
-        <div class="trade-card">
-          <div class="card-title">模拟交易</div>
-          <template v-if="userStore.isLoggedIn">
-            <div class="trade-tabs">
-              <div class="trade-tab" :class="{ active: activeTab === 'buy' }" @click="activeTab = 'buy'">买入</div>
-              <div class="trade-tab" :class="{ active: activeTab === 'sell' }" @click="activeTab = 'sell'">卖出</div>
-            </div>
-
-            <div class="trade-form">
-              <div class="form-row">
-                <span class="form-label">可用资金</span>
-                <span class="form-value">¥{{ balanceText }}</span>
+        <div class="detail-grid">
+          <div class="detail-left">
+            <div class="quote-card">
+              <div class="quote-left">
+                <span class="quote-price" :class="trendClass">{{ formatPrice(quote.price) }}</span>
+                <span class="quote-change" :class="trendClass">{{ formatPercent(quote.changePercent) }}</span>
               </div>
-              <div v-if="activeTab === 'sell'" class="form-row">
-                <span class="form-label">可卖数量</span>
-                <span class="form-value">{{ maxSellShares }} 股</span>
+              <div class="quote-stats" v-if="userStore.isLoggedIn">
+                <div class="q-stat">
+                  <span class="q-label">持仓</span>
+                  <span class="q-value">{{ holding?.shares ?? 0 }} 股</span>
+                </div>
+                <div class="q-stat">
+                  <span class="q-label">成本价</span>
+                  <span class="q-value">{{ formatPrice(holding?.avgCost) }}</span>
+                </div>
+                <div class="q-stat">
+                  <span class="q-label">浮动盈亏</span>
+                  <span class="q-value" :class="profitClass(holding?.profit)">{{ signedMoney(holding?.profit) }}</span>
+                </div>
               </div>
-
-              <div class="form-label-block">数量（股）</div>
-              <el-input-number
-                v-model="shareInput"
-                :min="0"
-                :max="99999999"
-                :step="100"
-                :step-strictly="false"
-                :controls-position="'right'"
-                class="share-input"
-                @change="sanitizeShares"
-              />
-              <div class="quick-btns">
-                <button class="quick-btn" @click="quickShare(0.25)">1/4</button>
-                <button class="quick-btn" @click="quickShare(0.5)">1/2</button>
-                <button class="quick-btn" @click="quickShare(1)">全部</button>
-              </div>
-
-              <div class="calc-box">
-                <template v-if="activeTab === 'buy'">
-                  <div class="calc-row">
-                    <span>买入金额</span>
-                    <span>¥{{ formatMoney(buyCost) }}</span>
-                  </div>
-                  <div class="calc-row">
-                    <span>手续费 (1.5%)</span>
-                    <span>¥{{ formatMoney(buyFee) }}</span>
-                  </div>
-                  <div class="calc-row total">
-                    <span>预计花费</span>
-                    <span>¥{{ formatMoney(buyTotal) }}</span>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="calc-row">
-                    <span>卖出金额</span>
-                    <span>¥{{ formatMoney(sellProceeds) }}</span>
-                  </div>
-                  <div class="calc-row">
-                    <span>手续费 (3%)</span>
-                    <span>¥{{ formatMoney(sellFee) }}</span>
-                  </div>
-                  <div class="calc-row total">
-                    <span>预计净得</span>
-                    <span>¥{{ formatMoney(sellNet) }}</span>
-                  </div>
-                </template>
-              </div>
-
-              <el-button
-                class="trade-btn"
-                :class="activeTab === 'buy' ? 'buy-btn' : 'sell-btn'"
-                :loading="trading"
-                @click="submitTrade"
-              >
-                {{ activeTab === 'buy' ? '买入' : '卖出' }}
-              </el-button>
             </div>
-          </template>
-          <div v-else class="login-tip">
-            <el-icon :size="40"><Lock /></el-icon>
-            <p>登录后可进行模拟交易</p>
-            <el-button type="primary" @click="requireLogin">去登录</el-button>
+
+            <div class="info-card">
+              <div class="card-title">股票信息</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">所属行业</span>
+                  <span class="info-value">{{ stock.industry || '-' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">总市值</span>
+                  <span class="info-value">{{ stock.marketCap || '-' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">市盈率</span>
+                  <span class="info-value">{{ stock.pe ? stock.pe.toFixed(2) : '-' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">交易所</span>
+                  <span class="info-value">{{ stock.exchange || '-' }}</span>
+                </div>
+              </div>
+              <div class="desc-block">
+                <span class="info-label">公司简介</span>
+                <p class="desc-text">{{ stock.desc || '暂无简介' }}</p>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="card-title">
+                <span>K线走势</span>
+                <span class="chart-sub">最近 80 根 · 5 秒刷新</span>
+              </div>
+              <KLineChart :data="history" :height="chartHeight" />
+            </div>
+          </div>
+
+          <div class="detail-right">
+            <div class="trade-card">
+              <div class="card-title">模拟交易</div>
+              <template v-if="userStore.isLoggedIn">
+                <div class="trade-tabs">
+                  <div class="trade-tab" :class="{ active: activeTab === 'buy' }" @click="activeTab = 'buy'">买入</div>
+                  <div class="trade-tab" :class="{ active: activeTab === 'sell' }" @click="activeTab = 'sell'">卖出</div>
+                </div>
+
+                <div class="trade-form">
+                  <div class="form-row">
+                    <span class="form-label">可用资金</span>
+                    <span class="form-value">¥{{ balanceText }}</span>
+                  </div>
+                  <div v-if="activeTab === 'sell'" class="form-row">
+                    <span class="form-label">可卖数量</span>
+                    <span class="form-value">{{ maxSellShares }} 股</span>
+                  </div>
+
+                  <div class="form-label-block">数量（股）</div>
+                  <el-input-number
+                    v-model="shareInput"
+                    :min="0"
+                    :max="99999999"
+                    :step="100"
+                    :step-strictly="false"
+                    :controls-position="'right'"
+                    class="share-input"
+                    @change="sanitizeShares"
+                  />
+                  <div class="quick-btns">
+                    <button class="quick-btn" @click="quickShare(0.25)">1/4</button>
+                    <button class="quick-btn" @click="quickShare(0.5)">1/2</button>
+                    <button class="quick-btn" @click="quickShare(1)">全部</button>
+                  </div>
+
+                  <div class="calc-box">
+                    <template v-if="activeTab === 'buy'">
+                      <div class="calc-row">
+                        <span>买入金额</span>
+                        <span>¥{{ formatMoney(buyCost) }}</span>
+                      </div>
+                      <div class="calc-row">
+                        <span>手续费 (1.5%)</span>
+                        <span>¥{{ formatMoney(buyFee) }}</span>
+                      </div>
+                      <div class="calc-row total">
+                        <span>预计花费</span>
+                        <span>¥{{ formatMoney(buyTotal) }}</span>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="calc-row">
+                        <span>卖出金额</span>
+                        <span>¥{{ formatMoney(sellProceeds) }}</span>
+                      </div>
+                      <div class="calc-row">
+                        <span>手续费 (3%)</span>
+                        <span>¥{{ formatMoney(sellFee) }}</span>
+                      </div>
+                      <div class="calc-row total">
+                        <span>预计净得</span>
+                        <span>¥{{ formatMoney(sellNet) }}</span>
+                      </div>
+                    </template>
+                  </div>
+
+                  <el-button
+                    class="trade-btn"
+                    :class="activeTab === 'buy' ? 'buy-btn' : 'sell-btn'"
+                    :loading="trading"
+                    @click="submitTrade"
+                  >
+                    {{ activeTab === 'buy' ? '买入' : '卖出' }}
+                  </el-button>
+                </div>
+              </template>
+              <div v-else class="login-tip">
+                <el-icon :size="40"><Lock /></el-icon>
+                <p>登录后可进行模拟交易</p>
+                <el-button type="primary" @click="requireLogin">去登录</el-button>
+              </div>
+            </div>
           </div>
         </div>
       </template>
@@ -194,6 +200,8 @@ const activeTab = ref('buy')
 const shareInput = ref(100)
 const trading = ref(false)
 
+const isDesktop = ref(false)
+
 let refreshTimer = null
 
 const balanceText = computed(() => Number(userStore.balance).toFixed(2))
@@ -221,6 +229,12 @@ const styleClass = (style) => {
     '防御': 'defensive'
   }
   return map[style] || 'default'
+}
+
+const chartHeight = computed(() => (isDesktop.value ? 240 : 280))
+
+function updateViewport() {
+  isDesktop.value = window.innerWidth >= 1024
 }
 
 async function fetchDetail() {
@@ -377,6 +391,8 @@ function goBack() {
 }
 
 onMounted(() => {
+  updateViewport()
+  window.addEventListener('resize', updateViewport)
   loading.value = true
   fetchDetail().finally(() => { loading.value = false })
   fetchHistory()
@@ -385,6 +401,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', updateViewport)
   stopAutoRefresh()
 })
 </script>
@@ -538,12 +555,19 @@ onUnmounted(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.info-card,
 .chart-card,
 .trade-card {
   background: #fff;
   border-radius: 12px;
   padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.info-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 20px;
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
@@ -569,8 +593,8 @@ onUnmounted(() => {
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 14px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .info-item {
@@ -592,14 +616,18 @@ onUnmounted(() => {
 
 .desc-block {
   border-top: 1px dashed #f0f0f0;
-  padding-top: 12px;
+  padding-top: 10px;
 }
 
 .desc-text {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.6;
   color: #666;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .trade-tabs {
@@ -781,6 +809,51 @@ onUnmounted(() => {
 
   .quote-stats {
     gap: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .stock-detail-page {
+    padding: 16px 0 24px;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .detail-header,
+  .quote-card,
+  .info-card,
+  .chart-card,
+  .trade-card {
+    margin-bottom: 12px;
+  }
+
+  .chart-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chart-card .card-title {
+    flex-shrink: 0;
+  }
+
+  .chart-card .kline-wrapper,
+  .chart-card :deep(.kline-chart) {
+    height: 260px !important;
+  }
+
+  .info-card {
+    padding: 14px 18px;
+  }
+
+  .desc-text {
+    font-size: 12px;
+    line-height: 1.5;
   }
 }
 </style>

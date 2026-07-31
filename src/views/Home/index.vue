@@ -85,7 +85,7 @@
             <el-icon><ArrowRight /></el-icon>
           </router-link>
         </div>
-        <SkeletonLoader v-if="loading" type="product-card" :count="4" />
+        <SkeletonLoader v-if="loading" type="product-card" :count="5" />
         <div class="product-grid" v-else>
           <ProductCard
             v-for="product in hotProducts"
@@ -106,7 +106,7 @@
             <el-icon><ArrowRight /></el-icon>
           </router-link>
         </div>
-        <SkeletonLoader v-if="loading" type="product-card" :count="4" />
+        <SkeletonLoader v-if="loading" type="product-card" :count="5" />
         <div class="product-grid" v-else>
           <ProductCard
             v-for="product in newArrivals"
@@ -175,11 +175,14 @@ const flashSaleItems = ref([
   { id: 2, name: '华为Mate60', image: 'https://picsum.photos/200/200?random=202', price: 5999, originalPrice: 6999, sold: 623, total: 800 },
   { id: 3, name: '小米14', image: 'https://picsum.photos/200/200?random=203', price: 3999, originalPrice: 4999, sold: 456, total: 600 },
   { id: 4, name: 'MacBook Pro', image: 'https://picsum.photos/200/200?random=204', price: 12999, originalPrice: 14999, sold: 234, total: 400 },
-  { id: 5, name: 'Sony耳机', image: 'https://picsum.photos/200/200?random=205', price: 1999, originalPrice: 2499, sold: 892, total: 1200 }
+  { id: 5, name: 'Sony耳机', image: 'https://picsum.photos/200/200?random=205', price: 1999, originalPrice: 2499, sold: 892, total: 1200 },
+  { id: 6, name: 'iPad Air', image: 'https://picsum.photos/200/200?random=206', price: 4799, originalPrice: 5999, sold: 512, total: 700 },
+  { id: 7, name: '机械键盘', image: 'https://picsum.photos/200/200?random=207', price: 399, originalPrice: 599, sold: 1245, total: 1500 },
+  { id: 8, name: '智能手表', image: 'https://picsum.photos/200/200?random=208', price: 899, originalPrice: 1299, sold: 734, total: 1000 }
 ])
 
-const hotProducts = ref(products.slice(0, 4))
-const newArrivals = ref(products.slice(4, 8))
+const hotProducts = ref(products.slice(0, 5))
+const newArrivals = ref(products.slice(5, 10))
 
 const goToProduct = (id) => {
   router.push(`/product/${id}`)
@@ -270,7 +273,7 @@ const goToProduct = (id) => {
 }
 
 .flash-sale-item {
-  min-width: 180px;
+  min-width: 200px;
   background: #fff;
   border-radius: 8px;
   padding: 15px;
@@ -394,6 +397,17 @@ const goToProduct = (id) => {
 .promo-arrow {
   color: rgba(255,255,255,0.6);
   font-size: 18px;
+}
+
+@media (min-width: 1200px) {
+  .flash-sale-item {
+    min-width: 200px;
+    flex: 1 1 200px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
