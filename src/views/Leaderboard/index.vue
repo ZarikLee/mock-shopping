@@ -463,7 +463,7 @@ onMounted(() => {
 
 .rank-top-1 .value-num {
   font-size: 19px;
-  color: #ffd700;
+  color: #333;
 }
 
 .value-label {
