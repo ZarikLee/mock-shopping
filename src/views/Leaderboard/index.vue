@@ -524,16 +524,21 @@ onMounted(() => {
 
   .tab-item {
     font-size: 13px;
-    padding: 14px 6px;
+    padding: 14px 4px;
+  }
+
+  .tab-item .tab-label {
+    white-space: nowrap;
   }
 
   .rank-row {
     padding: 10px 12px;
-    gap: 8px;
+    gap: 6px;
+    min-width: 0;
   }
 
   .rank-col {
-    width: 30px;
+    width: 28px;
   }
 
   .medal-badge {
@@ -547,8 +552,8 @@ onMounted(() => {
   }
 
   .user-avatar {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
 
   .rank-top-1 .user-avatar {
@@ -562,12 +567,14 @@ onMounted(() => {
   }
 
   .info-col {
+    flex: 1 1 0;
     gap: 1px;
     min-width: 0;
   }
 
   .username {
     font-size: 13px;
+    word-break: break-word;
   }
 
   .userid {
@@ -575,27 +582,72 @@ onMounted(() => {
   }
 
   .value-col {
-    max-width: 42%;
+    flex: 0 1 auto;
+    max-width: 40%;
+    min-width: 0;
     overflow: hidden;
   }
 
   .value-num {
-    font-size: 13px;
+    font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .rank-top-1 .value-num {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .value-label {
     font-size: 10px;
+    white-space: nowrap;
   }
 
   .leaderboard-stats {
     padding: 10px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rank-row {
+    padding: 10px 10px;
+    gap: 4px;
+  }
+
+  .rank-col {
+    width: 24px;
+  }
+
+  .avatar-col {
+    width: 32px;
+    height: 32px;
+  }
+
+  .user-avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .rank-top-1 .user-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .value-num {
+    font-size: 11px;
+  }
+
+  .rank-top-1 .value-num {
+    font-size: 13px;
+  }
+
+  .value-label {
+    font-size: 9px;
+  }
+
+  .username {
+    font-size: 12px;
   }
 }
 </style>

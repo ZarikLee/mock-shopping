@@ -345,6 +345,7 @@ const handleBuyNow = () => {
 
 .product-info {
   flex: 1;
+  min-width: 0;
 }
 
 .product-name {
@@ -353,12 +354,16 @@ const handleBuyNow = () => {
   color: #333;
   margin: 0 0 10px;
   line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .product-subtitle {
   color: #666;
   font-size: 14px;
   margin-bottom: 20px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .price-section {
@@ -465,6 +470,9 @@ const handleBuyNow = () => {
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .spec-option:hover {
@@ -483,15 +491,21 @@ const handleBuyNow = () => {
   align-items: center;
   gap: 15px;
   margin-bottom: 25px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .quantity-label {
   color: #666;
+  flex-shrink: 0;
 }
 
 .stock-info {
   color: #999;
   font-size: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .action-buttons {
@@ -555,6 +569,8 @@ const handleBuyNow = () => {
 
 .detail-images img {
   max-width: 100%;
+  width: 100%;
+  height: auto;
   margin-bottom: 20px;
 }
 
@@ -565,6 +581,12 @@ const handleBuyNow = () => {
 
 .specs-table {
   padding: 20px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.specs-table table {
+  min-width: 100%;
 }
 
 .specs-table table {
@@ -642,7 +664,9 @@ const handleBuyNow = () => {
 @media (max-width: 768px) {
   .product-detail-page {
     padding: 12px;
-    padding-bottom: 70px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0));
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .product-main {
@@ -653,6 +677,7 @@ const handleBuyNow = () => {
   .product-gallery {
     flex: none;
     width: 100%;
+    min-width: 0;
   }
 
   .main-image-container {
@@ -664,16 +689,22 @@ const handleBuyNow = () => {
     font-size: 18px;
   }
 
+  .price-section {
+    padding: 16px;
+  }
+
   .price-value {
     font-size: 24px;
+    overflow-wrap: anywhere;
   }
 
   .product-stats {
-    gap: 20px;
+    gap: 16px;
   }
 
   .stat-item {
     flex: 1;
+    min-width: 0;
   }
 
   .spec-group {
@@ -685,6 +716,15 @@ const handleBuyNow = () => {
     margin-right: 0;
   }
 
+  .spec-options {
+    min-width: 0;
+  }
+
+  .spec-option {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
   .service-bar {
     flex-direction: column;
     gap: 15px;
@@ -692,6 +732,46 @@ const handleBuyNow = () => {
 
   .product-tabs {
     margin-top: 20px;
+  }
+
+  .detail-content {
+    min-width: 0;
+  }
+
+  .detail-text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .specs-table {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-detail-page {
+    padding: 10px;
+  }
+
+  .main-image-container {
+    height: 260px;
+  }
+
+  .price-value {
+    font-size: 22px;
+  }
+
+  .product-stats {
+    gap: 12px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .mobile-bottom-actions .mobile-action {
+    font-size: 14px;
+    padding: 11px 0;
   }
 }
 </style>

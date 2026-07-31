@@ -78,6 +78,8 @@ const formatSales = (sales) => {
   transition: all 0.3s;
   cursor: pointer;
   position: relative;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .product-card:hover {
@@ -132,6 +134,7 @@ const formatSales = (sales) => {
 
 .product-info {
   padding: 15px;
+  min-width: 0;
 }
 
 .product-name {
@@ -141,15 +144,23 @@ const formatSales = (sales) => {
   line-height: 1.4;
   height: 40px;
   margin-bottom: 10px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .product-price {
   margin-bottom: 8px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
 }
 
 .price {
   color: #ff4400;
   font-weight: bold;
+  min-width: 0;
 }
 
 .price-symbol {
@@ -165,6 +176,9 @@ const formatSales = (sales) => {
   color: #999;
   text-decoration: line-through;
   margin-left: 8px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .product-meta {
@@ -173,6 +187,8 @@ const formatSales = (sales) => {
   font-size: 12px;
   color: #999;
   margin-bottom: 8px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .product-shop {
@@ -182,6 +198,10 @@ const formatSales = (sales) => {
   background: #f8f8f8;
   border-radius: 4px;
   display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .product-action {
@@ -198,5 +218,60 @@ const formatSales = (sales) => {
 
 .product-action .el-button {
   width: 100%;
+}
+
+@media (hover: none) {
+  .product-action {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-info {
+    padding: 12px;
+  }
+
+  .product-name {
+    font-size: 13px;
+    height: 36px;
+    margin-bottom: 8px;
+  }
+
+  .price-value {
+    font-size: 17px;
+  }
+
+  .original-price {
+    font-size: 12px;
+    margin-left: 6px;
+  }
+
+  .product-action {
+    padding: 0 12px 12px;
+  }
+
+  .product-action .el-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-name {
+    font-size: 12px;
+  }
+
+  .price-value {
+    font-size: 15px;
+  }
+
+  .product-meta {
+    font-size: 11px;
+  }
+
+  .product-shop {
+    font-size: 11px;
+  }
 }
 </style>

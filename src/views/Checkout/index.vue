@@ -401,16 +401,22 @@ const submitOrder = async () => {
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .address-info .name {
   font-weight: bold;
   font-size: 16px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .address-detail {
   font-size: 14px;
   color: #666;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .address-actions {
@@ -466,6 +472,7 @@ const submitOrder = async () => {
 
 .goods-info {
   flex: 1;
+  min-width: 0;
 }
 
 .goods-name {
@@ -473,11 +480,15 @@ const submitOrder = async () => {
   color: #333;
   display: block;
   margin-bottom: 5px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .goods-spec {
   font-size: 12px;
   color: #999;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .goods-price {
@@ -601,6 +612,7 @@ const submitOrder = async () => {
   padding: 20px;
   position: sticky;
   bottom: 0;
+  z-index: 10;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
@@ -623,17 +635,102 @@ const submitOrder = async () => {
 }
 
 @media (max-width: 768px) {
+  .checkout-page {
+    padding: 12px 0;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .section {
+    padding: 15px;
+  }
+
   .address-list {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
-  
+
+  .address-item,
+  .add-address-btn {
+    min-width: 0;
+  }
+
+  .delivery-option {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  .coupon-item {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  .coupon-name {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .goods-image {
+    width: 70px;
+    height: 70px;
+  }
+
+  .goods-price {
+    flex-shrink: 0;
+  }
+
   .submit-bar {
     flex-direction: column;
-    gap: 15px;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
   }
-  
+
   .submit-info {
     text-align: center;
+    font-size: 13px;
+  }
+
+  .submit-info .total {
+    margin-left: 0;
+    display: block;
+    margin-top: 4px;
+  }
+
+  .submit-info .total-price {
+    font-size: 18px;
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 12px 20px;
+  }
+
+  .total-price .price-value {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .goods-item {
+    gap: 10px;
+  }
+
+  .goods-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .goods-price .price {
+    font-size: 14px;
+  }
+
+  .summary-row {
+    font-size: 13px;
   }
 }
 </style>

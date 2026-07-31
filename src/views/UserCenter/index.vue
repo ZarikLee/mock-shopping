@@ -797,12 +797,17 @@ onMounted(() => {
   justify-content: center;
   gap: 8px;
   margin-bottom: 4px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .nickname {
   font-size: 18px;
   font-weight: 600;
   color: #1a1a1a;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .level-badge {
@@ -822,6 +827,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .mc-label {
@@ -833,6 +841,8 @@ onMounted(() => {
   font-size: 12px;
   color: #ff4400;
   font-weight: 600;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .exp-badge {
@@ -853,9 +863,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   font-size: 12px;
   color: #999;
   margin-bottom: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .achievements-count {
@@ -1164,6 +1177,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .tx-desc {
@@ -1219,6 +1234,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .address-name .name {
@@ -1241,6 +1258,7 @@ onMounted(() => {
 .address-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .coupon-list {
@@ -1536,6 +1554,7 @@ onMounted(() => {
   }
 
   .profile-card {
+    padding: 24px 16px 16px;
     margin-bottom: 12px;
   }
 
@@ -1557,12 +1576,52 @@ onMounted(() => {
     height: 38px;
   }
 
+  .status-label {
+    font-size: 11px;
+  }
+
   .dynamic-section {
     padding: 16px;
   }
 
   .balance-number {
-    font-size: 32px;
+    font-size: 28px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .stat-value {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .tx-amount {
+    font-size: 14px;
+  }
+
+  .coupon-card {
+    min-width: 0;
+  }
+
+  .coupon-left {
+    min-width: 90px;
+    padding: 12px 14px;
+  }
+
+  .coupon-amount {
+    font-size: 20px;
+  }
+
+  .coupon-right {
+    padding: 12px 14px;
+    min-width: 0;
+  }
+
+  .coupon-name,
+  .coupon-expire {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .wishlist-grid {
@@ -1570,9 +1629,56 @@ onMounted(() => {
     gap: 10px;
   }
 
+  .wishlist-name {
+    max-width: 100%;
+  }
+
   .purchased-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-value {
+    font-size: 13px;
+  }
+
+  .order-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .balance-number {
+    font-size: 24px;
+  }
+
+  .transaction-item {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .wishlist-grid,
+  .purchased-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wishlist-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .wishlist-image {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+  }
+
+  .wishlist-info {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
   }
 }
 </style>

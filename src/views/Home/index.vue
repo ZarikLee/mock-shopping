@@ -262,7 +262,9 @@ const goToProduct = (id) => {
 .flash-sale-list {
   display: flex;
   gap: 20px;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -438,12 +440,19 @@ const goToProduct = (id) => {
     border-radius: 0;
   }
 
+  .section-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
   .section-header h2 {
     font-size: 16px;
   }
 
   .countdown {
     font-size: 12px;
+    white-space: nowrap;
+    margin-left: auto;
   }
 
   .countdown .time {
@@ -469,6 +478,43 @@ const goToProduct = (id) => {
   .product-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 12px;
+  }
+
+  .section-header h2 {
+    font-size: 15px;
+  }
+
+  .countdown {
+    font-size: 11px;
+  }
+
+  .countdown .time {
+    padding: 2px 5px;
+    font-size: 11px;
+  }
+
+  .flash-sale-list {
+    margin: 0 -12px;
+    padding: 0 12px 4px;
+  }
+
+  .flash-sale-item {
+    min-width: 118px;
+  }
+
+  .current-price {
+    font-size: 14px;
+  }
+
+  .promo-card {
+    padding: 12px 14px;
+    gap: 12px;
   }
 }
 </style>

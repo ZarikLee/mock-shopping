@@ -224,6 +224,7 @@ const goToShopping = () => {
   display: flex;
   align-items: center;
   padding: 20px;
+  min-width: 0;
   border-bottom: 1px solid #f0f0f0;
   transition: background 0.3s;
 }
@@ -263,6 +264,8 @@ const goToShopping = () => {
   display: block;
   margin-bottom: 8px;
   transition: color 0.3s;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .item-name:hover {
@@ -272,6 +275,8 @@ const goToShopping = () => {
 .item-spec {
   font-size: 12px;
   color: #999;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .price .current-price {
@@ -315,6 +320,11 @@ const goToShopping = () => {
   display: flex;
   align-items: center;
   gap: 20px;
+  min-width: 0;
+}
+
+.total {
+  min-width: 0;
 }
 
 .summary .count {
@@ -347,6 +357,11 @@ const goToShopping = () => {
   gap: 4px;
   color: #ff4d4f;
   font-size: 12px;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: right;
 }
 
 .earn-link {
@@ -407,17 +422,20 @@ const goToShopping = () => {
 
   .col.checkbox {
     width: auto;
+    flex-shrink: 0;
   }
 
   .col.product {
-    width: calc(100% - 80px);
+    flex: 1;
+    width: auto;
+    min-width: 0;
     order: 1;
   }
 
   .col.quantity {
     width: auto;
     order: 2;
-    margin-left: 80px;
+    margin-left: 48px;
   }
 
   .col.action {
@@ -426,8 +444,12 @@ const goToShopping = () => {
   }
 
   .item-image {
-    width: 80px;
-    height: 80px;
+    width: 76px;
+    height: 76px;
+  }
+
+  .cart-item .product {
+    gap: 12px;
   }
 
   .item-price-mobile {
@@ -466,6 +488,7 @@ const goToShopping = () => {
 
   .cart-footer.mobile-footer {
     flex-direction: row;
+    align-items: center;
     padding: 12px 15px;
     padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
     position: sticky;
@@ -474,6 +497,7 @@ const goToShopping = () => {
 
   .footer-left {
     gap: 8px;
+    flex-shrink: 0;
   }
 
   .footer-left :deep(.el-checkbox) {
@@ -481,19 +505,33 @@ const goToShopping = () => {
   }
 
   .footer-right {
-    gap: 10px;
+    gap: 8px;
     flex: 1;
+    min-width: 0;
     justify-content: flex-end;
+    flex-wrap: wrap;
   }
 
   .total-price .price-value {
-    font-size: 16px;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .insufficient-tip {
+    font-size: 11px;
+  }
+
+  .earn-link {
+    font-size: 12px;
+    white-space: nowrap;
   }
 
   .btn-checkout-mobile {
-    padding: 8px 16px;
+    padding: 8px 14px;
     font-size: 13px;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 }
 </style>
