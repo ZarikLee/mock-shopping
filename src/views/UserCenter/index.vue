@@ -361,7 +361,7 @@ const compressImage = (file) => {
       const img = new Image()
       img.onload = () => {
         const canvas = document.createElement('canvas')
-        const size = 200
+        const size = 150
         canvas.width = size
         canvas.height = size
         const ctx = canvas.getContext('2d')
@@ -370,7 +370,7 @@ const compressImage = (file) => {
         const sx = (img.width - min) / 2
         const sy = (img.height - min) / 2
         ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size)
-        resolve(canvas.toDataURL('image/jpeg', 0.85))
+        resolve(canvas.toDataURL('image/jpeg', 0.8))
       }
       img.onerror = reject
       img.src = e.target.result

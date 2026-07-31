@@ -113,13 +113,15 @@
             <router-link to="/games" class="nav-item" :class="{ active: isActiveNav({ path: '/games' }) }">赚米中心</router-link>
             <router-link to="/leaderboard" class="nav-item" :class="{ active: isActiveNav({ path: '/leaderboard' }) }">全服排行榜</router-link>
             <router-link to="/activities" class="nav-item" :class="{ active: isActiveNav({ path: '/activities' }) }">限时活动</router-link>
-            <div class="nav-toggle-btn" @click="uiStore.toggleMenu()">
-              <el-icon v-if="!uiStore.menuCollapsed"><ArrowUp /></el-icon>
-              <el-icon v-else><ArrowDown /></el-icon>
-            </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 悬浮在屏幕最右侧的收起/展开按钮（始终可见） -->
+    <div class="nav-toggle-float" v-if="!isMobile" @click="uiStore.toggleMenu()">
+      <el-icon v-if="!uiStore.menuCollapsed"><ArrowUp /></el-icon>
+      <el-icon v-else><ArrowDown /></el-icon>
     </div>
 
     <transition name="slide-down">
@@ -548,24 +550,26 @@ watch(() => route.query.market, syncCategoryFromRoute)
   flex-shrink: 0;
 }
 
-.nav-toggle-btn {
-  display: inline-flex;
+.nav-toggle-float {
+  position: fixed;
+  right: 0;
+  top: 108px;
+  width: 26px;
+  height: 46px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  color: #ff4400;
-  background: #fff5f0;
-  border: 1px solid #ff4400;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.nav-toggle-btn:hover {
   background: #ff4400;
   color: #fff;
+  border-radius: 6px 0 0 6px;
+  cursor: pointer;
+  z-index: 1001;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s;
+}
+
+.nav-toggle-float:hover {
+  width: 32px;
 }
 
 .market-switcher-btn {
