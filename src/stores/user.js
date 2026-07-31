@@ -8,6 +8,21 @@ export const useUserStore = defineStore('user', () => {
   const isLoggedIn = computed(() => !!token.value)
   const balance = computed(() => userInfo.value?.balance || 0)
 
+  // Auto-fetch user info on startup if token exists
+  if (token.value) {
+    ;(async () => {
+      try {
+        const res = await authApi.getMe()
+        userInfo.value = res.data || res
+        localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+      } catch {
+        token.value = ''
+        localStorage.removeItem('token')
+        localStorage.removeItem('userInfo')
+      }
+    })()
+  }
+
   const initDefaultUser = async () => {
     if (!token.value) return
     try {
