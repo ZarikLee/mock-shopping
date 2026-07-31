@@ -458,8 +458,19 @@ onMounted(() => {
   font-feature-settings: 'tnum';
 }
 
-.value-num.up { color: #ff4d4f; }
-.value-num.down { color: #00b578; }
+.value-num.up,
+.rank-top-1 .value-num.up,
+.rank-top-2 .value-num.up,
+.rank-top-3 .value-num.up {
+  color: #ff4d4f !important;
+}
+
+.value-num.down,
+.rank-top-1 .value-num.down,
+.rank-top-2 .value-num.down,
+.rank-top-3 .value-num.down {
+  color: #00b578 !important;
+}
 
 .rank-top-1 .value-num {
   font-size: 19px;

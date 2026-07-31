@@ -506,9 +506,14 @@ watch(() => route.query.market, syncCategoryFromRoute)
   background: #fff;
   border-top: 1px solid #f0f0f0;
   border-bottom: 1px solid #f0f0f0;
-  transition: max-height 0.3s, opacity 0.3s;
+  transition:
+    max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.35s ease,
+    border-width 0.35s ease,
+    padding 0.35s ease;
   overflow: hidden;
-  max-height: 60px;
+  max-height: 100px;
+  will-change: max-height;
 }
 
 .main-nav-bar.collapsed {
