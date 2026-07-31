@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { queryOne, update } from '../db.js';
-import { authMiddleware } from './auth.js';
+import { authMiddleware, addExperience } from './auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -227,10 +227,11 @@ router.post('/:symbol/buy', authMiddleware, (req, res) => {
     balance: newBalance,
     stocks: JSON.stringify(holdings),
     stockTransactions: JSON.stringify(transactions),
-    exp: (Number(user.exp) || 0) + 1,
   });
+  // 买入加经验：活动资金 1%
+  const xpResult = addExperience(user.id, Math.floor(cost * 0.01));
 
-  res.json({ success: true, price, shares, cost, fee, total, balance: newBalance });
+  res.json({ success: true, price, shares, cost, fee, total, balance: newBalance, experienceGained: xpResult.gained });
 });
 
 router.post('/:symbol/sell', authMiddleware, (req, res) => {
@@ -269,8 +270,10 @@ router.post('/:symbol/sell', authMiddleware, (req, res) => {
     stocks: JSON.stringify(holdings),
     stockTransactions: JSON.stringify(transactions),
   });
+  // 卖出加经验：按卖出金额 1%（亏损不扣）
+  const xpResult = addExperience(user.id, Math.floor(proceeds * 0.01));
 
-  res.json({ success: true, price, shares, proceeds, fee, net, balance: newBalance });
+  res.json({ success: true, price, shares, proceeds, fee, net, balance: newBalance, experienceGained: xpResult.gained });
 });
 
 router.get('/:symbol', (req, res) => {

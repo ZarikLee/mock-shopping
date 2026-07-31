@@ -18,6 +18,12 @@
             <el-icon class="mc-arrow"><ArrowRight /></el-icon>
           </div>
 
+          <div class="report-review-entry" v-if="isAdmin" @click="openReportReview">
+            <el-icon><Warning /></el-icon>
+            <span>举报审核</span>
+            <span v-if="pendingReports > 0" class="report-badge">{{ pendingReports }}</span>
+          </div>
+
           <div class="conv-list" v-loading="conversationsLoading">
             <div
               v-for="conv in conversations"
@@ -53,6 +59,11 @@
               </div>
               <img :src="activeUser.avatar || defaultAvatar" alt="avatar" class="chat-avatar" />
               <span class="chat-name">{{ activeUser.name }}</span>
+              <div class="chat-actions" v-if="activeUser.id && !isAdmin">
+                <el-button v-if="!isBlocked" size="small" @click="confirmBlock">屏蔽</el-button>
+                <el-button v-else size="small" type="danger" plain @click="confirmUnblock">已屏蔽·解除</el-button>
+                <el-button size="small" @click="openReportDialog">举报</el-button>
+              </div>
             </div>
             <div ref="chatBodyRef" class="chat-body">
               <div
@@ -109,14 +120,58 @@
         <el-button class="send-btn" type="primary" :loading="feedbackSubmitting" @click="submitFeedback">提交反馈</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="reportDialogVisible" title="举报用户" width="440px">
+      <p class="report-tip">举报：{{ activeUser.name }}</p>
+      <el-radio-group v-model="reportReason">
+        <el-radio-button value="言语攻击">言语攻击</el-radio-button>
+        <el-radio-button value="骚扰行为">骚扰行为</el-radio-button>
+        <el-radio-button value="广告营销">广告营销</el-radio-button>
+        <el-radio-button value="其他">其他</el-radio-button>
+      </el-radio-group>
+      <div class="report-evidence">
+        <p>将提交最近聊天记录作为证据</p>
+      </div>
+      <template #footer>
+        <el-button @click="reportDialogVisible = false">取消</el-button>
+        <el-button type="danger" @click="submitReport">提交举报</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="reviewDialogVisible" title="举报审核" width="640px" :close-on-click-modal="false">
+      <div class="review-list" v-loading="reportsLoading">
+        <div v-for="report in reports" :key="report.id" class="report-card">
+          <div class="report-header">
+            <span class="report-reporter">举报人：{{ report.reporterName }}</span>
+            <span class="report-reported">被举报：{{ report.reportedName }}</span>
+            <span class="report-status" :class="report.status">{{ statusText(report.status) }}</span>
+          </div>
+          <div class="report-reason">原因：{{ report.reason }}</div>
+          <div class="report-messages" v-if="report.messages && report.messages.length">
+            <div v-for="m in report.messages" :key="m.id" class="report-msg">
+              <span class="rm-sender">{{ m.senderId === report.reporterId ? report.reporterName : report.reportedName }}:</span>
+              <span class="rm-content">{{ m.content }}</span>
+            </div>
+          </div>
+          <div class="report-actions" v-if="report.status === 'pending'">
+            <el-button type="danger" size="small" @click="approveReport(report)">确认违规</el-button>
+            <el-button size="small" @click="dismissReport(report)">驳回</el-button>
+          </div>
+        </div>
+        <div v-if="!reportsLoading && !reports.length" class="conv-empty">
+          <el-icon :size="44"><Warning /></el-icon>
+          <p>暂无举报</p>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { ArrowRight, ArrowLeft, ChatDotRound, Service, User } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowRight, ArrowLeft, ChatDotRound, Service, User, Warning } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
 import { useUserStore } from '../../stores/user'
 import { messageApi } from '../../api/messages'
@@ -129,8 +184,9 @@ const userStore = useUserStore()
 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
-const myId = computed(() => userStore.userInfo?.id)
+const myId = computed(() => Number(userStore.userInfo?.id))
 const myAvatar = computed(() => userStore.userInfo?.avatar || defaultAvatar)
+const isAdmin = computed(() => Number(myId.value) === 1)
 
 const isMobile = ref(false)
 const resizeHandler = () => {
@@ -145,10 +201,139 @@ const messages = ref([])
 const draft = ref('')
 const chatBodyRef = ref(null)
 
+const blockedList = ref([])
+const isBlocked = computed(() => blockedList.value.some(b => Number(b.userId ?? b.id) === Number(activeUser.value.id)))
+
+const reportDialogVisible = ref(false)
+const reportReason = ref('言语攻击')
+
+const reports = ref([])
+const reportsLoading = ref(false)
+const reviewDialogVisible = ref(false)
+const pendingReports = computed(() => reports.value.filter(r => r.status === 'pending').length)
+
 const feedbackDialogVisible = ref(false)
 const feedbackType = ref('问题反馈')
 const feedbackContent = ref('')
 const feedbackSubmitting = ref(false)
+
+const loadBlockedList = async () => {
+  try {
+    const res = await messageApi.blockedList()
+    blockedList.value = Array.isArray(res) ? res : (res.list || [])
+  } catch {
+    blockedList.value = []
+  }
+}
+
+const confirmBlock = async () => {
+  try {
+    await ElMessageBox.confirm(`确定屏蔽 ${activeUser.value.name} 吗？屏蔽后对方将无法给你发送消息。`, '屏蔽用户', {
+      confirmButtonText: '确定屏蔽',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
+  try {
+    await messageApi.block(activeUser.value.id)
+    await loadBlockedList()
+    ElMessage.success('已屏蔽该用户')
+  } catch (e) {
+    ElMessage.error(e?.message || '屏蔽失败')
+  }
+}
+
+const confirmUnblock = async () => {
+  try {
+    await ElMessageBox.confirm(`确定解除对 ${activeUser.value.name} 的屏蔽吗？`, '解除屏蔽', {
+      confirmButtonText: '解除屏蔽',
+      cancelButtonText: '取消',
+      type: 'info'
+    })
+  } catch {
+    return
+  }
+  try {
+    await messageApi.unblock(activeUser.value.id)
+    await loadBlockedList()
+    ElMessage.success('已解除屏蔽')
+  } catch (e) {
+    ElMessage.error(e?.message || '解除屏蔽失败')
+  }
+}
+
+const openReportDialog = () => {
+  if (activeUser.value.id) {
+    reportReason.value = '言语攻击'
+    reportDialogVisible.value = true
+  }
+}
+
+const submitReport = async () => {
+  const msgIds = messages.value.slice(-20).map(m => m.id)
+  try {
+    await messageApi.report({ reportedId: activeUser.value.id, reason: reportReason.value, messageIds: msgIds })
+    ElMessage.success('举报已提交，管理员将尽快处理')
+    reportDialogVisible.value = false
+  } catch (e) {
+    ElMessage.error(e?.message || '举报失败')
+  }
+}
+
+const loadReports = async () => {
+  reportsLoading.value = true
+  try {
+    const res = await messageApi.reports()
+    reports.value = Array.isArray(res) ? res : (res.reports || [])
+  } catch {
+    reports.value = []
+  } finally {
+    reportsLoading.value = false
+  }
+}
+
+const openReportReview = async () => {
+  reviewDialogVisible.value = true
+  await loadReports()
+}
+
+const approveReport = async (report) => {
+  try {
+    await ElMessageBox.confirm(`确认 ${report.reportedName} 存在违规行为？`, '确认违规', {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
+  try {
+    await messageApi.approveReport(report.id)
+    await loadReports()
+    ElMessage.success('已确认违规')
+  } catch (e) {
+    ElMessage.error(e?.message || '操作失败')
+  }
+}
+
+const dismissReport = async (report) => {
+  try {
+    await messageApi.dismissReport(report.id)
+    await loadReports()
+    ElMessage.success('已驳回该举报')
+  } catch (e) {
+    ElMessage.error(e?.message || '操作失败')
+  }
+}
+
+const statusText = (status) => {
+  if (status === 'pending') return '待处理'
+  if (status === 'approved') return '已确认违规'
+  if (status === 'dismissed') return '已驳回'
+  return status
+}
 
 const loadConversations = async (silent = false) => {
   if (!silent) conversationsLoading.value = true
@@ -337,6 +522,7 @@ onMounted(async () => {
     return
   }
   await loadConversations()
+  await loadBlockedList()
   handleRouteQuery()
   startPolling()
   window.addEventListener('resize', resizeHandler)
@@ -449,6 +635,36 @@ watch(() => route.query, () => handleRouteQuery())
 .mc-arrow {
   font-size: 14px;
   opacity: 0.9;
+}
+
+.report-review-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  color: #666;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.report-review-entry:hover {
+  background: #fafafa;
+  color: #ff4400;
+}
+
+.report-badge {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #ff4400;
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
 }
 
 .conv-list {
@@ -595,6 +811,17 @@ watch(() => route.query, () => handleRouteQuery())
   color: #1a1a1a;
 }
 
+.chat-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-actions :deep(.el-button--small) {
+  border-radius: 8px;
+}
+
 .chat-body {
   flex: 1;
   overflow-y: auto;
@@ -693,6 +920,117 @@ watch(() => route.query, () => handleRouteQuery())
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.report-tip {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 14px;
+}
+
+.report-evidence {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.report-evidence p {
+  font-size: 12px;
+  color: #999;
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 120px;
+}
+
+.report-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.report-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.report-reporter {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.report-reported {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ff4400;
+}
+
+.report-status {
+  margin-left: auto;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+.report-status.pending {
+  background: #fff7e6;
+  color: #d48806;
+}
+
+.report-status.approved {
+  background: #fef0f0;
+  color: #ff4400;
+}
+
+.report-status.dismissed {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.report-reason {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.report-messages {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 8px 12px;
+  max-height: 140px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-msg {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rm-sender {
+  color: #999;
+  margin-right: 6px;
+}
+
+.rm-content {
+  color: #333;
+  word-break: break-word;
+}
+
+.report-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
 }
 
 .feedback-types {

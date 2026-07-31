@@ -465,7 +465,8 @@ async function submitTrade() {
       }
       const res = await stockApi.buy(symbol, shares.value)
       applyTradeResult(res)
-      ElMessage.success(`买入成功，花费 ¥${formatMoney(res.total || buyTotal.value)}`)
+      if (res.experienceGained) ElMessage.success(`买入成功，花费 ¥${formatMoney(res.total || buyTotal.value)}，经验+${res.experienceGained}`)
+      else ElMessage.success(`买入成功，花费 ¥${formatMoney(res.total || buyTotal.value)}`)
     } else {
       if (shares.value > maxSellShares.value) {
         ElMessage.warning('持仓不足')
@@ -473,7 +474,8 @@ async function submitTrade() {
       }
       const res = await stockApi.sell(symbol, shares.value)
       applyTradeResult(res)
-      ElMessage.success(`卖出成功，净得 ¥${formatMoney(res.net || sellNet.value)}`)
+      if (res.experienceGained) ElMessage.success(`卖出成功，净得 ¥${formatMoney(res.net || sellNet.value)}，经验+${res.experienceGained}`)
+      else ElMessage.success(`卖出成功，净得 ¥${formatMoney(res.net || sellNet.value)}`)
     }
   } catch (e) {
     ElMessage.error(e?.error || e?.message || '交易失败')
