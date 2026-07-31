@@ -534,7 +534,7 @@ onUnmounted(() => {
 .balance-value {
   font-size: 22px;
   font-weight: 700;
-  color: #ff4400;
+  color: #ff4d4f;
   font-variant-numeric: tabular-nums;
 }
 
@@ -631,12 +631,12 @@ onUnmounted(() => {
 .flash-down { animation: flash-down 1.2s ease; }
 
 @keyframes flash-up {
-  0% { background: rgba(0, 181, 120, 0.35); }
+  0% { background: rgba(255, 77, 79, 0.35); }
   100% { background: transparent; }
 }
 
 @keyframes flash-down {
-  0% { background: rgba(255, 77, 79, 0.35); }
+  0% { background: rgba(0, 181, 120, 0.35); }
   100% { background: transparent; }
 }
 

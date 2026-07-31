@@ -310,6 +310,7 @@ import { useOrderStore } from '../../stores/order'
 import { useWishlistStore } from '../../stores/wishlist'
 import api from '../../api'
 import { addressApi } from '../../api/addresses'
+import { authApi } from '../../api/auth'
 import { ACHIEVEMENTS, getLevelProgress } from '../../data/achievements'
 
 const router = useRouter()
@@ -588,11 +589,25 @@ const doCheckin = async () => {
   try {
     const res = await userStore.checkin()
     checkedIn.value = true
-    ElMessage.success(`签到成功！获得金币`)
-  } catch {
-    checkedIn.value = true
-    ElMessage.success('签到成功！')
+    const pts = res.balance || 0
+    ElMessage.success(pts ? `签到成功！获得 ${pts} 金币` : '签到成功！获得金币')
+  } catch (e) {
+    const err = e?.error || e?.message || ''
+    if (String(err).toLowerCase().includes('already')) {
+      checkedIn.value = true
+      ElMessage.info('今日已签到')
+    } else {
+      ElMessage.error('签到失败，请稍后再试')
+    }
   }
+}
+
+const loadCheckinStatus = async () => {
+  if (!userStore.isLoggedIn) return
+  try {
+    const res = await authApi.getCheckinStatus()
+    checkedIn.value = res.checkedIn
+  } catch {}
 }
 
 const transactions = [
@@ -623,6 +638,7 @@ onMounted(() => {
   if (route.query.menu) {
     currentMenu.value = route.query.menu
   }
+  loadCheckinStatus()
   fetchOrders()
 })
 </script>
@@ -789,7 +805,7 @@ onMounted(() => {
   display: block;
   font-size: 18px;
   font-weight: 700;
-  color: #ff4400;
+  color: #ff4d4f;
 }
 
 .stat-label {
@@ -994,7 +1010,7 @@ onMounted(() => {
 .balance-number {
   font-size: 42px;
   font-weight: 700;
-  color: #ff4400;
+  color: #ff4d4f;
   line-height: 1;
 }
 
@@ -1055,11 +1071,11 @@ onMounted(() => {
 }
 
 .tx-amount.income {
-  color: #52c41a;
+  color: #ff4d4f;
 }
 
 .tx-amount.expense {
-  color: #333;
+  color: #00b578;
 }
 
 .profile-form {

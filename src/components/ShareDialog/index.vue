@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :model-value="visible" width="420px" title="分享赚金币" @close="close">
+  <el-dialog v-model="visible" width="420px" title="分享赚金币">
     <div class="share-body">
       <p class="share-tip">把淘大宝分享给好友，好友也能来玩！</p>
       <div class="share-qr">
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 
 const emit = defineEmits(['shared'])
@@ -45,8 +45,12 @@ const open = (url) => {
 }
 
 const close = () => {
-  visible.value = false
+  shared.value = false
 }
+
+watch(visible, (val) => {
+  if (!val) close()
+})
 
 const copyLink = async () => {
   try {

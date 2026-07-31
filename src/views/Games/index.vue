@@ -92,7 +92,7 @@
               <span class="card-badge">双倍奖励</span>
             </div>
             <p class="card-desc">下注金币，猜随机数字的大小，猜中赢得双倍金币！</p>
-            <div class="limit-text guess-limit-text cooldown-text">今日剩余次数：{{ guessRemaining }}/{{ guessDailyLimit }}</div>
+            <div class="limit-text guess-limit-text cooldown-text">本小时剩余次数：{{ guessRemaining }}/{{ guessHourlyLimit }}</div>
             <div class="guess-body">
               <div class="bet-area">
                 <span class="bet-label">下注</span>
@@ -105,8 +105,8 @@
               </div>
               <div class="result-area" v-if="guessRevealed">
                 <div class="result-icon" :class="guessResult">
-                  <svg v-if="guessResult === 'win'" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#52c41a" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
-                  <svg v-else viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ff4d4f" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/></svg>
+                  <svg v-if="guessResult === 'win'" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ff4d4f" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
+                  <svg v-else viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#00b578" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/></svg>
                 </div>
                 <div class="result-text">
                   <span class="result-title" :class="guessResult">{{ guessResult === 'win' ? '恭喜猜中！' : '很遗憾猜错了' }}</span>
@@ -115,11 +115,11 @@
                 <button class="play-btn guess-again-btn" @click="resetGuess">再来一局</button>
               </div>
               <div class="guess-buttons" v-else>
-                <button class="guess-btn high" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10 || guessDailyCount >= guessDailyLimit" @click="makeGuess('high')">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>{{ guessDailyCount >= guessDailyLimit ? '今日次数已用完' : '高（大于50）' }}
+                <button class="guess-btn high" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10 || guessHourlyCount >= guessHourlyLimit" @click="makeGuess('high')">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>{{ guessHourlyCount >= guessHourlyLimit ? '本小时次数已用完' : '高（大于50）' }}
                 </button>
-                <button class="guess-btn low" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10 || guessDailyCount >= guessDailyLimit" @click="makeGuess('low')">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>{{ guessDailyCount >= guessDailyLimit ? '今日次数已用完' : '低（小于等于50）' }}
+                <button class="guess-btn low" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10 || guessHourlyCount >= guessHourlyLimit" @click="makeGuess('low')">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>{{ guessHourlyCount >= guessHourlyLimit ? '本小时次数已用完' : '低（小于等于50）' }}
                 </button>
               </div>
             </div>
@@ -131,11 +131,11 @@
               <span class="card-badge">配对有奖</span>
             </div>
             <p class="card-desc">翻开卡片，找到配对的图案！每对奖励20金币。</p>
-            <div class="limit-text match-limit-text cooldown-text">今日剩余：{{ matchRemaining }}/{{ matchDailyLimit }}</div>
-            <div class="match-body match-limit-body" v-if="matchDailyCount >= matchDailyLimit && matchCards.length === 0">
+            <div class="limit-text match-limit-text cooldown-text">本小时剩余：{{ matchRemaining }}/{{ matchHourlyLimit }}</div>
+            <div class="match-body match-limit-body" v-if="matchHourlyCount >= matchHourlyLimit && matchCards.length === 0">
               <div class="match-result">
                 <el-icon :size="48" color="#999" class="match-result-icon"><Clock /></el-icon>
-                <span class="match-result-text">今日次数已用完，明天再来吧！</span>
+                <span class="match-result-text">本小时次数已用完，下小时再来吧！</span>
               </div>
             </div>
             <div class="match-body" v-else-if="!matchGameOver">
@@ -150,18 +150,80 @@
                 </div>
               </div>
               <div class="match-score-row">
-                <span class="match-pairs">已配对: {{ matchPairs }} / 2</span>
+                <span class="match-pairs">已配对: {{ matchPairs }} / 5</span>
                 <span class="match-earned">获得: +{{ matchEarned }} 金币</span>
               </div>
             </div>
             <div class="match-body" v-else>
               <div class="match-result">
                 <el-icon :size="48" color="#ff4400" class="match-result-icon"><CircleCheck /></el-icon>
-                <span class="match-result-text">恭喜完成！获得 {{ matchEarned }} 金币</span>
-                <button class="play-btn match-restart-btn" :disabled="matchDailyCount >= matchDailyLimit" @click="initMatchGame">{{ matchDailyCount >= matchDailyLimit ? '今日次数已用完' : '再来一局' }}</button>
+                <span class="match-result-text">恭喜完成！获得 <span class="match-earned-text">+{{ matchEarned }}</span> 金币</span>
+                <button class="play-btn match-restart-btn" :disabled="matchHourlyCount >= matchHourlyLimit" @click="initMatchGame">{{ matchHourlyCount >= matchHourlyLimit ? '本小时次数已用完' : '再来一局' }}</button>
               </div>
             </div>
             <button v-if="!matchGameOver && matchEarned > 0" class="play-btn match-claim-btn" @click="claimMatchReward">领取 {{ matchEarned }} 金币</button>
+          </div>
+
+          <div class="game-card rps-game">
+            <div class="card-header">
+              <h3>石头剪刀布</h3>
+              <span class="card-badge">消耗50金币</span>
+            </div>
+            <p class="card-desc">和电脑一决胜负！赢家赢得双倍奖励，平局退回下注金币。</p>
+            <div class="limit-text rps-limit-text cooldown-text">本小时剩余次数：{{ rpsRemaining }}/{{ rpsHourlyLimit }}</div>
+            <div class="rps-body">
+              <div class="rps-result" :class="rpsResult">
+                <template v-if="rpsResult">
+                  <div class="rps-choice-row">
+                    <div class="rps-choice">
+                      <span class="rps-choice-emoji">{{ RPS_EMOJIS[rpsPlayerChoice] }}</span>
+                      <span class="rps-choice-label">你出{{ RPS_NAMES[rpsPlayerChoice] }}</span>
+                    </div>
+                    <span class="rps-vs">VS</span>
+                    <div class="rps-choice">
+                      <span class="rps-choice-emoji">{{ RPS_EMOJIS[rpsComputerChoice] }}</span>
+                      <span class="rps-choice-label">电脑出{{ RPS_NAMES[rpsComputerChoice] }}</span>
+                    </div>
+                  </div>
+                  <span class="rps-result-title" :class="rpsResult">{{ rpsResultText }}</span>
+                  <span class="rps-score" :class="rpsResult">{{ rpsScoreText }}</span>
+                  <button class="play-btn rps-again-btn" @click="rpsResult = ''">再来一局</button>
+                </template>
+                <template v-else>
+                  <span class="rps-wait-text">选择你的出招，赢家获得双倍金币！</span>
+                </template>
+              </div>
+              <div class="rps-buttons">
+                <button class="rps-btn" :disabled="rpsPlaying || !canPlayRps" @click="playRps('rock')">
+                  <span class="rps-emoji">✊</span><span>石头</span>
+                </button>
+                <button class="rps-btn" :disabled="rpsPlaying || !canPlayRps" @click="playRps('paper')">
+                  <span class="rps-emoji">✋</span><span>布</span>
+                </button>
+                <button class="rps-btn" :disabled="rpsPlaying || !canPlayRps" @click="playRps('scissors')">
+                  <span class="rps-emoji">✌️</span><span>剪刀</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="game-card dice-game">
+            <div class="card-header">
+              <h3>掷骰子</h3>
+              <span class="card-badge">消耗100金币</span>
+            </div>
+            <p class="card-desc">掷出点数大于3即为赢家，赢得双倍金币奖励！</p>
+            <div class="limit-text dice-limit-text cooldown-text">本小时剩余次数：{{ diceRemaining }}/{{ diceHourlyLimit }}</div>
+            <div class="dice-body">
+              <div class="dice-display" :class="diceResult">
+                <span class="dice-face">{{ diceValue ? DICE_FACES[diceValue - 1] : '🎲' }}</span>
+                <span class="dice-label">{{ diceResultText }}</span>
+              </div>
+              <button class="play-btn dice-btn" :disabled="!canPlayDice || diceRolling" @click="rollDice">
+                <span v-if="diceRolling">掷骰子中...</span>
+                <span v-else>{{ diceResult ? '再掷一次' : '掷骰子（100金币）' }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -233,7 +295,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { List, Trophy, ShoppingBag, Coin, CircleCheck, Clock } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
@@ -407,17 +469,18 @@ const randomNumber = ref(0)
 const guessResult = ref('')
 const lastGuessScore = ref(0)
 
-const guessDailyCount = ref(0)
-const guessDailyLimit = 5
+const guessHourlyCount = ref(0)
+const guessHourlyLimit = 5
 
-const savedGuessCount = localStorage.getItem('guess_daily_count')
-const savedGuessDate = localStorage.getItem('guess_daily_date')
-const today = new Date().toDateString()
-if (savedGuessDate === today) {
-  guessDailyCount.value = parseInt(savedGuessCount || '0')
-}
+const currentHour = ref(new Date().getHours())
+const guessHourKey = () => `guess_hourly_count_${currentHour.value}`
+const matchHourKey = () => `match_hourly_count_${currentHour.value}`
+const rpsHourKey = () => `rps_hourly_count_${currentHour.value}`
+const diceHourKey = () => `dice_hourly_count_${currentHour.value}`
 
-const guessRemaining = computed(() => Math.max(0, guessDailyLimit - guessDailyCount.value))
+guessHourlyCount.value = parseInt(localStorage.getItem(guessHourKey()) || '0')
+
+const guessRemaining = computed(() => Math.max(0, guessHourlyLimit - guessHourlyCount.value))
 
 const makeGuess = async (guess) => {
   if (guessing.value || guessRevealed.value) return
@@ -437,9 +500,8 @@ const makeGuess = async (guess) => {
     lastGuessScore.value = res.score
     guessRevealed.value = true
     if (res.score > 0) todayEarned.value += res.score
-    guessDailyCount.value++
-    localStorage.setItem('guess_daily_count', String(guessDailyCount.value))
-    localStorage.setItem('guess_daily_date', new Date().toDateString())
+    guessHourlyCount.value++
+    localStorage.setItem(guessHourKey(), String(guessHourlyCount.value))
     userStore.fetchUserInfo()
     loadRecords()
   } catch (e) {
@@ -467,21 +529,17 @@ const matchGameOver = ref(false)
 const matchClaimed = ref(false)
 const matchLocked = ref(false)
 
-const matchDailyCount = ref(0)
-const matchDailyLimit = 3
+const matchHourlyCount = ref(0)
+const matchHourlyLimit = 3
 
-const savedMatchCount = localStorage.getItem('match_daily_count')
-const savedMatchDate = localStorage.getItem('match_daily_date')
-if (savedMatchDate === today) {
-  matchDailyCount.value = parseInt(savedMatchCount || '0')
-}
+matchHourlyCount.value = parseInt(localStorage.getItem(matchHourKey()) || '0')
 
-const matchRemaining = computed(() => Math.max(0, matchDailyLimit - matchDailyCount.value))
+const matchRemaining = computed(() => Math.max(0, matchHourlyLimit - matchHourlyCount.value))
 
-const matchIcons = ['#ff4400', '#1890ff', '#52c41a', '#faad14']
+const matchIcons = ['#ff4400', '#1890ff', '#52c41a', '#faad14', '#722ed1']
 
 const initMatchGame = () => {
-  if (matchDailyCount.value >= matchDailyLimit) {
+  if (matchHourlyCount.value >= matchHourlyLimit) {
     matchCards.value = []
     matchGameOver.value = false
     matchEarned.value = 0
@@ -524,11 +582,10 @@ const flipCard = (idx) => {
       matchEarned.value += 20
       matchFlipped.value = []
       matchLocked.value = false
-      if (matchPairs.value === 2) {
+      if (matchPairs.value === 5) {
         matchGameOver.value = true
-        matchDailyCount.value++
-        localStorage.setItem('match_daily_count', String(matchDailyCount.value))
-        localStorage.setItem('match_daily_date', new Date().toDateString())
+        matchHourlyCount.value++
+        localStorage.setItem(matchHourKey(), String(matchHourlyCount.value))
       }
     } else {
       setTimeout(() => {
@@ -551,6 +608,161 @@ const claimMatchReward = () => {
   matchClaimed.value = true
   ElMessage.success(`获得 ${matchEarned.value} 金币`)
 }
+
+const addCoins = (n) => {
+  if (userStore.userInfo) {
+    userStore.userInfo.balance = (userStore.userInfo.balance || 0) + n
+    localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
+  }
+  if (n > 0) todayEarned.value += n
+}
+
+const recordGamePlay = () => {
+  if (userStore.userInfo) {
+    userStore.userInfo.experience = (userStore.userInfo.experience || 0) + 1
+    localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
+  }
+}
+
+const RPS_BET = 50
+const rpsHourlyLimit = 5
+const rpsHourlyCount = ref(0)
+const rpsHourKeyNow = rpsHourKey()
+rpsHourlyCount.value = parseInt(localStorage.getItem(rpsHourKeyNow) || '0')
+const rpsRemaining = computed(() => Math.max(0, rpsHourlyLimit - rpsHourlyCount.value))
+const canPlayRps = computed(() => userStore.isLoggedIn && userStore.balance >= RPS_BET && rpsRemaining.value > 0)
+
+const RPS_CHOICES = ['rock', 'paper', 'scissors']
+const RPS_EMOJIS = { rock: '✊', paper: '✋', scissors: '✌️' }
+const RPS_NAMES = { rock: '石头', paper: '布', scissors: '剪刀' }
+const rpsPlaying = ref(false)
+const rpsResult = ref('')
+const rpsPlayerChoice = ref('')
+const rpsComputerChoice = ref('')
+const rpsScore = ref(0)
+
+const rpsResultText = computed(() => {
+  if (rpsResult.value === 'win') return '你赢了！'
+  if (rpsResult.value === 'lose') return '你输了！'
+  return '平局！'
+})
+
+const rpsScoreText = computed(() => {
+  if (rpsResult.value === 'win') return `+${rpsScore.value} 金币`
+  if (rpsResult.value === 'lose') return `${rpsScore.value} 金币`
+  return '退回下注金币'
+})
+
+const playRps = (choice) => {
+  if (rpsPlaying.value) return
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  if (rpsRemaining.value <= 0) {
+    ElMessage.warning('本小时次数已用完')
+    return
+  }
+  if (userStore.balance < RPS_BET) {
+    ElMessage.warning('金币不足，需要50金币')
+    return
+  }
+  rpsPlaying.value = true
+  const computer = RPS_CHOICES[Math.floor(Math.random() * 3)]
+  let result = 'tie'
+  if (choice !== computer) {
+    const winMap = { rock: 'scissors', paper: 'rock', scissors: 'paper' }
+    result = winMap[choice] === computer ? 'win' : 'lose'
+  }
+  const net = result === 'win' ? RPS_BET : result === 'lose' ? -RPS_BET : 0
+  rpsPlayerChoice.value = choice
+  rpsComputerChoice.value = computer
+  rpsResult.value = result
+  rpsScore.value = net
+  addCoins(net)
+  recordGamePlay()
+  rpsHourlyCount.value++
+  localStorage.setItem(rpsHourKey(), String(rpsHourlyCount.value))
+  rpsPlaying.value = false
+  if (result === 'win') {
+    ElMessage.success(`你赢了 +${RPS_BET} 金币`)
+  } else if (result === 'lose') {
+    ElMessage.info(`你输了 -${RPS_BET} 金币`)
+  } else {
+    ElMessage.info('平局，退回下注金币')
+  }
+}
+
+const DICE_BET = 100
+const diceHourlyLimit = 3
+const diceHourlyCount = ref(0)
+const diceHourKeyNow = diceHourKey()
+diceHourlyCount.value = parseInt(localStorage.getItem(diceHourKeyNow) || '0')
+const diceRemaining = computed(() => Math.max(0, diceHourlyLimit - diceHourlyCount.value))
+const canPlayDice = computed(() => userStore.isLoggedIn && userStore.balance >= DICE_BET && diceRemaining.value > 0)
+
+const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
+const diceValue = ref(0)
+const diceRolling = ref(false)
+const diceResult = ref('')
+const diceScore = ref(0)
+
+const diceResultText = computed(() => {
+  if (diceRolling.value) return '掷骰子中...'
+  if (!diceResult.value) return diceValue.value ? `点数 ${diceValue.value}` : '点击按钮掷骰子'
+  if (diceResult.value === 'win') return `掷出 ${diceValue.value}，大于3！+${diceScore.value} 金币`
+  return `掷出 ${diceValue.value}，未超过3 -${DICE_BET} 金币`
+})
+
+const rollDice = () => {
+  if (diceRolling.value) return
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  if (diceRemaining.value <= 0) {
+    ElMessage.warning('本小时次数已用完')
+    return
+  }
+  if (userStore.balance < DICE_BET) {
+    ElMessage.warning('金币不足，需要100金币')
+    return
+  }
+  diceRolling.value = true
+  diceResult.value = ''
+  setTimeout(() => {
+    const value = Math.floor(Math.random() * 6) + 1
+    const won = value > 3
+    const net = won ? DICE_BET : -DICE_BET
+    diceValue.value = value
+    diceResult.value = won ? 'win' : 'lose'
+    diceScore.value = net
+    addCoins(net)
+    recordGamePlay()
+    diceHourlyCount.value++
+    localStorage.setItem(diceHourKey(), String(diceHourlyCount.value))
+    diceRolling.value = false
+    if (won) {
+      ElMessage.success(`掷出 ${value}，+${DICE_BET} 金币`)
+    } else {
+      ElMessage.info(`掷出 ${value}，-${DICE_BET} 金币`)
+    }
+  }, 700)
+}
+
+const refreshHourlyLimits = () => {
+  const hour = new Date().getHours()
+  if (hour !== currentHour.value) {
+    currentHour.value = hour
+    guessHourlyCount.value = parseInt(localStorage.getItem(guessHourKey()) || '0')
+    matchHourlyCount.value = parseInt(localStorage.getItem(matchHourKey()) || '0')
+    rpsHourlyCount.value = parseInt(localStorage.getItem(rpsHourKey()) || '0')
+    diceHourlyCount.value = parseInt(localStorage.getItem(diceHourKey()) || '0')
+    initMatchGame()
+  }
+}
+
+let hourlyTimer = null
 
 const promotions = [
   { tag: '满减', desc: '购物满200元返10金币' },
@@ -605,6 +817,11 @@ onMounted(() => {
     loadRecords()
   }
   initMatchGame()
+  hourlyTimer = setInterval(refreshHourlyLimits, 60000)
+})
+
+onUnmounted(() => {
+  clearInterval(hourlyTimer)
 })
 </script>
 
@@ -648,7 +865,7 @@ onMounted(() => {
 }
 
 .points-value {
-  color: #ff4400;
+  color: #ff4d4f;
   font-size: 42px;
   font-weight: bold;
   line-height: 1;
@@ -664,7 +881,7 @@ onMounted(() => {
 }
 
 .today-num {
-  color: #52c41a;
+  color: #ff4d4f;
   font-size: 22px;
   font-weight: bold;
 }
@@ -828,6 +1045,14 @@ onMounted(() => {
   background: #ff8833;
 }
 
+.rps-game .card-badge {
+  background: #ff9c00;
+}
+
+.dice-game .card-badge {
+  background: #ff5500;
+}
+
 .card-desc {
   color: #666;
   font-size: 13px;
@@ -845,7 +1070,9 @@ onMounted(() => {
 }
 
 .guess-limit-text,
-.match-limit-text {
+.match-limit-text,
+.rps-limit-text,
+.dice-limit-text {
   background: #fff7e6;
   border: 1px solid #ffd591;
   border-radius: 8px;
@@ -959,15 +1186,15 @@ onMounted(() => {
 }
 
 .number-display.win {
-  border-color: #52c41a;
-  background: rgba(82, 196, 26, 0.05);
-  box-shadow: 0 0 30px rgba(82, 196, 26, 0.15);
-}
-
-.number-display.lose {
   border-color: #ff4d4f;
   background: rgba(255, 77, 79, 0.05);
   box-shadow: 0 0 30px rgba(255, 77, 79, 0.15);
+}
+
+.number-display.lose {
+  border-color: #00b578;
+  background: rgba(0, 181, 120, 0.05);
+  box-shadow: 0 0 30px rgba(0, 181, 120, 0.15);
 }
 
 .number-value {
@@ -981,13 +1208,13 @@ onMounted(() => {
 }
 
 .number-display.win .number-value {
-  color: #52c41a;
-  text-shadow: 0 0 30px rgba(82, 196, 26, 0.3);
+  color: #ff4d4f;
+  text-shadow: 0 0 30px rgba(255, 77, 79, 0.3);
 }
 
 .number-display.lose .number-value {
-  color: #ff4d4f;
-  text-shadow: 0 0 30px rgba(255, 77, 79, 0.3);
+  color: #00b578;
+  text-shadow: 0 0 30px rgba(0, 181, 120, 0.3);
 }
 
 .number-label {
@@ -1056,11 +1283,11 @@ onMounted(() => {
 }
 
 .result-icon.win svg {
-  filter: drop-shadow(0 0 20px rgba(82, 196, 26, 0.6));
+  filter: drop-shadow(0 0 20px rgba(255, 77, 79, 0.6));
 }
 
 .result-icon.lose svg {
-  filter: drop-shadow(0 0 20px rgba(255, 77, 79, 0.6));
+  filter: drop-shadow(0 0 20px rgba(0, 181, 120, 0.6));
 }
 
 .result-text {
@@ -1075,16 +1302,16 @@ onMounted(() => {
   font-weight: 600;
 }
 
-.result-title.win { color: #52c41a; }
-.result-title.lose { color: #ff4d4f; }
+.result-title.win { color: #ff4d4f; }
+.result-title.lose { color: #00b578; }
 
 .result-score {
   font-size: 22px;
   font-weight: bold;
 }
 
-.result-score.win { color: #52c41a; }
-.result-score.lose { color: #ff4d4f; }
+.result-score.win { color: #ff4d4f; }
+.result-score.lose { color: #00b578; }
 
 .guess-again-btn {
   background: #ff4400;
@@ -1167,9 +1394,9 @@ onMounted(() => {
 }
 
 .match-card.matched .match-back {
-  border-color: #52c41a;
-  background: rgba(82, 196, 26, 0.08);
-  box-shadow: 0 0 16px rgba(82, 196, 26, 0.2);
+  border-color: #ff4d4f;
+  background: rgba(255, 77, 79, 0.08);
+  box-shadow: 0 0 16px rgba(255, 77, 79, 0.2);
 }
 
 .match-score-row {
@@ -1185,9 +1412,14 @@ onMounted(() => {
 }
 
 .match-earned {
-  color: #52c41a;
+  color: #ff4d4f;
   font-size: 14px;
   font-weight: 600;
+}
+
+.match-earned-text {
+  color: #ff4d4f;
+  font-weight: 700;
 }
 
 .match-result {
@@ -1215,13 +1447,198 @@ onMounted(() => {
 }
 
 .match-claim-btn {
-  background: #52c41a;
+  background: #ff4d4f;
   color: #fff;
   margin-top: 8px;
 }
 
 .match-claim-btn:hover:not(:disabled) {
-  box-shadow: 0 8px 25px rgba(82, 196, 26, 0.4);
+  box-shadow: 0 8px 25px rgba(255, 77, 79, 0.4);
+}
+
+.rps-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rps-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s;
+}
+
+.rps-result.win {
+  background: rgba(255, 77, 79, 0.06);
+  border-color: rgba(255, 77, 79, 0.35);
+}
+
+.rps-result.lose {
+  background: rgba(0, 181, 120, 0.06);
+  border-color: rgba(0, 181, 120, 0.35);
+}
+
+.rps-result.tie {
+  background: #fafafa;
+  border-color: #eee;
+}
+
+.rps-choice-row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.rps-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.rps-choice-emoji {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.rps-choice-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.rps-vs {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ff4400;
+}
+
+.rps-result-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.rps-result-title.win { color: #ff4d4f; }
+.rps-result-title.lose { color: #00b578; }
+.rps-result-title.tie { color: #666; }
+
+.rps-score {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.rps-score.win { color: #ff4d4f; }
+.rps-score.lose { color: #00b578; }
+.rps-score.tie { color: #666; }
+
+.rps-wait-text {
+  font-size: 13px;
+  color: #999;
+  padding: 8px 0;
+}
+
+.rps-again-btn {
+  background: #ff4400;
+  color: #fff;
+  max-width: 200px;
+}
+
+.rps-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: auto;
+}
+
+.rps-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 0;
+  border: none;
+  border-radius: 12px;
+  background: #fff5f0;
+  color: #ff4400;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.rps-btn:hover:not(:disabled) {
+  background: #ff4400;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.rps-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rps-btn .rps-emoji {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.dice-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.dice-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  width: 100%;
+  transition: all 0.3s;
+}
+
+.dice-display.win {
+  background: rgba(255, 77, 79, 0.06);
+  border-color: rgba(255, 77, 79, 0.35);
+}
+
+.dice-display.lose {
+  background: rgba(0, 181, 120, 0.06);
+  border-color: rgba(0, 181, 120, 0.35);
+}
+
+.dice-face {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.dice-label {
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+}
+
+.dice-btn {
+  background: #ff4400;
+  color: #fff;
+  margin-top: auto;
+}
+
+.dice-btn:hover:not(:disabled) {
+  background: #e63e00;
+  box-shadow: 0 8px 25px rgba(255, 68, 0, 0.4);
 }
 
 .rebate-card {
@@ -1402,11 +1819,11 @@ onMounted(() => {
 }
 
 .history-score.win {
-  color: #52c41a;
+  color: #ff4d4f;
 }
 
 .history-score.lose {
-  color: #ff4d4f;
+  color: #00b578;
 }
 
 .prize-dialog-body {
@@ -1424,7 +1841,7 @@ onMounted(() => {
 }
 
 .prize-value.win {
-  color: #ff4400;
+  color: #ff4d4f;
 }
 
 .prize-value.lose {

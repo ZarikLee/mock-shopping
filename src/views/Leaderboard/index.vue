@@ -444,7 +444,7 @@ onMounted(() => {
 .value-num {
   font-size: 17px;
   font-weight: 700;
-  color: #ff4400;
+  color: #333;
   font-feature-settings: 'tnum';
 }
 
