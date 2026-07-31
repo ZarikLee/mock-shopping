@@ -13,12 +13,12 @@ router.post('/play', authMiddleware, (req, res) => {
   const user = queryOne('users', { id: req.user.id });
 
   if (gameType === 'wheel') {
-    if (user.balance < 10) {
-      return res.status(400).json({ error: 'Not enough balance. Need at least 10 coins to spin.' });
-    }
-    const prizes = [10, 20, 50, 100, 0, 200, 5, 500];
+    const cost = 100;
+    if (user.balance < cost) return res.status(400).json({ error: 'Not enough balance. Need at least 100 coins to spin.' });
+    const prizes = [100, 200, 500, 1000, 2000, 5000, 0, 10000];
     const prize = prizes[Math.floor(Math.random() * prizes.length)];
-    const netPoints = prize - 10;
+    const net = prize - cost;
+    const netPoints = net;
     const newBalance = (user.balance || 0) + netPoints;
     const now = new Date().toISOString();
     update('users', req.user.id, { balance: newBalance });

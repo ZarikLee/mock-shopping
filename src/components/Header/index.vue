@@ -119,7 +119,7 @@
               :key="item.label"
               :to="item.path"
               class="nav-item"
-            >{{ item.label }}</router-link>
+            >{{ item.label }}<span v-if="item.badge" class="nav-item-badge">{{ item.badge }}</span></router-link>
           </div>
           <div class="nav-global-items">
             <router-link to="/games" class="nav-item">赚米中心</router-link>
@@ -303,7 +303,7 @@ const marketNavItems = {
   ],
   house: [ { label: '全部房源', path: '/products?market=house' } ],
   car: [ { label: '全部车型', path: '/products?market=car' } ],
-  invest: [ { label: '股票交易', path: '/stocks' } ]
+  invest: [ { label: '股票交易', path: '/stocks', badge: '24小时' } ]
 }
 
 const currentNavItems = computed(() => marketNavItems[currentCategory.value] || marketNavItems.shop)
@@ -593,6 +593,18 @@ if (savedCat) {
 .nav-item.active {
   color: #ff4400;
   font-weight: 600;
+}
+
+.nav-item-badge {
+  display: inline-block;
+  background: #ff4400;
+  color: #fff;
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+  line-height: 16px;
 }
 
 .mobile-header-left {

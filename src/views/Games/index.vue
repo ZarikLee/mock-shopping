@@ -37,18 +37,6 @@
             </button>
           </div>
           <div class="task-card">
-            <div class="task-icon browse">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </div>
-            <div class="task-body">
-              <span class="task-name">浏览商品</span>
-              <span class="task-desc">去浏览5件商品赚10金币</span>
-            </div>
-            <button class="task-btn" :class="{ done: browsed }" :disabled="browsed" @click="doBrowse">
-              {{ browsed ? '已领取' : '去浏览' }}
-            </button>
-          </div>
-          <div class="task-card">
             <div class="task-icon share">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             </div>
@@ -72,9 +60,9 @@
           <div class="game-card wheel-game">
             <div class="card-header">
               <h3>幸运转盘</h3>
-              <span class="card-badge">消耗10金币</span>
+              <span class="card-badge">消耗100金币</span>
             </div>
-            <p class="card-desc">转动转盘，赢取丰厚金币奖励！最高可赢500金币！</p>
+            <p class="card-desc">转动转盘，赢取丰厚金币奖励！最高可赢10000金币！</p>
             <div class="wheel-wrapper">
               <div class="wheel-pointer">
                 <svg viewBox="0 0 24 24" width="32" height="32"><polygon points="12,2 4,18 12,14 20,18" fill="#ff4400" stroke="#fff" stroke-width="1.5"/></svg>
@@ -84,7 +72,7 @@
                   <circle cx="200" cy="200" r="190" fill="none" stroke="#fff" stroke-width="4"/>
                   <g v-for="(seg, i) in wheelSegments" :key="i">
                     <path :d="seg.path" :fill="seg.color" stroke="#fff" stroke-width="2"/>
-                    <text :x="seg.textX" :y="seg.textY" :transform="`rotate(${seg.textRot}, ${seg.textX}, ${seg.textY})`" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-weight="bold" font-size="18">{{ seg.prize }}</text>
+                    <text :x="seg.textX" :y="seg.textY" :transform="`rotate(${seg.textRot}, ${seg.textX}, ${seg.textY})`" text-anchor="middle" dominant-baseline="middle" fill="#333" font-weight="bold" font-size="18">{{ seg.prize }}</text>
                   </g>
                   <circle cx="200" cy="200" r="25" fill="#fff" stroke="#ddd" stroke-width="2"/>
                   <circle cx="200" cy="200" r="18" fill="#ff4400"/>
@@ -239,26 +227,27 @@
         <el-button type="primary" @click="showPrizeDialog = false" round>知道了</el-button>
       </template>
     </el-dialog>
+
+    <ShareDialog ref="shareDialogRef" @shared="onShared" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { List, Trophy, ShoppingBag, Coin, CircleCheck, Clock } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
+import ShareDialog from '../../components/ShareDialog/index.vue'
 import { gameApi } from '../../api/games'
 import { authApi } from '../../api/auth'
 import { useUserStore } from '../../stores/user'
 
-const router = useRouter()
 const userStore = useUserStore()
 
 const todayEarned = ref(0)
 const checkedIn = ref(false)
-const browsed = ref(false)
 const shared = ref(false)
+const shareDialogRef = ref(null)
 
 const doCheckin = async () => {
   if (!userStore.isLoggedIn) {
@@ -283,19 +272,15 @@ const doCheckin = async () => {
   }
 }
 
-const doBrowse = () => {
-  if (!userStore.isLoggedIn) {
-    ElMessage.warning('请先登录')
-    return
-  }
-  router.push('/products')
-}
-
 const doShare = () => {
   if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录')
     return
   }
+  shareDialogRef.value.open(window.location.origin)
+}
+
+const onShared = () => {
   if (userStore.userInfo) {
     userStore.userInfo.balance = (userStore.userInfo.balance || 0) + 5
     localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
@@ -313,8 +298,8 @@ const loadCheckinStatus = async () => {
   } catch {}
 }
 
-const SEG_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F']
-const PRIZES = [10, 20, 50, 100, 0, 200, 5, 500]
+const SEG_COLORS = ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#FF8FB1', '#9B72CF', '#FFC300', '#2EC4B6']
+const PRIZES = [100, 200, 500, 1000, 2000, 5000, 0, 10000]
 const CX = 200, CY = 200, R = 180
 const SEG_ANGLE = Math.PI / 4
 
@@ -345,9 +330,11 @@ const lastPrize = ref(0)
 const wheelCooldown = ref(0)
 let wheelCooldownTimer = null
 
-const startWheelCooldown = (seconds = 300) => {
+const WHEEL_COOLDOWN = 3600 // 1 hour
+
+const startWheelCooldown = (seconds = WHEEL_COOLDOWN) => {
   wheelCooldown.value = seconds
-  localStorage.setItem('wheel_cooldown_until', Date.now() + seconds * 1000)
+  localStorage.setItem('wheel_cooldown_until_v2', Date.now() + seconds * 1000)
   clearInterval(wheelCooldownTimer)
   wheelCooldownTimer = setInterval(() => {
     if (wheelCooldown.value > 0) {
@@ -369,6 +356,10 @@ const spinWheel = async () => {
   if (spinning.value) return
   if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录')
+    return
+  }
+  if (userStore.balance < 100) {
+    ElMessage.warning('金币不足，需要100金币才能转动')
     return
   }
   spinning.value = true
@@ -403,7 +394,7 @@ const onWheelTransitionEnd = () => {
   } else {
     ElMessage.info('很遗憾，没有中奖')
   }
-  const netScore = lastPrize.value - 10
+  const netScore = lastPrize.value - 100
   if (netScore > 0) todayEarned.value += netScore
   userStore.fetchUserInfo()
   loadRecords()
@@ -601,7 +592,7 @@ const formatTime = (t) => {
 
 onMounted(() => {
   document.title = '赚米中心 - 淘大宝'
-  const savedCooldown = localStorage.getItem('wheel_cooldown_until')
+  const savedCooldown = localStorage.getItem('wheel_cooldown_until_v2')
   if (savedCooldown) {
     const remaining = Math.max(0, Math.floor((savedCooldown - Date.now()) / 1000))
     if (remaining > 0) {
@@ -734,10 +725,6 @@ onMounted(() => {
 
 .task-icon.daily-checkin {
   background: #ff4400;
-}
-
-.task-icon.browse {
-  background: #ff6600;
 }
 
 .task-icon.share {
