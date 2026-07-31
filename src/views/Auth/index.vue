@@ -26,10 +26,10 @@
         class="auth-form"
         @keyup.enter="handleLogin"
       >
-        <el-form-item label="用户名" prop="username">
+        <el-form-item label="账号" prop="account">
           <el-input
-            v-model="loginForm.username"
-            placeholder="请输入用户名"
+            v-model="loginForm.account"
+            placeholder="请输入系统分配的账号"
             :prefix-icon="User"
             size="large"
           />
@@ -62,7 +62,7 @@
         class="auth-form"
         @keyup.enter="handleRegister"
       >
-        <el-form-item label="用户名" prop="username">
+        <el-form-item label="用户名（展示用）" prop="username">
           <el-input
             v-model="registerForm.username"
             placeholder="请输入用户名"
@@ -134,12 +134,12 @@ const loginFormRef = ref(null)
 const registerFormRef = ref(null)
 
 const loginForm = reactive({
-  username: '',
+  account: '',
   password: ''
 })
 
 const loginRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  account: [{ required: true, message: '请输入账号', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
@@ -180,11 +180,11 @@ const handleLogin = async () => {
   }
   loading.value = true
   try {
-    await userStore.login(loginForm.username, loginForm.password)
+    await userStore.login(loginForm.account, loginForm.password)
     ElMessage.success('登录成功')
     router.push('/')
   } catch (e) {
-    ElMessage.error(e?.message || e?.msg || '登录失败，请检查用户名和密码')
+    ElMessage.error(e?.message || e?.msg || '登录失败，请检查账号和密码')
   } finally {
     loading.value = false
   }
@@ -199,10 +199,11 @@ const handleRegister = async () => {
   }
   loading.value = true
   try {
-    await userStore.register(registerForm.username, registerForm.password, registerForm.nickname)
-    ElMessage.success('注册成功，请登录')
+    const res = await userStore.register(registerForm.username, registerForm.password, registerForm.nickname)
+    const account = res?.account
+    ElMessage.success(`注册成功，您的账号是 ${account}，请使用账号登录`)
     isLogin.value = true
-    loginForm.username = registerForm.username
+    loginForm.account = account || ''
     loginForm.password = ''
   } catch (e) {
     ElMessage.error(e?.message || e?.msg || '注册失败')

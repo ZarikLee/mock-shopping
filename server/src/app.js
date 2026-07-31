@@ -10,6 +10,7 @@ import addressRoutes from './routes/addresses.js';
 import couponRoutes from './routes/coupons.js';
 import gameRoutes from './routes/games.js';
 import leaderboardRoutes from './routes/leaderboard.js';
+import userProfileRoutes from './routes/userProfile.js';
 import checkinRoutes from './routes/checkin.js';
 import stockRoutes from './routes/stocks.js';
 
@@ -27,6 +28,7 @@ app.use('/api/addresses', addressRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/users', userProfileRoutes);
 app.use('/api/checkin', checkinRoutes);
 app.use('/api/stocks', stockRoutes);
 

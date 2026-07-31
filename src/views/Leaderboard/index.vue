@@ -51,13 +51,13 @@
                 </span>
                 <span v-else class="rank-num">{{ item.rank }}</span>
               </div>
-              <div class="avatar-col">
+              <div class="avatar-col" @click="goProfile(item)">
                 <img :src="item.avatar" :alt="item.nickname" class="user-avatar" />
                 <div v-if="item.rank <= 3" class="avatar-ring"></div>
               </div>
-              <div class="info-col">
+              <div class="info-col" @click="goProfile(item)">
                 <span class="username">{{ item.nickname || item.username }}</span>
-                <span class="userid">ID: {{ item.userId }}</span>
+                <span class="userid">ID: {{ item.userId || item.id }}</span>
               </div>
               <div class="value-col">
                 <span class="value-num">{{ formatValue(item) }}</span>
@@ -77,10 +77,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Trophy, Wallet, ShoppingCart, DataAnalysis } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
 import { useUserStore } from '../../stores/user'
 import { leaderboardApi } from '../../api/leaderboard'
+
+const router = useRouter()
 
 const userStore = useUserStore()
 const currentUserId = computed(() => userStore.userInfo?.id)
@@ -132,6 +135,10 @@ function switchTab(key) {
   if (activeTab.value === key) return
   activeTab.value = key
   fetchData()
+}
+
+function goProfile(item) {
+  router.push(`/user/${item.userId || item.id}`)
 }
 
 onMounted(() => {
@@ -272,6 +279,23 @@ onMounted(() => {
 
 .rank-row:hover {
   background: #fafafa;
+}
+
+.avatar-col,
+.info-col {
+  cursor: pointer;
+}
+
+.info-col:hover .username {
+  color: #ff4400;
+}
+
+.avatar-col:hover .user-avatar {
+  transform: scale(1.08);
+}
+
+.user-avatar {
+  transition: transform 0.2s;
 }
 
 .rank-row.is-current-user {

@@ -43,10 +43,9 @@
         <el-form :model="addressForm" label-width="80px">
           <el-form-item label="收货人"><el-input v-model="addressForm.name" /></el-form-item>
           <el-form-item label="手机号"><el-input v-model="addressForm.phone" /></el-form-item>
-          <el-form-item label="省份"><el-input v-model="addressForm.province" /></el-form-item>
-          <el-form-item label="城市"><el-input v-model="addressForm.city" /></el-form-item>
-          <el-form-item label="区县"><el-input v-model="addressForm.district" /></el-form-item>
-          <el-form-item label="详细地址"><el-input v-model="addressForm.detail" /></el-form-item>
+          <el-form-item label="所在地区">
+            <AddressPicker :model-value="addressForm" @update:model-value="onAddressChange" />
+          </el-form-item>
           <el-form-item label="默认地址"><el-switch v-model="addressForm.isDefault" /></el-form-item>
         </el-form>
         <template #footer>
@@ -210,6 +209,7 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { Location, ShoppingBag, Van, CreditCard, Ticket, Coin, Phone, Plus } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
+import AddressPicker from '../../components/AddressPicker/index.vue'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useOrderStore } from '../../stores/order'
@@ -249,6 +249,10 @@ const resetForm = () => {
   addressForm.isDefault = false
 }
 
+const onAddressChange = (val) => {
+  Object.assign(addressForm, val)
+}
+
 const editAddress = (addr) => {
   editingAddress.value = addr
   addressForm.name = addr.name
@@ -263,18 +267,26 @@ const editAddress = (addr) => {
 
 const saveAddress = async () => {
   try {
-    if (editingAddress.value) {
+    const isEdit = !!editingAddress.value
+    let savedId
+    if (isEdit) {
       await addressApi.update(editingAddress.value.id, { ...addressForm })
+      savedId = editingAddress.value.id
     } else {
-      await addressApi.create({ ...addressForm })
+      const addr = await addressApi.create({ ...addressForm })
+      savedId = addr?.id
     }
     showAddressDialog.value = false
     editingAddress.value = null
     resetForm()
     await userStore.fetchUserInfo()
-    const addr = userStore.userInfo?.addresses?.find(a => a.isDefault) || userStore.userInfo?.addresses?.[0]
-    if (addr) selectedAddressId.value = addr.id
-    ElMessage.success(editingAddress.value ? '地址更新成功' : '地址添加成功')
+    if (savedId && userStore.userInfo?.addresses?.some(a => a.id === savedId)) {
+      selectedAddressId.value = savedId
+    } else {
+      const addr = userStore.userInfo?.addresses?.find(a => a.isDefault) || userStore.userInfo?.addresses?.[0]
+      if (addr) selectedAddressId.value = addr.id
+    }
+    ElMessage.success(isEdit ? '地址更新成功' : '地址添加成功')
   } catch (e) {
     ElMessage.error(e?.message || '操作失败')
   }

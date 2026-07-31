@@ -258,6 +258,12 @@
         <el-form-item label="生日">
           <el-date-picker v-model="editForm.birthday" type="date" placeholder="选择日期" style="width:100%" value-format="YYYY-MM-DD" />
         </el-form-item>
+        <el-form-item label="家乡">
+          <el-input v-model="editForm.homeCity" placeholder="请输入家乡城市" />
+        </el-form-item>
+        <el-form-item label="个人简介">
+          <el-input v-model="editForm.bio" type="textarea" :rows="3" placeholder="介绍一下自己吧" maxlength="200" show-word-limit />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showEditDialog = false">取消</el-button>
@@ -273,17 +279,8 @@
         <el-form-item label="手机号">
           <el-input v-model="addressForm.phone" placeholder="请输入手机号" />
         </el-form-item>
-        <el-form-item label="省份">
-          <el-input v-model="addressForm.province" placeholder="省份" />
-        </el-form-item>
-        <el-form-item label="城市">
-          <el-input v-model="addressForm.city" placeholder="城市" />
-        </el-form-item>
-        <el-form-item label="区县">
-          <el-input v-model="addressForm.district" placeholder="区县" />
-        </el-form-item>
-        <el-form-item label="详细地址">
-          <el-input v-model="addressForm.detail" placeholder="街道、楼栋、门牌号" />
+        <el-form-item label="所在地区">
+          <AddressPicker :model-value="addressForm" @update:model-value="onAddressChange" />
         </el-form-item>
         <el-form-item label="默认地址">
           <el-switch v-model="addressForm.isDefault" />
@@ -307,10 +304,12 @@ import {
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import BackButton from '../../components/BackButton/index.vue'
+import AddressPicker from '../../components/AddressPicker/index.vue'
 import { useUserStore } from '../../stores/user'
 import { useOrderStore } from '../../stores/order'
 import { useWishlistStore } from '../../stores/wishlist'
 import api from '../../api'
+import { addressApi } from '../../api/addresses'
 import { ACHIEVEMENTS, getLevelProgress } from '../../data/achievements'
 
 const router = useRouter()
@@ -429,6 +428,8 @@ const editForm = reactive({
   email: '',
   gender: '',
   birthday: '',
+  bio: '',
+  homeCity: '',
 })
 
 const openEditDialog = () => {
@@ -438,6 +439,8 @@ const openEditDialog = () => {
   editForm.email = u.email || ''
   editForm.gender = u.gender || ''
   editForm.birthday = u.birthday || ''
+  editForm.bio = u.bio || ''
+  editForm.homeCity = u.homeCity || ''
   showEditDialog.value = true
 }
 
@@ -449,14 +452,19 @@ const saveEditProfile = async () => {
     email: editForm.email,
     gender: editForm.gender,
     birthday: editForm.birthday,
+    bio: editForm.bio,
+    homeCity: editForm.homeCity,
   })
   localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
   try {
     await api.put('/auth/profile', {
       nickname: editForm.nickname,
+      phone: editForm.phone,
       email: editForm.email,
       gender: editForm.gender,
       birthday: editForm.birthday,
+      bio: editForm.bio,
+      homeCity: editForm.homeCity,
     })
   } catch {
     // server may not have this endpoint; local update is enough
@@ -530,41 +538,45 @@ const openAddressDialog = (addr) => {
   showAddressDialog.value = true
 }
 
-const saveAddress = () => {
-  if (!userStore.userInfo) return
-  const addrs = userStore.userInfo.addresses || []
-  if (editingAddress.value) {
-    const idx = addrs.findIndex(a => a.id === editingAddress.value.id)
-    if (idx !== -1) addrs[idx] = { ...addrs[idx], ...addressForm }
-  } else {
-    const id = Date.now()
-    addrs.push({ id, ...addressForm })
-  }
-  if (addressForm.isDefault) {
-    addrs.forEach(a => { if (a.id !== (editingAddress.value?.id || id)) a.isDefault = false })
-  }
-  userStore.userInfo.addresses = addrs
-  localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
-  showAddressDialog.value = false
-  editingAddress.value = null
-  ElMessage.success('保存成功')
+const onAddressChange = (val) => {
+  Object.assign(addressForm, val)
 }
 
-const deleteAddress = (id) => {
-  if (!userStore.userInfo) return
-  const addrs = (userStore.userInfo.addresses || []).filter(a => a.id !== id)
-  userStore.userInfo.addresses = addrs
-  localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
-  ElMessage.success('已删除')
+const saveAddress = async () => {
+  try {
+    const isEdit = !!editingAddress.value
+    if (isEdit) {
+      await addressApi.update(editingAddress.value.id, { ...addressForm })
+    } else {
+      await addressApi.create({ ...addressForm })
+    }
+    showAddressDialog.value = false
+    editingAddress.value = null
+    await userStore.fetchUserInfo()
+    ElMessage.success(isEdit ? '地址更新成功' : '地址添加成功')
+  } catch (e) {
+    ElMessage.error(e?.message || '操作失败')
+  }
 }
 
-const setDefaultAddress = (id) => {
-  if (!userStore.userInfo) return
-  const addrs = userStore.userInfo.addresses || []
-  addrs.forEach(a => { a.isDefault = a.id === id })
-  userStore.userInfo.addresses = addrs
-  localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
-  ElMessage.success('已设为默认')
+const deleteAddress = async (id) => {
+  try {
+    await addressApi.delete(id)
+    await userStore.fetchUserInfo()
+    ElMessage.success('已删除')
+  } catch (e) {
+    ElMessage.error(e?.message || '删除失败')
+  }
+}
+
+const setDefaultAddress = async (id) => {
+  try {
+    await addressApi.setDefault(id)
+    await userStore.fetchUserInfo()
+    ElMessage.success('已设为默认')
+  } catch (e) {
+    ElMessage.error(e?.message || '操作失败')
+  }
 }
 
 const checkedIn = ref(false)

@@ -33,14 +33,22 @@ router.put('/:id', authMiddleware, (req, res) => {
     queryAll('addresses', { userId: req.user.id, isDefault: 1 }).forEach(a => update('addresses', a.id, { isDefault: 0 }));
   }
   const updated = update('addresses', Number(req.params.id), {
-    name: name || address.name,
-    phone: phone || address.phone,
-    province: province || address.province,
-    city: city || address.city,
-    district: district || address.district,
-    detail: detail || address.detail,
+    name: name !== undefined ? name : address.name,
+    phone: phone !== undefined ? phone : address.phone,
+    province: province !== undefined ? province : address.province,
+    city: city !== undefined ? city : address.city,
+    district: district !== undefined ? district : address.district,
+    detail: detail !== undefined ? detail : address.detail,
     isDefault: isDefault !== undefined ? (isDefault ? 1 : 0) : address.isDefault,
   });
+  res.json(updated);
+});
+
+router.put('/:id/default', authMiddleware, (req, res) => {
+  const address = queryOne('addresses', { id: Number(req.params.id), userId: req.user.id });
+  if (!address) return res.status(404).json({ error: 'Address not found' });
+  queryAll('addresses', { userId: req.user.id, isDefault: 1 }).forEach(a => update('addresses', a.id, { isDefault: 0 }));
+  const updated = update('addresses', Number(req.params.id), { isDefault: 1 });
   res.json(updated);
 });
 

@@ -33,10 +33,10 @@
         class="auth-form"
         @keyup.enter="handleLogin"
       >
-        <el-form-item label="用户名" prop="username">
+        <el-form-item label="账号" prop="account">
           <el-input
-            v-model="loginForm.username"
-            placeholder="请输入用户名"
+            v-model="loginForm.account"
+            placeholder="请输入系统分配的账号"
             :prefix-icon="User"
             size="large"
           />
@@ -69,7 +69,7 @@
         class="auth-form"
         @keyup.enter="handleRegister"
       >
-        <el-form-item label="用户名" prop="username">
+        <el-form-item label="用户名（展示用）" prop="username">
           <el-input
             v-model="registerForm.username"
             placeholder="请输入用户名"
@@ -105,26 +105,6 @@
             show-password
           />
         </el-form-item>
-        <el-form-item label="支付密码" prop="payPassword">
-          <el-input
-            v-model="registerForm.payPassword"
-            type="password"
-            placeholder="请设置6位数字支付密码（仅游戏使用）"
-            :prefix-icon="Key"
-            size="large"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="确认支付密码" prop="confirmPayPassword">
-          <el-input
-            v-model="registerForm.confirmPayPassword"
-            type="password"
-            placeholder="请再次输入支付密码"
-            :prefix-icon="Key"
-            size="large"
-            show-password
-          />
-        </el-form-item>
         <el-button
           type="primary"
           size="large"
@@ -141,7 +121,7 @@
 import { ref, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock, EditPen, Key } from '@element-plus/icons-vue'
+import { User, Lock, EditPen } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useAuthStore } from '../../stores/auth'
 
@@ -157,12 +137,12 @@ const loginFormRef = ref(null)
 const registerFormRef = ref(null)
 
 const loginForm = reactive({
-  username: '',
+  account: '',
   password: ''
 })
 
 const loginRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  account: [{ required: true, message: '请输入账号', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
@@ -170,30 +150,12 @@ const registerForm = reactive({
   username: '',
   nickname: '',
   password: '',
-  confirmPassword: '',
-  payPassword: '',
-  confirmPayPassword: ''
+  confirmPassword: ''
 })
 
 const validateConfirmPassword = (rule, value, callback) => {
   if (value !== registerForm.password) {
     callback(new Error('两次输入的密码不一致'))
-  } else {
-    callback()
-  }
-}
-
-const validatePayPassword = (rule, value, callback) => {
-  if (!/^\d{6}$/.test(value)) {
-    callback(new Error('支付密码必须为6位数字'))
-  } else {
-    callback()
-  }
-}
-
-const validateConfirmPayPassword = (rule, value, callback) => {
-  if (value !== registerForm.payPassword) {
-    callback(new Error('两次输入的支付密码不一致'))
   } else {
     callback()
   }
@@ -209,14 +171,6 @@ const registerRules = {
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
     { validator: validateConfirmPassword, trigger: 'blur' }
-  ],
-  payPassword: [
-    { required: true, message: '请设置支付密码', trigger: 'blur' },
-    { validator: validatePayPassword, trigger: 'blur' }
-  ],
-  confirmPayPassword: [
-    { required: true, message: '请确认支付密码', trigger: 'blur' },
-    { validator: validateConfirmPayPassword, trigger: 'blur' }
   ]
 }
 
@@ -247,13 +201,13 @@ const handleLogin = async () => {
   }
   loading.value = true
   try {
-    await userStore.login(loginForm.username, loginForm.password)
+    await userStore.login(loginForm.account, loginForm.password)
     ElMessage.success('登录成功')
     authStore.closeAuth()
     emit('logged-in')
     router.push('/')
   } catch (e) {
-    ElMessage.error(e?.message || e?.msg || '登录失败，请检查用户名和密码')
+    ElMessage.error(e?.message || e?.msg || '登录失败，请检查账号和密码')
   } finally {
     loading.value = false
   }
@@ -268,18 +222,17 @@ const handleRegister = async () => {
   }
   loading.value = true
   try {
-    await userStore.register(registerForm.username, registerForm.password, registerForm.nickname, registerForm.payPassword)
-    ElMessage.success('注册成功，请登录')
+    const res = await userStore.register(registerForm.username, registerForm.password, registerForm.nickname)
+    const account = res?.account
+    ElMessage.success(`注册成功，您的账号是 ${account}，请使用账号登录`)
     isLogin.value = true
     authStore.openLogin()
-    loginForm.username = registerForm.username
+    loginForm.account = account || ''
     loginForm.password = ''
     registerForm.username = ''
     registerForm.nickname = ''
     registerForm.password = ''
     registerForm.confirmPassword = ''
-    registerForm.payPassword = ''
-    registerForm.confirmPayPassword = ''
   } catch (e) {
     ElMessage.error(e?.message || e?.msg || '注册失败')
   } finally {

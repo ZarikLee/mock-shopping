@@ -145,9 +145,14 @@ const handlePay = () => {
 
 const handlePasswordConfirm = async (password) => {
   try {
-    await authApi.verifyPayPassword({ payPassword: password })
-  } catch {
-    ElMessage.error('支付密码错误')
+    const status = await authApi.getPayPasswordStatus()
+    if (status.hasPayPassword) {
+      await authApi.verifyPayPassword({ payPassword: password })
+    } else {
+      await authApi.setPayPassword({ payPassword: password })
+    }
+  } catch (e) {
+    ElMessage.error(e?.message || '支付密码错误')
     return
   }
 

@@ -52,6 +52,11 @@ const routes = [
     component: () => import('../views/UserCenter/index.vue')
   },
   {
+    path: '/user/:id',
+    name: 'UserProfile',
+    component: () => import('../views/UserProfile/index.vue')
+  },
+  {
     path: '/achievements',
     name: 'Achievements',
     component: () => import('../views/Achievements/index.vue')
