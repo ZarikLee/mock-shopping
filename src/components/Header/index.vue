@@ -86,7 +86,7 @@
     <div class="main-nav-bar" v-if="!isMobile" :class="{ collapsed: uiStore.menuCollapsed }">
       <div class="container">
         <div class="nav-bar-inner" :class="{ collapsed: uiStore.menuCollapsed }">
-          <div class="nav-left">
+          <div class="nav-left" :class="{ 'hide-on-collapse': uiStore.menuCollapsed }">
             <el-dropdown trigger="click" @command="switchCategory">
               <span class="market-switcher-btn">
                 <span class="switcher-text">{{ currentCategoryLabel }}</span>
@@ -104,7 +104,7 @@
               </template>
             </el-dropdown>
           </div>
-          <div class="nav-center">
+          <div class="nav-center" :class="{ 'hide-on-collapse': uiStore.menuCollapsed }">
             <router-link v-for="item in currentNavItems" :key="item.label" :to="item.path" class="nav-item" :class="{ active: isActiveNav(item) }">
               {{ item.label }}<span v-if="item.badge" class="nav-item-badge">{{ item.badge }}</span>
             </router-link>
@@ -508,19 +508,28 @@ watch(() => route.query.market, syncCategoryFromRoute)
   border-bottom: 1px solid #f0f0f0;
   transition:
     max-height 0.75s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.75s ease,
-    border-width 0.75s ease,
-    padding 0.75s ease;
+    border-width 0.75s ease;
   overflow: hidden;
   max-height: 100px;
   will-change: max-height;
 }
 
 .main-nav-bar.collapsed {
-  max-height: 0;
-  opacity: 0;
+  max-height: 46px;
   border-top-width: 0;
   border-bottom-width: 0;
+}
+
+.nav-left,
+.nav-center {
+  transition: opacity 0.4s ease;
+}
+
+.hide-on-collapse {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  overflow: hidden;
 }
 
 .main-nav-bar .container {
@@ -531,6 +540,7 @@ watch(() => route.query.market, syncCategoryFromRoute)
 .nav-bar-inner {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   height: 44px;
 }
 

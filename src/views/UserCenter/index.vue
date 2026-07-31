@@ -15,7 +15,7 @@
           <div class="profile-header-info">
             <div class="nickname-row">
               <span class="nickname">{{ userStore.userInfo?.nickname || '未登录' }}</span>
-              <span class="level-badge">{{ levelName }}</span>
+              <span class="level-badge">{{ memberLevel.name }}</span>
               <span class="exp-badge">Lv.{{ userStore.level }}</span>
             </div>
             <div class="profile-uid">
@@ -38,8 +38,9 @@
             </div>
           </div>
           <div class="member-criteria">
-            <span class="mc-label">会员等级（按余额累计）</span>
-            <span class="mc-detail" v-if="nextMemberLevel">再存 ¥{{ nextMemberNeed }} 升级为{{ nextMemberLevel.name }}</span>
+            <span class="mc-label">会员等级（按资产值）</span>
+            <span class="mc-detail">余额 ¥{{ userStore.balance.toFixed(2) }} + 经验 {{ userStore.experience }} + 投资收益 ¥{{ stockPnL.toFixed(2) }} = 资产值 ¥{{ memberScore.toLocaleString() }}</span>
+            <span class="mc-detail" v-if="nextMemberTier">再攒 ¥{{ nextMemberNeed }} 升级为{{ nextMemberTier.name }}</span>
             <span class="mc-detail" v-else>已达最高等级</span>
           </div>
           <div class="profile-stats">
@@ -319,6 +320,7 @@ import { useWishlistStore } from '../../stores/wishlist'
 import api from '../../api'
 import { addressApi } from '../../api/addresses'
 import { authApi } from '../../api/auth'
+import { stockApi } from '../../api/stocks'
 import { ACHIEVEMENTS, getLevelProgress } from '../../data/achievements'
 
 const router = useRouter()
@@ -371,33 +373,50 @@ const onAvatarCropped = async (croppedBase64) => {
   }
 }
 
-const levelConfig = [
-  { min: 0, name: '普通会员' },
-  { min: 100, name: '银牌会员' },
-  { min: 500, name: '金牌会员' },
-  { min: 2000, name: '钻石会员' },
-  { min: 5000, name: '至尊会员' },
+const memberTiers = [
+  { min: 0, name: '见习玩家' },
+  { min: 2000, name: '青铜玩家' },
+  { min: 10000, name: '白银玩家' },
+  { min: 50000, name: '黄金玩家' },
+  { min: 200000, name: '铂金玩家' },
+  { min: 1000000, name: '钻石玩家' },
+  { min: 5000000, name: '星耀玩家' },
+  { min: 20000000, name: '王者玩家' },
 ]
-const levelName = computed(() => {
-  const pts = userStore.balance
-  let name = '普通会员'
-  for (const l of levelConfig) {
-    if (pts >= l.min) name = l.name
-  }
-  return name
+
+const stockPnL = ref(0)
+const loadStockPnL = async () => {
+  try {
+    const res = await stockApi.stats()
+    const data = res.data || res
+    stockPnL.value = data.totalPnL ?? 0
+  } catch { /* ok */ }
+}
+
+// 资产值 = 余额 + 经验 * 0.5 + 股票正收益
+const memberScore = computed(() => {
+  return userStore.balance + userStore.experience * 0.5 + Math.max(stockPnL.value || 0, 0)
 })
-// 下一个会员等级及所需金额
-const nextMemberLevel = computed(() => {
-  const pts = userStore.balance
+
+// 当前会员等级
+const memberLevel = computed(() => {
+  let tier = memberTiers[0]
+  for (const t of memberTiers) {
+    if (memberScore.value >= t.min) tier = t
+  }
+  return tier
+})
+// 下一个会员等级及所需资产值
+const nextMemberTier = computed(() => {
   let next = null
-  for (const l of levelConfig) {
-    if (pts < l.min) { next = l; break }
+  for (const t of memberTiers) {
+    if (memberScore.value < t.min) { next = t; break }
   }
   return next
 })
 const nextMemberNeed = computed(() => {
-  if (!nextMemberLevel.value) return 0
-  return (nextMemberLevel.value.min - userStore.balance).toLocaleString()
+  if (!nextMemberTier.value) return 0
+  return Math.ceil(nextMemberTier.value.min - memberScore.value).toLocaleString()
 })
 
 const levelProgress = computed(() => {
@@ -679,6 +698,7 @@ onMounted(() => {
   }
   loadCheckinStatus()
   fetchOrders()
+  loadStockPnL()
 })
 </script>
 
@@ -724,7 +744,7 @@ onMounted(() => {
   margin: 0 auto 14px;
   cursor: pointer;
   border-radius: 50%;
-  border: 3px solid #e0e0e0;
+  border: 3px solid #ffffff;
   overflow: hidden;
 }
 
@@ -1445,7 +1465,7 @@ onMounted(() => {
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
-  border: 3px solid #e0e0e0;
+  border: 3px solid #ffffff;
   margin-bottom: 6px;
 }
 
