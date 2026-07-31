@@ -22,8 +22,14 @@
           <div class="detail-left">
             <div class="quote-card">
               <div class="quote-left">
-                <span class="quote-price" :class="trendClass">{{ formatPrice(quote.price) }}</span>
-                <span class="quote-change" :class="trendClass">{{ formatPercent(quote.changePercent) }}</span>
+                <div class="quote-main">
+                  <span class="quote-price" :class="trendClass">{{ formatPrice(quote.price) }}</span>
+                  <span class="quote-change" :class="trendClass">{{ formatPercent(quote.changePercent) }}</span>
+                </div>
+                <div class="quote-reference">
+                  <span class="ref-item">昨收 <b>¥{{ formatPrice(quote.prevClose) }}</b></span>
+                  <span class="ref-legend">涨跌幅较昨收计算</span>
+                </div>
               </div>
               <div class="quote-stats" v-if="userStore.isLoggedIn">
                 <div class="q-stat">
@@ -70,9 +76,18 @@
             <div class="chart-card">
               <div class="card-title">
                 <span>K线走势</span>
-                <span class="chart-sub">最近 80 根 · 5 秒刷新</span>
+                <span class="chart-sub">{{ periodLabel }} · 最近 {{ displayHistory.length }} 根</span>
               </div>
-              <KLineChart :data="history" :height="chartHeight" />
+              <div class="period-tabs">
+                <button
+                  v-for="p in periods"
+                  :key="p.value"
+                  class="period-tab"
+                  :class="{ active: period === p.value }"
+                  @click="period = p.value"
+                >{{ p.label }}</button>
+              </div>
+              <KLineChart :data="displayHistory" :height="chartHeight" />
             </div>
           </div>
 
@@ -190,11 +205,42 @@ const authStore = useAuthStore()
 
 const symbol = computed(() => route.params.symbol)
 const stock = ref(null)
-const quote = ref({ price: 0, changePercent: 0 })
+const quote = ref({ price: 0, changePercent: 0, prevClose: 0 })
 const history = ref([])
 const loading = ref(false)
 const holding = ref(null)
 const lastQuoteUpdate = ref('')
+
+const periods = [
+  { value: 'time', label: '分时' },
+  { value: '5min', label: '5分' },
+  { value: '15min', label: '15分' },
+  { value: '60min', label: '60分' },
+  { value: 'day', label: '日K' }
+]
+const period = ref('time')
+const periodLabel = computed(() => periods.find(p => p.value === period.value)?.label || period.value)
+
+function aggregateCandles(candles, period) {
+  if (period === 'time') return candles.slice(-100)
+  const groupSize = period === '5min' ? 60 : period === '15min' ? 180 : period === '60min' ? 720 : candles.length
+  const groups = []
+  for (let i = 0; i < candles.length; i += groupSize) {
+    const slice = candles.slice(i, i + groupSize)
+    if (slice.length === 0) continue
+    groups.push({
+      time: slice[0].time,
+      open: slice[0].open,
+      high: Math.max(...slice.map(c => c.high)),
+      low: Math.min(...slice.map(c => c.low)),
+      close: slice[slice.length - 1].close,
+      volume: slice.reduce((s, c) => s + c.volume, 0)
+    })
+  }
+  return groups.slice(-80)
+}
+
+const displayHistory = computed(() => aggregateCandles(history.value, period.value))
 
 const activeTab = ref('buy')
 const shareInput = ref(100)
@@ -251,12 +297,12 @@ async function fetchHistory() {
   try {
     const res = await stockApi.history(symbol.value)
     const hist = res.history || []
-    history.value = hist.slice(-80)
+    history.value = hist
     if (hist.length) {
       const last = hist[hist.length - 1]
-      quote.value = { price: last.close, changePercent: res.changePercent ?? 0 }
+      quote.value = { price: last.close, changePercent: res.changePercent ?? 0, prevClose: res.prevClose ?? 0 }
     } else {
-      quote.value = { price: res.price ?? 0, changePercent: res.changePercent ?? 0 }
+      quote.value = { price: res.price ?? 0, changePercent: res.changePercent ?? 0, prevClose: res.prevClose ?? 0 }
     }
     lastQuoteUpdate.value = new Date().toLocaleTimeString()
   } catch {
@@ -510,8 +556,38 @@ onUnmounted(() => {
 
 .quote-left {
   display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.quote-main {
+  display: flex;
   align-items: baseline;
   gap: 14px;
+}
+
+.quote-reference {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-left: 1px solid #f0f0f0;
+  padding-left: 18px;
+}
+
+.ref-item {
+  font-size: 13px;
+  color: #999;
+}
+
+.ref-item b {
+  color: #333;
+  font-variant-numeric: tabular-nums;
+}
+
+.ref-legend {
+  font-size: 11px;
+  color: #bbb;
 }
 
 .quote-price {
@@ -588,6 +664,35 @@ onUnmounted(() => {
   font-size: 12px;
   font-weight: 400;
   color: #999;
+}
+
+.period-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.period-tab {
+  padding: 5px 14px;
+  font-size: 13px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.period-tab:hover {
+  border-color: #ff4400;
+  color: #ff4400;
+}
+
+.period-tab.active {
+  background: #ff4400;
+  border-color: #ff4400;
+  color: #fff;
 }
 
 .info-grid {

@@ -65,12 +65,17 @@
           >
             <el-table-column prop="symbol" label="代码" width="100" />
             <el-table-column prop="name" label="名称" min-width="110" />
+            <el-table-column label="昨收" width="90" align="right">
+              <template #default="{ row }">
+                <span class="prev-close-cell">{{ formatPrice(row.prevClose) }}</span>
+              </template>
+            </el-table-column>
             <el-table-column label="现价" width="120" align="right">
               <template #default="{ row }">
                 <span class="price-cell" :class="flashClass(row.symbol)">{{ formatPrice(row.price) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="涨跌幅" width="120" align="right">
+            <el-table-column label="涨跌幅(较昨收)" min-width="140" align="right">
               <template #default="{ row }">
                 <span class="trend-badge" :class="trendClass(row)">{{ formatPercent(row.changePercent) }}</span>
               </template>
@@ -738,6 +743,11 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
+.prev-close-cell {
+  font-variant-numeric: tabular-nums;
+  color: #999;
+}
+
 .trend-badge {
   display: inline-block;
   padding: 2px 8px;
@@ -745,6 +755,7 @@ onUnmounted(() => {
   font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .trend-badge.up { color: #ff4d4f; background: rgba(255, 77, 79, 0.1); }

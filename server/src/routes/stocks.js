@@ -49,7 +49,7 @@ function appendHistory(stock) {
     close: stock.price,
     volume: Math.floor(Math.random() * 100000)
   });
-  if (stock.history.length > 200) stock.history.shift();
+  if (stock.history.length > 500) stock.history.shift();
 }
 
 function simulatePrice(stock) {
@@ -173,8 +173,8 @@ router.get('/:symbol/history', (req, res) => {
   const stock = stocks.find(s => s.symbol === req.params.symbol);
   if (!stock) return res.status(404).json({ error: 'Stock not found' });
   simulatePrice(stock);
-  // Return last 100 candles for K-line
-  res.json({ symbol: stock.symbol, name: stock.name, price: stock.price, changePercent: stock.changePercent, history: stock.history.slice(-100) });
+  // Return last 500 candles for client-side K-line aggregation
+  res.json({ symbol: stock.symbol, name: stock.name, price: stock.price, changePercent: stock.changePercent, prevClose: stock.prevClose, history: stock.history.slice(-500) });
 });
 
 router.get('/:symbol/positions', authMiddleware, (req, res) => {
