@@ -130,7 +130,7 @@
               <h3>翻翻乐</h3>
               <span class="card-badge">配对有奖</span>
             </div>
-            <p class="card-desc">翻开卡片，找到配对的图案！每对奖励20金币。</p>
+            <p class="card-desc">翻开卡片，找到配对的图案！每对奖励10金币。</p>
             <div class="limit-text match-limit-text cooldown-text">本小时剩余：{{ matchRemaining }}/{{ matchHourlyLimit }}</div>
             <div class="match-body match-limit-body" v-if="matchHourlyCount >= matchHourlyLimit && matchCards.length === 0">
               <div class="match-result">
@@ -144,24 +144,28 @@
                   <div class="match-card-inner">
                     <div class="match-front">?</div>
                     <div class="match-back">
-                      <div class="match-color" :style="{ backgroundColor: card.emoji }"></div>
+                      <span class="match-emoji">{{ card.emoji }}</span>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="match-score-row">
-                <span class="match-pairs">已配对: {{ matchPairs }} / 5</span>
+                <span class="match-pairs">已配对: {{ matchPairs }} / 4</span>
+                <span class="match-flips">翻牌: {{ matchFlips }} / 10</span>
                 <span class="match-earned">获得: +{{ matchEarned }} 金币</span>
               </div>
             </div>
             <div class="match-body" v-else>
               <div class="match-result">
-                <el-icon :size="48" color="#ff4400" class="match-result-icon"><CircleCheck /></el-icon>
-                <span class="match-result-text">恭喜完成！获得 <span class="match-earned-text">+{{ matchEarned }}</span> 金币</span>
+                <el-icon :size="48" :color="matchWon ? '#ff4400' : '#999'" class="match-result-icon">
+                  <CircleCheck v-if="matchWon" /><Close v-else />
+                </el-icon>
+                <span class="match-result-text" v-if="matchWon">恭喜完成！获得 <span class="match-earned-text">+{{ matchEarned }}</span> 金币</span>
+                <span class="match-result-text" v-else>次数用完了！已配对 {{ matchPairs }} 对</span>
                 <button class="play-btn match-restart-btn" :disabled="matchHourlyCount >= matchHourlyLimit" @click="initMatchGame">{{ matchHourlyCount >= matchHourlyLimit ? '本小时次数已用完' : '再来一局' }}</button>
               </div>
             </div>
-            <button v-if="!matchGameOver && matchEarned > 0" class="play-btn match-claim-btn" @click="claimMatchReward">领取 {{ matchEarned }} 金币</button>
+            <button v-if="matchEarned > 0 && !matchClaimed" class="play-btn match-claim-btn" @click="claimMatchReward">领取 {{ matchEarned }} 金币</button>
           </div>
 
           <div class="game-card rps-game">
@@ -290,26 +294,26 @@
       </template>
     </el-dialog>
 
-    <ShareDialog ref="shareDialogRef" @shared="onShared" />
+    <ShareDialog @shared="onShared" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { List, Trophy, ShoppingBag, Coin, CircleCheck, Clock } from '@element-plus/icons-vue'
+import { List, Trophy, ShoppingBag, Coin, CircleCheck, Clock, Close } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
 import ShareDialog from '../../components/ShareDialog/index.vue'
 import { gameApi } from '../../api/games'
 import { authApi } from '../../api/auth'
 import { useUserStore } from '../../stores/user'
+import { useShareStore } from '../../stores/share'
 
 const userStore = useUserStore()
 
 const todayEarned = ref(0)
 const checkedIn = ref(false)
 const shared = ref(false)
-const shareDialogRef = ref(null)
 
 const doCheckin = async () => {
   if (!userStore.isLoggedIn) {
@@ -339,7 +343,7 @@ const doShare = () => {
     ElMessage.warning('请先登录')
     return
   }
-  shareDialogRef.value.open(window.location.origin)
+  useShareStore().openShare(window.location.origin)
 }
 
 const onShared = () => {
@@ -525,7 +529,9 @@ const matchCards = ref([])
 const matchFlipped = ref([])
 const matchPairs = ref(0)
 const matchEarned = ref(0)
+const matchFlips = ref(0)
 const matchGameOver = ref(false)
+const matchWon = ref(false)
 const matchClaimed = ref(false)
 const matchLocked = ref(false)
 
@@ -536,16 +542,19 @@ matchHourlyCount.value = parseInt(localStorage.getItem(matchHourKey()) || '0')
 
 const matchRemaining = computed(() => Math.max(0, matchHourlyLimit - matchHourlyCount.value))
 
-const matchIcons = ['#ff4400', '#1890ff', '#52c41a', '#faad14', '#722ed1']
+const matchEmojis = ['🍎', '🍊', '🍋', '🍇']
+const maxFlips = 10
+const matchTotalPairs = 4
 
 const initMatchGame = () => {
   if (matchHourlyCount.value >= matchHourlyLimit) {
     matchCards.value = []
     matchGameOver.value = false
     matchEarned.value = 0
+    matchFlips.value = 0
     return
   }
-  const deck = [...matchIcons, ...matchIcons]
+  const deck = [...matchEmojis, ...matchEmojis]
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]]
@@ -559,16 +568,29 @@ const initMatchGame = () => {
   matchFlipped.value = []
   matchPairs.value = 0
   matchEarned.value = 0
+  matchFlips.value = 0
   matchGameOver.value = false
+  matchWon.value = false
   matchClaimed.value = false
   matchLocked.value = false
 }
 
+const finishMatchGame = (won) => {
+  if (matchGameOver.value) return
+  matchGameOver.value = true
+  matchWon.value = won
+  if (won) {
+    matchHourlyCount.value++
+    localStorage.setItem(matchHourKey(), String(matchHourlyCount.value))
+  }
+}
+
 const flipCard = (idx) => {
-  if (matchLocked.value) return
+  if (matchLocked.value || matchGameOver.value) return
   const card = matchCards.value[idx]
   if (card.flipped || card.matched) return
   card.flipped = true
+  matchFlips.value++
   matchFlipped.value.push(idx)
   if (matchFlipped.value.length === 2) {
     matchLocked.value = true
@@ -579,13 +601,13 @@ const flipCard = (idx) => {
       c1.matched = true
       c2.matched = true
       matchPairs.value++
-      matchEarned.value += 20
+      matchEarned.value += 10
       matchFlipped.value = []
       matchLocked.value = false
-      if (matchPairs.value === 5) {
-        matchGameOver.value = true
-        matchHourlyCount.value++
-        localStorage.setItem(matchHourKey(), String(matchHourlyCount.value))
+      if (matchPairs.value === matchTotalPairs) {
+        finishMatchGame(true)
+      } else if (matchFlips.value >= maxFlips) {
+        finishMatchGame(false)
       }
     } else {
       setTimeout(() => {
@@ -593,8 +615,13 @@ const flipCard = (idx) => {
         c2.flipped = false
         matchFlipped.value = []
         matchLocked.value = false
+        if (matchFlips.value >= maxFlips) {
+          finishMatchGame(false)
+        }
       }, 800)
     }
+  } else if (matchFlips.value >= maxFlips) {
+    finishMatchGame(false)
   }
 }
 
@@ -1387,10 +1414,9 @@ onUnmounted(() => {
   padding: 6px;
 }
 
-.match-color {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
+.match-emoji {
+  font-size: 34px;
+  line-height: 1;
 }
 
 .match-card.matched .match-back {
@@ -1403,12 +1429,19 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   padding: 0 4px;
 }
 
 .match-pairs {
   color: #666;
   font-size: 13px;
+}
+
+.match-flips {
+  color: #ff6600;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .match-earned {

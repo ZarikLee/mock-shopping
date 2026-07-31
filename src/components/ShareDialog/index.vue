@@ -1,11 +1,11 @@
 <template>
-  <el-dialog v-model="visible" width="420px" title="分享赚金币">
+  <el-dialog v-model="showShare" width="420px" title="分享赚金币">
     <div class="share-body">
       <p class="share-tip">把淘大宝分享给好友，好友也能来玩！</p>
       <div class="share-qr">
         <img :src="qrUrl" alt="分享二维码" />
       </div>
-      <p class="share-url">{{ shareUrl }}</p>
+      <p class="share-url">{{ shareStore.shareUrl }}</p>
       <div class="share-actions">
         <el-button type="primary" @click="copyLink">复制链接</el-button>
         <el-button v-if="canNativeShare" @click="nativeShare">分享给好友</el-button>
@@ -25,36 +25,26 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useShareStore } from '../../stores/share'
 
 const emit = defineEmits(['shared'])
-
-const visible = ref(false)
-const shareUrl = ref('')
+const shareStore = useShareStore()
 const shared = ref(false)
+
+const showShare = computed({
+  get: () => shareStore.showShare,
+  set: (v) => { shareStore.showShare = v }
+})
 
 const canNativeShare = computed(() => typeof navigator !== 'undefined' && !!navigator.share)
 
-const qrUrl = computed(() => `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(shareUrl.value)}&size=200x200`)
-
-const open = (url) => {
-  shareUrl.value = url
-  shared.value = false
-  visible.value = true
-}
-
-const close = () => {
-  shared.value = false
-}
-
-watch(visible, (val) => {
-  if (!val) close()
-})
+const qrUrl = computed(() => `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(shareStore.shareUrl)}&size=200x200`)
 
 const copyLink = async () => {
   try {
-    await navigator.clipboard.writeText(shareUrl.value)
+    await navigator.clipboard.writeText(shareStore.shareUrl)
     ElMessage.success('链接已复制，快去分享吧')
   } catch {
     ElMessage.warning('复制失败，请手动复制链接')
@@ -63,7 +53,7 @@ const copyLink = async () => {
 
 const nativeShare = async () => {
   try {
-    await navigator.share({ title: '淘大宝', text: '快来淘大宝玩吧！', url: shareUrl.value })
+    await navigator.share({ title: '淘大宝', text: '快来淘大宝玩吧！', url: shareStore.shareUrl })
   } catch {
     // 用户取消或分享失败，不发放奖励
   }
