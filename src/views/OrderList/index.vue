@@ -98,6 +98,9 @@ const router = useRouter()
 const orderStore = useOrderStore()
 const loading = ref(true)
 
+onMounted(() => {
+  document.title = '我的订单 - 淘大宝'
+})
 onMounted(async () => {
   loading.value = true
   try {

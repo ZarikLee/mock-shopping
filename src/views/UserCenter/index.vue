@@ -521,6 +521,7 @@ const fetchOrders = async () => {
 }
 
 onMounted(() => {
+  document.title = '个人中心 - 淘大宝'
   if (userStore.userInfo) {
     profileForm.nickname = userStore.userInfo.nickname || ''
     profileForm.phone = userStore.userInfo.phone || ''

@@ -180,7 +180,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Location, ShoppingBag, Van, CreditCard, Ticket, Coin, Phone } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
@@ -205,6 +205,8 @@ const paymentType = ref(1)
 
 // 优惠券
 const selectedCouponId = ref(0)
+
+onMounted(() => { document.title = '确认订单 - 淘大宝' })
 
 // 运费
 const deliveryFee = computed(() => deliveryType.value === 2 ? 10 : 0)

@@ -148,6 +148,7 @@ const cartStore = useCartStore()
 const loading = ref(true)
 
 onMounted(() => {
+  document.title = '购物车 - 淘大宝'
   setTimeout(() => {
     loading.value = false
   }, 300)

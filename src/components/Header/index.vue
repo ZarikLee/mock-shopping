@@ -88,7 +88,7 @@
 
     <div class="header-nav" v-if="!isMobile">
       <div class="container">
-        <div class="nav-all">
+        <div class="nav-all" @click="router.push('/products')">
           <span>全部商品分类</span>
           <el-icon><ArrowDown /></el-icon>
         </div>

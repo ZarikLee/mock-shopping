@@ -135,6 +135,7 @@ const router = useRouter()
 const loading = ref(true)
 
 onMounted(() => {
+  document.title = '淘大宝 - 快乐购物'
   startCountdown()
   setTimeout(() => {
     loading.value = false

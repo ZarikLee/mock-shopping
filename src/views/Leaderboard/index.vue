@@ -134,7 +134,10 @@ function switchTab(key) {
   fetchData()
 }
 
-onMounted(fetchData)
+onMounted(() => {
+  document.title = '全服排行榜 - 淘大宝'
+  fetchData()
+})
 </script>
 
 <style scoped>

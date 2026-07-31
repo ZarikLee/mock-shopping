@@ -529,6 +529,7 @@ const formatTime = (t) => {
 }
 
 onMounted(() => {
+  document.title = '赚米中心 - 淘大宝'
   if (userStore.isLoggedIn) {
     loadCheckinStatus()
     loadRecords()

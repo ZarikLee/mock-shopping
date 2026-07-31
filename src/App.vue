@@ -2,7 +2,11 @@
   <div id="app" :class="{ 'is-mobile': isMobile }">
     <Header />
     <main class="main-content">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
     <Footer />
     <LoginDialog />
@@ -50,6 +54,13 @@ a {
 .is-mobile .main-content {
   padding-top: 56px;
   padding-bottom: 60px;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 
 ul, li {

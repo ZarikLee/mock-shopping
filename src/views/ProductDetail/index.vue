@@ -244,6 +244,7 @@ const discountPercent = computed(() => {
 })
 
 onMounted(() => {
+  document.title = '商品详情 - 淘大宝'
   if (product.value?.specs?.length) {
     selectedSpec.value = product.value.specs[0]
   }

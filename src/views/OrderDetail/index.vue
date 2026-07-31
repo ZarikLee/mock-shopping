@@ -145,6 +145,9 @@ const orderStore = useOrderStore()
 
 const order = ref(null)
 
+onMounted(() => {
+  document.title = '订单详情 - 淘大宝'
+})
 onMounted(async () => {
   try {
     order.value = await orderStore.getOrder(Number(route.params.id))

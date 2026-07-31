@@ -111,6 +111,8 @@ const payPassword = ref('')
 const paying = ref(false)
 const paymentSuccess = ref(false)
 
+onMounted(() => { document.title = '支付 - 淘大宝' })
+
 const order = computed(() => {
   return orderStore.getOrder(Number(route.params.orderId))
 })

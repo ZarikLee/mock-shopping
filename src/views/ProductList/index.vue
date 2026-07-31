@@ -319,6 +319,7 @@ const handleCurrentChange = () => {
 }
 
 onMounted(() => {
+  document.title = '商品列表 - 淘大宝'
   setTimeout(() => {
     loading.value = false
   }, 300)
