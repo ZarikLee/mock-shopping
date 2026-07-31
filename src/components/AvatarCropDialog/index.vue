@@ -18,10 +18,10 @@
           @touchstart.prevent="startDrag($event)"
         >
           <div class="crop-grid"></div>
-          <div class="crop-handle corner tl" @mousedown.prevent="startResize($event, 'tl')" @touchstart.prevent="startResize($event, 'tl')"></div>
-          <div class="crop-handle corner tr" @mousedown.prevent="startResize($event, 'tr')" @touchstart.prevent="startResize($event, 'tr')"></div>
-          <div class="crop-handle corner bl" @mousedown.prevent="startResize($event, 'bl')" @touchstart.prevent="startResize($event, 'bl')"></div>
-          <div class="crop-handle corner br" @mousedown.prevent="startResize($event, 'br')" @touchstart.prevent="startResize($event, 'br')"></div>
+          <div class="crop-handle corner tl" @mousedown.stop.prevent="startResize($event, 'tl')" @touchstart.stop.prevent="startResize($event, 'tl')"></div>
+          <div class="crop-handle corner tr" @mousedown.stop.prevent="startResize($event, 'tr')" @touchstart.stop.prevent="startResize($event, 'tr')"></div>
+          <div class="crop-handle corner bl" @mousedown.stop.prevent="startResize($event, 'bl')" @touchstart.stop.prevent="startResize($event, 'bl')"></div>
+          <div class="crop-handle corner br" @mousedown.stop.prevent="startResize($event, 'br')" @touchstart.stop.prevent="startResize($event, 'br')"></div>
           <div class="crop-size-label">{{ Math.round(boxSize / scale) }}px</div>
         </div>
       </div>

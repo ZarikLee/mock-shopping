@@ -15,7 +15,7 @@
           <div class="profile-header-info">
             <div class="nickname-row">
               <span class="nickname">{{ userStore.userInfo?.nickname || '未登录' }}</span>
-              <el-tag :type="levelType" size="small" effect="dark" class="level-badge">{{ levelName }}</el-tag>
+              <span class="level-badge">{{ levelName }}</span>
               <span class="exp-badge">Lv.{{ userStore.level }}</span>
             </div>
             <div class="profile-uid">
@@ -36,6 +36,11 @@
                 :show-text="false"
               />
             </div>
+          </div>
+          <div class="member-criteria">
+            <span class="mc-label">会员等级（按余额累计）</span>
+            <span class="mc-detail" v-if="nextMemberLevel">再存 ¥{{ nextMemberNeed }} 升级为{{ nextMemberLevel.name }}</span>
+            <span class="mc-detail" v-else>已达最高等级</span>
           </div>
           <div class="profile-stats">
             <div class="stat-item" @click="switchMenu('balance')">
@@ -367,10 +372,11 @@ const onAvatarCropped = async (croppedBase64) => {
 }
 
 const levelConfig = [
-  { min: 0, name: '普通会员', type: 'info' },
-  { min: 100, name: '银牌会员', type: 'success' },
-  { min: 500, name: '金牌会员', type: 'warning' },
-  { min: 2000, name: '钻石会员', type: 'danger' },
+  { min: 0, name: '普通会员' },
+  { min: 100, name: '银牌会员' },
+  { min: 500, name: '金牌会员' },
+  { min: 2000, name: '钻石会员' },
+  { min: 5000, name: '至尊会员' },
 ]
 const levelName = computed(() => {
   const pts = userStore.balance
@@ -380,13 +386,18 @@ const levelName = computed(() => {
   }
   return name
 })
-const levelType = computed(() => {
+// 下一个会员等级及所需金额
+const nextMemberLevel = computed(() => {
   const pts = userStore.balance
-  let t = 'info'
+  let next = null
   for (const l of levelConfig) {
-    if (pts >= l.min) t = l.type
+    if (pts < l.min) { next = l; break }
   }
-  return t
+  return next
+})
+const nextMemberNeed = computed(() => {
+  if (!nextMemberLevel.value) return 0
+  return (nextMemberLevel.value.min - userStore.balance).toLocaleString()
 })
 
 const levelProgress = computed(() => {
@@ -713,7 +724,7 @@ onMounted(() => {
   margin: 0 auto 14px;
   cursor: pointer;
   border-radius: 50%;
-  border: 3px solid #ff4400;
+  border: 3px solid #e0e0e0;
   overflow: hidden;
 }
 
@@ -764,8 +775,32 @@ onMounted(() => {
 
 .level-badge {
   flex-shrink: 0;
+  background: #f5f5f5;
+  color: #666;
   border-radius: 10px;
-  padding: 0 8px;
+  padding: 1px 10px;
+  font-size: 12px;
+}
+
+.member-criteria {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mc-label {
+  font-size: 11px;
+  color: #999;
+}
+
+.mc-detail {
+  font-size: 12px;
+  color: #ff4400;
+  font-weight: 600;
 }
 
 .exp-badge {
@@ -1410,7 +1445,7 @@ onMounted(() => {
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
-  border: 3px solid #ff4400;
+  border: 3px solid #e0e0e0;
   margin-bottom: 6px;
 }
 
