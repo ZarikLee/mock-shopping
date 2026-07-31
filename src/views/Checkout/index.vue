@@ -25,9 +25,33 @@
             <div class="address-detail">
               {{ addr.province }}{{ addr.city }}{{ addr.district }}{{ addr.detail }}
             </div>
+            <div class="address-actions">
+              <el-button type="primary" link size="small" @click.stop="editAddress(addr)">编辑</el-button>
+              <el-button type="danger" link size="small" @click.stop="deleteAddress(addr.id)">删除</el-button>
+            </div>
+          </div>
+          <div class="add-address-btn" @click="showAddressDialog = true">
+            <el-icon><Plus /></el-icon>
+            <span>新增收货地址</span>
           </div>
         </div>
       </div>
+
+      <el-dialog v-model="showAddressDialog" :title="editingAddress ? '编辑地址' : '新增地址'" width="500px">
+        <el-form :model="addressForm" label-width="80px">
+          <el-form-item label="收货人"><el-input v-model="addressForm.name" /></el-form-item>
+          <el-form-item label="手机号"><el-input v-model="addressForm.phone" /></el-form-item>
+          <el-form-item label="省份"><el-input v-model="addressForm.province" /></el-form-item>
+          <el-form-item label="城市"><el-input v-model="addressForm.city" /></el-form-item>
+          <el-form-item label="区县"><el-input v-model="addressForm.district" /></el-form-item>
+          <el-form-item label="详细地址"><el-input v-model="addressForm.detail" /></el-form-item>
+          <el-form-item label="默认地址"><el-switch v-model="addressForm.isDefault" /></el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="showAddressDialog = false">取消</el-button>
+          <el-button type="primary" @click="saveAddress">保存</el-button>
+        </template>
+      </el-dialog>
 
       <!-- 商品清单 -->
       <div class="section goods-section">
@@ -180,13 +204,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { Location, ShoppingBag, Van, CreditCard, Ticket, Coin, Phone } from '@element-plus/icons-vue'
+import { Location, ShoppingBag, Van, CreditCard, Ticket, Coin, Phone, Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
 import { useOrderStore } from '../../stores/order'
 import { ElMessage } from 'element-plus'
+import { addressApi } from '../../api/addresses'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -205,6 +230,66 @@ const paymentType = ref(1)
 
 // 优惠券
 const selectedCouponId = ref(0)
+
+// 地址管理
+const showAddressDialog = ref(false)
+const editingAddress = ref(null)
+const addressForm = reactive({ name: '', phone: '', province: '', city: '', district: '', detail: '', isDefault: false })
+
+const resetForm = () => {
+  addressForm.name = ''
+  addressForm.phone = ''
+  addressForm.province = ''
+  addressForm.city = ''
+  addressForm.district = ''
+  addressForm.detail = ''
+  addressForm.isDefault = false
+}
+
+const editAddress = (addr) => {
+  editingAddress.value = addr
+  addressForm.name = addr.name
+  addressForm.phone = addr.phone
+  addressForm.province = addr.province
+  addressForm.city = addr.city
+  addressForm.district = addr.district
+  addressForm.detail = addr.detail
+  addressForm.isDefault = addr.isDefault
+  showAddressDialog.value = true
+}
+
+const saveAddress = async () => {
+  try {
+    if (editingAddress.value) {
+      await addressApi.update(editingAddress.value.id, { ...addressForm })
+    } else {
+      await addressApi.create({ ...addressForm })
+    }
+    showAddressDialog.value = false
+    editingAddress.value = null
+    resetForm()
+    await userStore.fetchUserInfo()
+    const addr = userStore.userInfo?.addresses?.find(a => a.isDefault) || userStore.userInfo?.addresses?.[0]
+    if (addr) selectedAddressId.value = addr.id
+    ElMessage.success(editingAddress.value ? '地址更新成功' : '地址添加成功')
+  } catch (e) {
+    ElMessage.error(e?.message || '操作失败')
+  }
+}
+
+const deleteAddress = async (id) => {
+  try {
+    await addressApi.delete(id)
+    await userStore.fetchUserInfo()
+    if (selectedAddressId.value === id) {
+      const addr = userStore.userInfo?.addresses?.[0]
+      selectedAddressId.value = addr?.id || 0
+    }
+    ElMessage.success('地址删除成功')
+  } catch (e) {
+    ElMessage.error(e?.message || '删除失败')
+  }
+}
 
 onMounted(() => { document.title = '确认订单 - 淘大宝' })
 
@@ -306,6 +391,7 @@ const submitOrder = async () => {
   padding: 15px;
   cursor: pointer;
   transition: all 0.3s;
+  position: relative;
 }
 
 .address-item:hover {
@@ -332,6 +418,37 @@ const submitOrder = async () => {
 .address-detail {
   font-size: 14px;
   color: #666;
+}
+
+.address-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.add-address-btn {
+  border: 2px dashed #e8e8e8;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #999;
+  font-size: 14px;
+  min-height: 100px;
+}
+
+.add-address-btn:hover {
+  border-color: #ff4400;
+  color: #ff4400;
+}
+
+.add-address-btn .el-icon {
+  font-size: 24px;
 }
 
 /* 商品 */

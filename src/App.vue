@@ -10,6 +10,7 @@
     </main>
     <Footer />
     <LoginDialog />
+    <DisclaimerDialog />
   </div>
 </template>
 
@@ -17,9 +18,25 @@
 import Header from './components/Header/index.vue'
 import Footer from './components/Footer/index.vue'
 import LoginDialog from './components/LoginDialog/index.vue'
+import DisclaimerDialog from './components/DisclaimerDialog/index.vue'
 import { useDevice } from './utils/device.js'
+import { onMounted } from 'vue'
+import { useAuthStore } from './stores/auth'
+import { useUserStore } from './stores/user'
 
 const { isMobile } = useDevice()
+const authStore = useAuthStore()
+const userStore = useUserStore()
+
+onMounted(() => {
+  const hasVisited = localStorage.getItem('taobao_has_visited')
+  if (!hasVisited) {
+    localStorage.setItem('taobao_has_visited', 'true')
+    if (!userStore.isLoggedIn) {
+      setTimeout(() => authStore.openLogin(), 500)
+    }
+  }
+})
 </script>
 
 <style>
