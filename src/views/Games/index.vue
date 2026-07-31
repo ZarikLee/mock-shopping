@@ -144,7 +144,7 @@
                   <div class="match-card-inner">
                     <div class="match-front">?</div>
                     <div class="match-back">
-                      <span class="match-emoji">{{ card.emoji }}</span>
+                      <div class="match-color-dot" :style="{ background: card.color }"></div>
                     </div>
                   </div>
                 </div>
@@ -180,12 +180,18 @@
                 <template v-if="rpsResult">
                   <div class="rps-choice-row">
                     <div class="rps-choice">
-                      <span class="rps-choice-emoji">{{ RPS_EMOJIS[rpsPlayerChoice] }}</span>
+                      <span class="rps-choice-emoji">
+                        <span v-if="rpsPlayerChoice === 'rock'" class="rock-dot"></span>
+                        <el-icon v-else :size="36"><component :is="RPS_ICONS[rpsPlayerChoice]" /></el-icon>
+                      </span>
                       <span class="rps-choice-label">你出{{ RPS_NAMES[rpsPlayerChoice] }}</span>
                     </div>
                     <span class="rps-vs">VS</span>
                     <div class="rps-choice">
-                      <span class="rps-choice-emoji">{{ RPS_EMOJIS[rpsComputerChoice] }}</span>
+                      <span class="rps-choice-emoji">
+                        <span v-if="rpsComputerChoice === 'rock'" class="rock-dot"></span>
+                        <el-icon v-else :size="36"><component :is="RPS_ICONS[rpsComputerChoice]" /></el-icon>
+                      </span>
                       <span class="rps-choice-label">电脑出{{ RPS_NAMES[rpsComputerChoice] }}</span>
                     </div>
                   </div>
@@ -199,13 +205,13 @@
               </div>
               <div class="rps-buttons">
                 <button class="rps-btn" :disabled="rpsPlaying || !canPlayRps" @click="playRps('rock')">
-                  <span class="rps-emoji">✊</span><span>石头</span>
+                  <span class="rps-symbol rock-dot"></span><span>石头</span>
                 </button>
                 <button class="rps-btn" :disabled="rpsPlaying || !canPlayRps" @click="playRps('paper')">
-                  <span class="rps-emoji">✋</span><span>布</span>
+                  <el-icon :size="30" class="rps-symbol"><Document /></el-icon><span>布</span>
                 </button>
                 <button class="rps-btn" :disabled="rpsPlaying || !canPlayRps" @click="playRps('scissors')">
-                  <span class="rps-emoji">✌️</span><span>剪刀</span>
+                  <el-icon :size="30" class="rps-symbol"><Scissor /></el-icon><span>剪刀</span>
                 </button>
               </div>
             </div>
@@ -220,7 +226,9 @@
             <div class="limit-text dice-limit-text cooldown-text">本小时剩余次数：{{ diceRemaining }}/{{ diceHourlyLimit }}</div>
             <div class="dice-body">
               <div class="dice-display" :class="diceResult">
-                <span class="dice-face">{{ diceValue ? DICE_FACES[diceValue - 1] : '🎲' }}</span>
+                <span class="dice-face">
+                  <span class="dice-square" :class="{ idle: !diceValue }">{{ diceValue || '?' }}</span>
+                </span>
                 <span class="dice-label">{{ diceResultText }}</span>
               </div>
               <button class="play-btn dice-btn" :disabled="!canPlayDice || diceRolling" @click="rollDice">
@@ -301,7 +309,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { List, Trophy, ShoppingBag, Coin, CircleCheck, Clock, Close } from '@element-plus/icons-vue'
+import { List, Trophy, ShoppingBag, Coin, CircleCheck, Clock, Close, Document, Scissor } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
 import ShareDialog from '../../components/ShareDialog/index.vue'
 import { gameApi } from '../../api/games'
@@ -542,7 +550,7 @@ matchHourlyCount.value = parseInt(localStorage.getItem(matchHourKey()) || '0')
 
 const matchRemaining = computed(() => Math.max(0, matchHourlyLimit - matchHourlyCount.value))
 
-const matchEmojis = ['🍎', '🍊', '🍋', '🍇']
+const matchColors = ['#FF6B6B', '#FFD93D', '#4D96FF', '#2EC4B6']
 const maxFlips = 10
 const matchTotalPairs = 4
 
@@ -554,13 +562,13 @@ const initMatchGame = () => {
     matchFlips.value = 0
     return
   }
-  const deck = [...matchEmojis, ...matchEmojis]
+  const deck = [...matchColors, ...matchColors]
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]]
   }
-  matchCards.value = deck.map((emoji, idx) => ({
-    emoji,
+  matchCards.value = deck.map((color, idx) => ({
+    color,
     id: idx,
     flipped: false,
     matched: false
@@ -597,7 +605,7 @@ const flipCard = (idx) => {
     const [i1, i2] = matchFlipped.value
     const c1 = matchCards.value[i1]
     const c2 = matchCards.value[i2]
-    if (c1.emoji === c2.emoji) {
+    if (c1.color === c2.color) {
       c1.matched = true
       c2.matched = true
       matchPairs.value++
@@ -660,7 +668,7 @@ const rpsRemaining = computed(() => Math.max(0, rpsHourlyLimit - rpsHourlyCount.
 const canPlayRps = computed(() => userStore.isLoggedIn && userStore.balance >= RPS_BET && rpsRemaining.value > 0)
 
 const RPS_CHOICES = ['rock', 'paper', 'scissors']
-const RPS_EMOJIS = { rock: '✊', paper: '✋', scissors: '✌️' }
+const RPS_ICONS = { paper: 'Document', scissors: 'Scissor' }
 const RPS_NAMES = { rock: '石头', paper: '布', scissors: '剪刀' }
 const rpsPlaying = ref(false)
 const rpsResult = ref('')
@@ -728,7 +736,6 @@ diceHourlyCount.value = parseInt(localStorage.getItem(diceHourKeyNow) || '0')
 const diceRemaining = computed(() => Math.max(0, diceHourlyLimit - diceHourlyCount.value))
 const canPlayDice = computed(() => userStore.isLoggedIn && userStore.balance >= DICE_BET && diceRemaining.value > 0)
 
-const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
 const diceValue = ref(0)
 const diceRolling = ref(false)
 const diceResult = ref('')
@@ -1414,9 +1421,11 @@ onUnmounted(() => {
   padding: 6px;
 }
 
-.match-emoji {
-  font-size: 34px;
-  line-height: 1;
+.match-color-dot {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: inset -4px -4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .match-card.matched .match-back {
@@ -1537,8 +1546,20 @@ onUnmounted(() => {
 }
 
 .rps-choice-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 36px;
   line-height: 1;
+  min-height: 36px;
+}
+
+.rock-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ff4400;
+  box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.25);
 }
 
 .rps-choice-label {
@@ -1616,9 +1637,15 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-.rps-btn .rps-emoji {
-  font-size: 26px;
+.rps-btn .rps-symbol {
+  font-size: 30px;
   line-height: 1;
+  display: flex;
+}
+
+.rps-btn .rock-dot {
+  width: 26px;
+  height: 26px;
 }
 
 .dice-body {
@@ -1653,8 +1680,29 @@ onUnmounted(() => {
 }
 
 .dice-face {
-  font-size: 56px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dice-square {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff4400, #ff6600);
+  color: #fff;
+  font-size: 30px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset -4px -4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.dice-square.idle {
+  background: #eee;
+  color: #999;
+  box-shadow: none;
 }
 
 .dice-label {

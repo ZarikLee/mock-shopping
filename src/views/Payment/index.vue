@@ -121,9 +121,9 @@ const paymentSuccess = ref(false)
 const payDialogVisible = ref(false)
 
 const methodBrands = {
-  alipay: { name: '支付宝', icon: '💙' },
-  wechat: { name: '微信支付', icon: '💚' },
-  balance: { name: '余额支付', icon: '🧡' }
+  alipay: { name: '支付宝', icon: 'Wallet' },
+  wechat: { name: '微信支付', icon: 'ChatDotRound' },
+  balance: { name: '余额支付', icon: 'Coin' }
 }
 
 const payBrandName = computed(() => methodBrands[selectedMethod.value]?.name || '支付')

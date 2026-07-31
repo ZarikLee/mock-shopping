@@ -2,7 +2,7 @@
   <el-dialog :model-value="visible" width="380px" :close-on-click-modal="false" :show-close="false" top="25vh">
     <div class="pay-dialog">
       <div class="pay-brand">
-        <span class="pay-brand-icon">{{ brandIcon }}</span>
+        <el-icon v-if="brandIcon" :size="28" color="#ff4400" class="pay-brand-icon"><component :is="brandIcon" /></el-icon>
         <span class="pay-brand-name">{{ brandName }}</span>
       </div>
       <div class="pay-amount">
@@ -22,7 +22,7 @@
         />
       </div>
       <p class="pay-tip">请输入6位支付密码</p>
-      <p class="pay-disclaimer">⚠️ 仅供游戏模拟，不涉及真实资金，请勿输入真实支付密码</p>
+      <p class="pay-disclaimer">仅供游戏模拟，不涉及真实资金，请勿输入真实支付密码</p>
       <div class="pay-actions">
         <el-button @click="cancel">取消</el-button>
         <el-button type="primary" :disabled="password.length !== 6" @click="confirm">确认支付</el-button>
@@ -105,8 +105,7 @@ const confirm = () => {
 }
 
 .pay-brand-icon {
-  font-size: 28px;
-  line-height: 1;
+  display: flex;
 }
 
 .pay-brand-name {

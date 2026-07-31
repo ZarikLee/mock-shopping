@@ -9,7 +9,7 @@
       </div>
 
       <div class="level-summary" v-if="userStore.isLoggedIn">
-        <span class="level-icon">🏆</span>
+        <el-icon :size="40" color="#ff4400" class="level-icon"><Trophy /></el-icon>
         <div class="level-info">
           <span class="level-name">Lv.{{ userStore.level }}</span>
           <el-progress
@@ -30,7 +30,11 @@
           class="achievement-card"
           :class="{ unlocked: isUnlocked(item.id) }"
         >
-          <div class="card-icon">{{ isUnlocked(item.id) ? item.icon : '❓' }}</div>
+          <div class="card-icon">
+            <el-icon :size="40" :color="isUnlocked(item.id) ? '#ff4400' : '#999'">
+              <component :is="isUnlocked(item.id) ? item.icon : 'Lock'" />
+            </el-icon>
+          </div>
           <div class="card-name">{{ isUnlocked(item.id) ? item.name : '未解锁' }}</div>
           <div class="card-desc">{{ isUnlocked(item.id) ? item.desc : '???' }}</div>
         </div>
@@ -41,6 +45,7 @@
 
 <script setup>
 import { computed, onMounted } from 'vue'
+import { Trophy, Lock } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
 import { useUserStore } from '../../stores/user'
 import { authApi } from '../../api/auth'
@@ -116,7 +121,7 @@ onMounted(async () => {
 }
 
 .level-icon {
-  font-size: 36px;
+  display: flex;
 }
 
 .level-info {
@@ -171,7 +176,8 @@ onMounted(async () => {
 }
 
 .card-icon {
-  font-size: 40px;
+  display: flex;
+  justify-content: center;
   margin-bottom: 12px;
 }
 

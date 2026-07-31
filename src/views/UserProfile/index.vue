@@ -61,7 +61,11 @@
                 class="achievement-card"
                 :class="{ unlocked: isUnlocked(item.id) }"
               >
-                <div class="card-icon">{{ isUnlocked(item.id) ? item.icon : '❓' }}</div>
+                <div class="card-icon">
+                  <el-icon :size="32" :color="isUnlocked(item.id) ? '#ff4400' : '#999'">
+                    <component :is="isUnlocked(item.id) ? item.icon : 'Lock'" />
+                  </el-icon>
+                </div>
                 <div class="card-name">{{ isUnlocked(item.id) ? item.name : '未解锁' }}</div>
               </div>
             </div>
@@ -80,7 +84,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { User, Location, Calendar, Edit, UserFilled } from '@element-plus/icons-vue'
+import { User, Location, Calendar, Edit, UserFilled, Lock } from '@element-plus/icons-vue'
 import BackButton from '../../components/BackButton/index.vue'
 import { userApi } from '../../api/users'
 import { useUserStore } from '../../stores/user'
@@ -318,6 +322,8 @@ onMounted(() => {
 }
 
 .card-icon {
+  display: flex;
+  justify-content: center;
   font-size: 32px;
   margin-bottom: 8px;
 }
