@@ -11,8 +11,6 @@
             <span class="separator">|</span>
             <span class="balance">余额：¥{{ userStore.balance.toFixed(2) }}</span>
             <span class="separator">|</span>
-            <span class="points">积分：{{ userStore.points }}</span>
-            <span class="separator">|</span>
             <router-link to="/user" class="link">个人中心</router-link>
             <span class="separator">|</span>
             <span class="link logout" @click="handleLogout">退出</span>
@@ -293,8 +291,7 @@ const toggleMobileSearch = () => {
   color: #666;
 }
 
-.top-right .balance,
-.top-right .points {
+.top-right .balance {
   color: #ff4400;
 }
 

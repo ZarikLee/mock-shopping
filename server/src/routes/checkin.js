@@ -10,12 +10,12 @@ router.post('/', authMiddleware, (req, res) => {
   if (existing) {
     return res.status(400).json({ error: 'Already checked in today' });
   }
-  const points = Math.floor(Math.random() * 41) + 10;
+  const amount = Math.floor(Math.random() * 41) + 10;
   const now = new Date().toISOString();
-  insert('checkins', { userId: req.user.id, date: today, points, created_at: now });
+  insert('checkins', { userId: req.user.id, date: today, points: amount, created_at: now });
   const user = queryOne('users', { id: req.user.id });
-  update('users', req.user.id, { points: (user.points || 0) + points });
-  res.json({ points, message: `Checked in! Earned ${points} points today.` });
+  update('users', req.user.id, { balance: (user.balance || 0) + amount });
+  res.json({ balance: amount, message: `签到成功！获得 ${amount} 金币` });
 });
 
 router.get('/status', authMiddleware, (req, res) => {

@@ -75,7 +75,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { Trophy, Wallet, Star, ShoppingCart, DataAnalysis } from '@element-plus/icons-vue'
+import { Trophy, Wallet, ShoppingCart, DataAnalysis } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
 import { leaderboardApi } from '../../api/leaderboard'
 
@@ -84,7 +84,6 @@ const currentUserId = computed(() => userStore.userInfo?.id)
 
 const tabs = [
   { key: 'balance', label: '财富榜', icon: 'Wallet' },
-  { key: 'points', label: '积分榜', icon: 'Star' },
   { key: 'spending', label: '消费榜', icon: 'ShoppingCart' }
 ]
 
@@ -93,7 +92,7 @@ const list = ref([])
 const loading = ref(false)
 
 const valueLabel = computed(() => {
-  const map = { balance: '余额', points: '积分', spending: '总消费' }
+  const map = { balance: '余额', spending: '总消费' }
   return map[activeTab.value] || ''
 })
 
@@ -103,7 +102,6 @@ const currentUserRank = computed(() => {
 })
 
 function formatValue(item) {
-  if (activeTab.value === 'points') return item.points?.toLocaleString() || '0'
   const val = activeTab.value === 'balance' ? item.balance : item.totalSpent
   return '¥' + (val !== undefined ? Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00')
 }
@@ -113,7 +111,6 @@ async function fetchData() {
   try {
     const apiMap = {
       balance: leaderboardApi.getByBalance,
-      points: leaderboardApi.getByPoints,
       spending: leaderboardApi.getBySpending
     }
     const res = await apiMap[activeTab.value]()

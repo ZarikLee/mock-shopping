@@ -4,8 +4,8 @@
       <div class="container">
         <div class="points-card">
           <div class="points-info">
-            <span class="points-label">我的积分</span>
-            <span class="points-value">{{ userStore.points }}</span>
+            <span class="points-label">我的余额</span>
+            <span class="points-value">{{ userStore.balance }}</span>
           </div>
           <div class="today-earned">
             <span>今日赚取</span>
@@ -28,7 +28,7 @@
             </div>
             <div class="task-body">
               <span class="task-name">每日签到</span>
-              <span class="task-desc">{{ checkedIn ? '今日已签到' : '签到赚取积分' }}</span>
+              <span class="task-desc">{{ checkedIn ? '今日已签到' : '签到赚取金币' }}</span>
             </div>
             <button class="task-btn" :class="{ done: checkedIn }" :disabled="checkedIn" @click="doCheckin">
               {{ checkedIn ? '已签到' : '签到' }}
@@ -40,7 +40,7 @@
             </div>
             <div class="task-body">
               <span class="task-name">浏览商品</span>
-              <span class="task-desc">去浏览5件商品赚10积分</span>
+              <span class="task-desc">去浏览5件商品赚10金币</span>
             </div>
             <button class="task-btn" :class="{ done: browsed }" :disabled="browsed" @click="doBrowse">
               {{ browsed ? '已领取' : '去浏览' }}
@@ -51,8 +51,8 @@
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             </div>
             <div class="task-body">
-              <span class="task-name">分享赚积分</span>
-              <span class="task-desc">分享给好友赚5积分</span>
+              <span class="task-name">分享赚金币</span>
+              <span class="task-desc">分享给好友赚5金币</span>
             </div>
             <button class="task-btn" :class="{ done: shared }" :disabled="shared" @click="doShare">
               {{ shared ? '已领取' : '分享' }}
@@ -70,9 +70,9 @@
           <div class="game-card wheel-game">
             <div class="card-header">
               <h3>幸运转盘</h3>
-              <span class="card-badge">消耗10积分</span>
+              <span class="card-badge">消耗10金币</span>
             </div>
-            <p class="card-desc">转动转盘，赢取丰厚积分奖励！最高可赢500积分！</p>
+            <p class="card-desc">转动转盘，赢取丰厚金币奖励！最高可赢500金币！</p>
             <div class="wheel-wrapper">
               <div class="wheel-pointer">
                 <svg viewBox="0 0 24 24" width="32" height="32"><polygon points="12,2 4,18 12,14 20,18" fill="#ff4400" stroke="#fff" stroke-width="1.5"/></svg>
@@ -100,12 +100,12 @@
               <h3>猜数字</h3>
               <span class="card-badge">双倍奖励</span>
             </div>
-            <p class="card-desc">下注积分，猜随机数字的大小，猜中赢得双倍积分！</p>
+            <p class="card-desc">下注金币，猜随机数字的大小，猜中赢得双倍金币！</p>
             <div class="guess-body">
               <div class="bet-area">
                 <span class="bet-label">下注</span>
-                <el-input-number v-model="betAmount" :min="10" :step="10" :max="userStore.points" :disabled="guessing" controls-position="right" size="large" />
-                <span class="bet-hint" v-if="userStore.points < 10">积分不足！</span>
+                <el-input-number v-model="betAmount" :min="10" :step="10" :max="userStore.balance" :disabled="guessing" controls-position="right" size="large" />
+                <span class="bet-hint" v-if="userStore.balance < 10">金币不足！</span>
               </div>
               <div class="number-display" :class="{ revealed: guessRevealed, win: guessResult === 'win', lose: guessResult === 'lose' }">
                 <span class="number-value">{{ guessRevealed ? randomNumber : '?' }}</span>
@@ -118,15 +118,15 @@
                 </div>
                 <div class="result-text">
                   <span class="result-title" :class="guessResult">{{ guessResult === 'win' ? '恭喜猜中！' : '很遗憾猜错了' }}</span>
-                  <span class="result-score" :class="guessResult">{{ guessResult === 'win' ? '+' : '' }}{{ lastGuessScore }} 积分</span>
+                  <span class="result-score" :class="guessResult">{{ guessResult === 'win' ? '+' : '' }}{{ lastGuessScore }} 金币</span>
                 </div>
                 <button class="play-btn guess-again-btn" @click="resetGuess">再来一局</button>
               </div>
               <div class="guess-buttons" v-else>
-                <button class="guess-btn high" :disabled="!userStore.isLoggedIn || guessing || userStore.points < 10" @click="makeGuess('high')">
+                <button class="guess-btn high" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10" @click="makeGuess('high')">
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>高（大于50）
                 </button>
-                <button class="guess-btn low" :disabled="!userStore.isLoggedIn || guessing || userStore.points < 10" @click="makeGuess('low')">
+                <button class="guess-btn low" :disabled="!userStore.isLoggedIn || guessing || userStore.balance < 10" @click="makeGuess('low')">
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>低（小于等于50）
                 </button>
               </div>
@@ -138,7 +138,7 @@
               <h3>翻翻乐</h3>
               <span class="card-badge">配对有奖</span>
             </div>
-            <p class="card-desc">翻开卡片，找到配对的图案！每对奖励20积分。</p>
+            <p class="card-desc">翻开卡片，找到配对的图案！每对奖励20金币。</p>
             <div class="match-body" v-if="!matchGameOver">
               <div class="match-grid">
                 <div v-for="(card, i) in matchCards" :key="i" class="match-card" :class="{ flipped: card.flipped || card.matched, matched: card.matched }" @click="flipCard(i)">
@@ -152,17 +152,17 @@
               </div>
               <div class="match-score-row">
                 <span class="match-pairs">已配对: {{ matchPairs }} / 2</span>
-                <span class="match-earned">获得: +{{ matchEarned }} 积分</span>
+                <span class="match-earned">获得: +{{ matchEarned }} 金币</span>
               </div>
             </div>
             <div class="match-body" v-else>
               <div class="match-result">
                 <el-icon :size="48" color="#ff4400" class="match-result-icon"><CircleCheck /></el-icon>
-                <span class="match-result-text">恭喜完成！获得 {{ matchEarned }} 积分</span>
+                <span class="match-result-text">恭喜完成！获得 {{ matchEarned }} 金币</span>
                 <button class="play-btn match-restart-btn" @click="initMatchGame">再来一局</button>
               </div>
             </div>
-            <button v-if="!matchGameOver && matchEarned > 0" class="play-btn match-claim-btn" @click="claimMatchReward">领取 {{ matchEarned }} 积分</button>
+            <button v-if="!matchGameOver && matchEarned > 0" class="play-btn match-claim-btn" @click="claimMatchReward">领取 {{ matchEarned }} 金币</button>
           </div>
         </div>
       </section>
@@ -176,8 +176,8 @@
           <div class="rebate-rule">
             <el-icon :size="32" color="#ff4400"><Coin /></el-icon>
             <div class="rebate-info">
-              <span class="rebate-title">购物返积分</span>
-              <span class="rebate-desc">购物每满100元返5积分，多买多送！</span>
+              <span class="rebate-title">购物返金币</span>
+              <span class="rebate-desc">购物每满100元返5金币，多买多送！</span>
             </div>
           </div>
           <div class="promo-list">
@@ -196,7 +196,7 @@
         </div>
         <div class="history-empty" v-if="records.length === 0">
           <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ccc" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <p>还没有记录，快来赚取积分吧！</p>
+          <p>还没有记录，快来赚取金币吧！</p>
         </div>
         <div class="history-list" v-else>
           <div class="history-item" v-for="(rec, i) in records" :key="rec.id || i">
@@ -220,9 +220,9 @@
     <el-dialog v-model="showPrizeDialog" title="中奖结果" width="360px" :close-on-click-modal="false" center>
       <div class="prize-dialog-body">
         <div class="prize-value" :class="lastPrize > 0 ? 'win' : 'lose'">{{ lastPrize }}</div>
-        <div class="prize-label">{{ lastPrize > 0 ? '积分' : '下次加油！' }}</div>
-        <div class="prize-message" v-if="lastPrize > 0">恭喜你赢得了 {{ lastPrize }} 积分！</div>
-        <div class="prize-message" v-else>很遗憾，没有赢得积分，再试一次吧！</div>
+        <div class="prize-label">{{ lastPrize > 0 ? '金币' : '下次加油！' }}</div>
+        <div class="prize-message" v-if="lastPrize > 0">恭喜你赢得了 {{ lastPrize }} 金币！</div>
+        <div class="prize-message" v-else>很遗憾，没有赢得金币，再试一次吧！</div>
       </div>
       <template #footer>
         <el-button type="primary" @click="showPrizeDialog = false" round>知道了</el-button>
@@ -255,10 +255,10 @@ const doCheckin = async () => {
   }
   try {
     const res = await userStore.checkin()
-    const pts = res.points || 10
+    const pts = res.balance || 10
     todayEarned.value += pts
     checkedIn.value = true
-    ElMessage.success(`签到成功 +${pts} 积分`)
+    ElMessage.success(`签到成功 +${pts} 金币`)
     loadRecords()
   } catch (e) {
     const err = e.error || ''
@@ -285,12 +285,12 @@ const doShare = () => {
     return
   }
   if (userStore.userInfo) {
-    userStore.userInfo.points = (userStore.userInfo.points || 0) + 5
+    userStore.userInfo.balance = (userStore.userInfo.balance || 0) + 5
     localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
   }
   todayEarned.value += 5
   shared.value = true
-  ElMessage.success('分享成功 +5 积分')
+  ElMessage.success('分享成功 +5 金币')
 }
 
 const loadCheckinStatus = async () => {
@@ -386,8 +386,8 @@ const makeGuess = async (guess) => {
     ElMessage.warning('请先登录')
     return
   }
-  if (betAmount.value > userStore.points) {
-    ElMessage.warning('积分不足')
+    if (betAmount.value > userStore.balance) {
+    ElMessage.warning('金币不足')
     return
   }
   guessing.value = true
@@ -412,8 +412,8 @@ const resetGuess = () => {
   randomNumber.value = 0
   guessResult.value = ''
   lastGuessScore.value = 0
-  if (userStore.points < betAmount.value) {
-    betAmount.value = Math.max(10, Math.min(10, userStore.points))
+  if (userStore.balance < betAmount.value) {
+    betAmount.value = Math.max(10, Math.min(10, userStore.balance))
   }
 }
 
@@ -482,18 +482,18 @@ const flipCard = (idx) => {
 const claimMatchReward = () => {
   if (matchClaimed.value) return
   if (userStore.userInfo) {
-    userStore.userInfo.points = (userStore.userInfo.points || 0) + matchEarned.value
+    userStore.userInfo.balance = (userStore.userInfo.balance || 0) + matchEarned.value
     localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
   }
   todayEarned.value += matchEarned.value
   matchClaimed.value = true
-  ElMessage.success(`获得 ${matchEarned.value} 积分`)
+  ElMessage.success(`获得 ${matchEarned.value} 金币`)
 }
 
 const promotions = [
-  { tag: '满减', desc: '购物满200元返10积分' },
-  { tag: '限时', desc: '限时3倍积分，仅限今日' },
-  { tag: '新客', desc: '首次购物额外返20积分' }
+  { tag: '满减', desc: '购物满200元返10金币' },
+  { tag: '限时', desc: '限时3倍金币，仅限今日' },
+  { tag: '新客', desc: '首次购物额外返20金币' }
 ]
 
 const records = ref([])
@@ -517,7 +517,7 @@ const getGameName = (rec) => {
   if (rec.gameType === 'guess') return '猜数字'
   if (rec.gameType === 'checkin') return '每日签到'
   if (rec.gameType === 'browse') return '浏览商品'
-  if (rec.gameType === 'share') return '分享赚积分'
+  if (rec.gameType === 'share') return '分享赚金币'
   return rec.gameType || '赚米任务'
 }
 

@@ -7,7 +7,6 @@ export const useUserStore = defineStore('user', () => {
   const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || 'null'))
   const isLoggedIn = computed(() => !!token.value)
   const balance = computed(() => userInfo.value?.balance || 0)
-  const points = computed(() => userInfo.value?.points || 0)
 
   const initDefaultUser = async () => {
     if (!token.value) return
@@ -53,7 +52,8 @@ export const useUserStore = defineStore('user', () => {
   const checkin = async () => {
     const res = await authApi.checkin()
     if (userInfo.value) {
-      userInfo.value.points = (res.data?.points || res?.points || userInfo.value.points)
+      const amount = res.data?.balance || res?.balance || 0
+      userInfo.value.balance = (userInfo.value.balance || 0) + amount
       localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
     }
     return res.data || res
@@ -64,7 +64,6 @@ export const useUserStore = defineStore('user', () => {
     userInfo,
     isLoggedIn,
     balance,
-    points,
     initDefaultUser,
     login,
     register,

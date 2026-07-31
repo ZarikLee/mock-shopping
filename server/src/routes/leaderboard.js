@@ -11,14 +11,6 @@ router.get('/', (req, res) => {
   res.json(users);
 });
 
-router.get('/points', (req, res) => {
-  const users = queryAll('users')
-    .sort((a, b) => (b.points || 0) - (a.points || 0))
-    .slice(0, 50)
-    .map((u, i) => ({ id: u.id, username: u.username, nickname: u.nickname, avatar: u.avatar, points: u.points, rank: i + 1 }));
-  res.json(users);
-});
-
 router.get('/spending', (req, res) => {
   const users = queryAll('users');
   const orders = queryAll('orders').filter(o => o.status >= 1);

@@ -13,23 +13,23 @@ router.post('/play', authMiddleware, (req, res) => {
   const user = queryOne('users', { id: req.user.id });
 
   if (gameType === 'wheel') {
-    if (user.points < 10) {
-      return res.status(400).json({ error: 'Not enough points. Need at least 10 points to spin.' });
+    if (user.balance < 10) {
+      return res.status(400).json({ error: 'Not enough balance. Need at least 10 coins to spin.' });
     }
     const prizes = [10, 20, 50, 100, 0, 200, 5, 500];
     const prize = prizes[Math.floor(Math.random() * prizes.length)];
     const netPoints = prize - 10;
-    const newPoints = (user.points || 0) + netPoints;
+    const newBalance = (user.balance || 0) + netPoints;
     const now = new Date().toISOString();
-    update('users', req.user.id, { points: newPoints });
+    update('users', req.user.id, { balance: newBalance });
     insert('game_scores', { userId: req.user.id, gameType: 'wheel', score: netPoints, created_at: now });
-    res.json({ score: prize, result: netPoints >= 0 ? 'win' : 'lose', totalPoints: newPoints });
+    res.json({ score: prize, result: netPoints >= 0 ? 'win' : 'lose', totalBalance: newBalance });
   }
 
   if (gameType === 'guess') {
     const betAmount = bet || 10;
-    if (user.points < betAmount) {
-      return res.status(400).json({ error: 'Not enough points' });
+    if (user.balance < betAmount) {
+      return res.status(400).json({ error: 'Not enough balance' });
     }
 
     if (guess) {
@@ -38,21 +38,21 @@ router.post('/play', authMiddleware, (req, res) => {
       const playerGuessedHigh = guess === 'high';
       const won = isHigh === playerGuessedHigh;
       const score = won ? betAmount * 2 : -betAmount;
-      const newPoints = (user.points || 0) + score;
+      const newBalance = (user.balance || 0) + score;
       const now = new Date().toISOString();
-      update('users', req.user.id, { points: newPoints });
+      update('users', req.user.id, { balance: newBalance });
       insert('game_scores', { userId: req.user.id, gameType: 'guess', score, created_at: now });
-      res.json({ score, result: won ? 'win' : 'lose', totalPoints: newPoints, number });
+      res.json({ score, result: won ? 'win' : 'lose', totalBalance: newBalance, number });
     } else {
       const target = Math.floor(Math.random() * 10) + 1;
       const guess = Math.floor(Math.random() * 10) + 1;
       const won = guess === target;
       const score = won ? betAmount : -betAmount;
-      const newPoints = (user.points || 0) + score;
+      const newBalance = (user.balance || 0) + score;
       const now = new Date().toISOString();
-      update('users', req.user.id, { points: newPoints });
+      update('users', req.user.id, { balance: newBalance });
       insert('game_scores', { userId: req.user.id, gameType: 'guess', score, created_at: now });
-      res.json({ target, guess, won, score, totalPoints: newPoints, message: won ? `You won ${betAmount} points!` : `You lost ${betAmount} points. Target was ${target}` });
+      res.json({ target, guess, won, score, totalBalance: newBalance, message: won ? `You won ${betAmount} coins!` : `You lost ${betAmount} coins. Target was ${target}` });
     }
   }
 });

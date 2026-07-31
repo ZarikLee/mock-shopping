@@ -24,11 +24,6 @@
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
-              <span class="stat-value">{{ userStore.points }}</span>
-              <span class="stat-label">积分</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
               <span class="stat-value">{{ userStore.userInfo?.coupons?.length || 0 }}</span>
               <span class="stat-label">优惠券</span>
             </div>
@@ -79,10 +74,7 @@
                 <span class="balance-label">可用余额</span>
                 <span class="balance-number"><small>¥</small>{{ userStore.balance.toFixed(2).split('.')[0] }}<small>.{{ userStore.balance.toFixed(2).split('.')[1] }}</small></span>
               </div>
-              <div class="balance-points">
-                <el-icon><Wallet /></el-icon>
-                <span>{{ userStore.points }} 积分</span>
-              </div>
+
             </div>
             <el-divider />
             <h4 class="sub-title">交易记录</h4>
@@ -188,9 +180,9 @@
             <div class="checkin-content">
               <div class="checkin-circle" :class="{ checked: checkedIn }" @click="doCheckin">
                 <el-icon v-if="checkedIn" :size="36"><CircleCheck /></el-icon>
-                <span v-else class="checkin-text">签到<br/><small>+积分</small></span>
+                <span v-else class="checkin-text">签到<br/><small>+金币</small></span>
               </div>
-              <p class="checkin-tip">{{ checkedIn ? '今日已签到' : '点击签到获取积分' }}</p>
+              <p class="checkin-tip">{{ checkedIn ? '今日已签到' : '点击签到获取金币' }}</p>
             </div>
           </div>
         </div>
@@ -310,7 +302,7 @@ const levelConfig = [
   { min: 2000, name: '钻石会员', type: 'danger' },
 ]
 const levelName = computed(() => {
-  const pts = userStore.points
+  const pts = userStore.balance
   let name = '普通会员'
   for (const l of levelConfig) {
     if (pts >= l.min) name = l.name
@@ -318,7 +310,7 @@ const levelName = computed(() => {
   return name
 })
 const levelType = computed(() => {
-  const pts = userStore.points
+  const pts = userStore.balance
   let t = 'info'
   for (const l of levelConfig) {
     if (pts >= l.min) t = l.type
@@ -491,14 +483,10 @@ const doCheckin = async () => {
   try {
     const res = await userStore.checkin()
     checkedIn.value = true
-    ElMessage.success(`签到成功！获得积分`)
+    ElMessage.success(`签到成功！获得金币`)
   } catch {
     checkedIn.value = true
-    if (userStore.userInfo) {
-      userStore.userInfo.points = (userStore.userInfo.points || 0) + 10
-      localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
-    }
-    ElMessage.success('签到成功 +10 积分')
+    ElMessage.success('签到成功！')
   }
 }
 
@@ -507,7 +495,7 @@ const transactions = [
   { desc: '余额充值', time: '2026-07-25 09:15', amount: 5000.00, type: 'income' },
   { desc: '购买商品 - 罗技 MX Master 3', time: '2026-07-20 16:48', amount: 699.00, type: 'expense' },
   { desc: '订单退款 - 商品已取消', time: '2026-07-18 11:20', amount: 199.00, type: 'income' },
-  { desc: '签到奖励积分', time: '2026-07-15 08:00', amount: 0, type: 'income', pointsText: '+10积分' },
+  { desc: '签到奖励金币', time: '2026-07-15 08:00', amount: 0, type: 'income', pointsText: '+10金币' },
   { desc: '购买商品 - Apple AirPods Pro', time: '2026-07-12 20:05', amount: 1799.00, type: 'expense' },
   { desc: '余额充值', time: '2026-07-01 10:30', amount: 2000.00, type: 'income' },
 ]

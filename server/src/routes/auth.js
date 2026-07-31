@@ -36,10 +36,10 @@ router.post('/register', (req, res) => {
     username,
     password: hashed,
     nickname: nickname || username,
-    avatar: 'https://picsum.photos/seed/default/100/100',
     created_at: now,
-    points: 5000,
-    balance: 10000,
+    points: 0,
+    balance: 5000,
+    avatar: 'https://picsum.photos/seed/default/100/100',
   });
   res.json({ message: '注册成功' });
 });
