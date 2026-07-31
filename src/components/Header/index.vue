@@ -525,13 +525,6 @@ watch(() => route.query.market, syncCategoryFromRoute)
   transition: opacity 0.4s ease;
 }
 
-.hide-on-collapse {
-  opacity: 0;
-  pointer-events: none;
-  width: 0;
-  overflow: hidden;
-}
-
 .main-nav-bar .container {
   display: flex;
   align-items: center;
@@ -540,7 +533,6 @@ watch(() => route.query.market, syncCategoryFromRoute)
 .nav-bar-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   height: 44px;
 }
 
@@ -556,6 +548,7 @@ watch(() => route.query.market, syncCategoryFromRoute)
   display: flex;
   align-items: center;
   overflow: hidden;
+  min-width: 0;
 }
 
 .nav-right {
@@ -563,6 +556,11 @@ watch(() => route.query.market, syncCategoryFromRoute)
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  margin-left: auto;
+}
+
+.hide-on-collapse {
+  display: none;
 }
 
 .nav-toggle-float {
