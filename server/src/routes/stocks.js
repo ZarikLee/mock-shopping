@@ -53,17 +53,31 @@ function appendHistory(stock) {
 }
 
 function simulatePrice(stock) {
-  // Randomly shift trend occasionally
-  if (Math.random() < 0.1) {
-    stock.trend = Math.max(-0.8, Math.min(0.8, stock.trend + (Math.random() * 2 - 1) * 0.3))
+  // 每日涨跌停限制（相对昨收 ±15%）
+  const maxPrice = stock.prevClose * 1.15;
+  const minPrice = stock.prevClose * 0.85;
+
+  // 趋势偶尔随机转向（更强的波动性）
+  if (Math.random() < 0.08) {
+    stock.trend = Math.max(-0.6, Math.min(0.6, stock.trend + (Math.random() * 2 - 1) * 0.45));
   }
-  // Price moves with momentum + random noise, ±2-4%
-  const move = stock.trend * 0.02 + (Math.random() - 0.5) * 0.03
-  stock.price = Math.max(0.01, stock.price * (1 + move))
-  stock.changePercent = Math.round(((stock.price - stock.prevClose) / stock.prevClose) * 10000) / 100
-  stock.price = Math.round(stock.price * 100) / 100
+
+  // 均值回归：涨到高位附近强制转跌，跌到低位附近强制转涨，防止离谱飙升
+  const deviation = (stock.price - stock.prevClose) / stock.prevClose; // 相对昨收偏离
+  if (deviation > 0.12) stock.trend = Math.min(stock.trend, -0.25);
+  if (deviation < -0.12) stock.trend = Math.max(stock.trend, 0.25);
+
+  // 价格移动：趋势动量 + 随机噪声（单次最大约 ±2.5%）
+  const move = stock.trend * 0.012 + (Math.random() - 0.5) * 0.02;
+  let newPrice = stock.price * (1 + move);
+
+  // 涨跌停硬限制
+  newPrice = Math.max(minPrice, Math.min(maxPrice, newPrice));
+
+  stock.price = Math.round(newPrice * 100) / 100;
+  stock.changePercent = Math.round(((stock.price - stock.prevClose) / stock.prevClose) * 10000) / 100;
   appendHistory(stock);
-  return stock
+  return stock;
 }
 
 function parseHoldings(user) {
