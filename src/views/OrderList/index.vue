@@ -33,7 +33,7 @@
           <div class="order-header">
             <span class="order-no">订单号：{{ order.orderNo }}</span>
             <span class="order-status" :style="{ color: order.status.color }">
-              {{ order.status.text }}
+              {{ displayStatusText(order) }}
             </span>
           </div>
           
@@ -134,6 +134,16 @@ const filteredOrders = computed(() => {
 const getOrderCount = (status) => {
   if (status === -1) return orderStore.orders.length
   return orderStore.orders.filter(o => o.status.code === status).length
+}
+
+// 根据预计送达时间动态显示状态
+const displayStatusText = (order) => {
+  if (!order) return ''
+  const code = order.status.code
+  if (code === 5 && order.deliveryType === 'express' && order.expectedDeliveryDate && new Date() >= new Date(order.expectedDeliveryDate)) {
+    return '已送达，请签收'
+  }
+  return order.status.text
 }
 
 const goToPayment = (orderId) => {

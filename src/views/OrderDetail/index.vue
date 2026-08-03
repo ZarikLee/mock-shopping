@@ -16,7 +16,7 @@
         <div class="status-info">
           <el-icon :size="40"><CircleCheck /></el-icon>
           <div class="status-text">
-            <h2>{{ order.status.text }}</h2>
+            <h2>{{ displayStatusText }}</h2>
             <p v-if="order.status.code === 0">请尽快完成支付，超时订单将自动取消</p>
             <p v-else-if="order.deliveryType === 'on_site'">
               现场交付订单{{ order.status.code >= 6 ? '，已完成交付' : '，请留意交付进度' }}
@@ -145,7 +145,7 @@
         <el-button v-if="isOnSite && order.status.code >= 1 && order.status.code < 7" type="primary" @click="handleConfirm">
           确认交付
         </el-button>
-        <el-button v-else-if="order.status.code >= 5 && order.status.code < 7" type="primary" @click="handleConfirm">
+        <el-button v-else-if="order.status.code >= 5 && order.status.code < 7 && isArrived" type="primary" @click="handleConfirm">
           确认收货
         </el-button>
         <el-button @click="router.push('/orders')">返回订单列表</el-button>
@@ -196,11 +196,28 @@ const statusGradient = computed(() => {
 
 const isOnSite = computed(() => order.value?.deliveryType === 'on_site')
 
+// 快递是否已到（当前时间超过预计送达时间）
+const isArrived = computed(() => {
+  if (!order.value || !order.value.expectedDeliveryDate) return false
+  return new Date() >= new Date(order.value.expectedDeliveryDate)
+})
+
+// 展示用状态文字
+const displayStatusText = computed(() => {
+  if (!order.value) return ''
+  const code = order.value.status.code
+  if (code === 5 && isArrived.value) return '已送达，请签收'
+  return order.value.status.text
+})
+
 const deliveryText = computed(() => {
   if (!order.value || order.value.deliveryType !== 'express' || !order.value.expectedDeliveryDate) return ''
   const expected = new Date(order.value.expectedDeliveryDate)
-  const days = Math.max(1, Math.ceil((expected - new Date()) / 86400000))
-  return `预计 ${days} 天后送达（${expected.getMonth() + 1}月${expected.getDate()}日）`
+  if (isArrived.value) return '包裹已送达，请尽快签收'
+  const hours = Math.max(1, Math.ceil((expected - new Date()) / 3600000))
+  if (hours < 24) return `预计 ${hours} 小时后送达`
+  const days = Math.ceil(hours / 24)
+  return `预计 ${days} 天后送达（${expected.getMonth() + 1}月${expected.getDate()}日 ${String(expected.getHours()).padStart(2, '0')}:${String(expected.getMinutes()).padStart(2, '0')}）`
 })
 
 const onSiteSteps = computed(() => {

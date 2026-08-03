@@ -201,13 +201,8 @@ router.post('/:id/pay', authMiddleware, (req, res) => {
 
   let expectedDeliveryDate = null;
   if (delivery.deliveryType === 'express') {
-    const expected = new Date();
-    // 顺丰 2-3 天，京东 1-2 天
-    if (order.deliveryMethod === '京东物流') {
-      expected.setDate(expected.getDate() + 1 + Math.floor(Math.random() * 2));
-    } else {
-      expected.setDate(expected.getDate() + 2 + Math.floor(Math.random() * 2));
-    }
+    // 12-36 小时送达
+    const expected = new Date(Date.now() + (12 + Math.floor(Math.random() * 25)) * 3600 * 1000);
     expectedDeliveryDate = expected.toISOString();
   }
 
@@ -217,12 +212,12 @@ router.post('/:id/pay', authMiddleware, (req, res) => {
     no: (order.deliveryMethod === '京东物流' ? 'JD' : 'SF') + order.orderNo,
     status: [
       { status: '订单已支付', time: now, location: '系统' },
-      { status: onSite ? '手续办理中' : '商品已出库', time: now, location: onSite ? '系统' : '仓库' },
+      { status: onSite ? '手续办理中' : '商品已出库，运输中', time: now, location: onSite ? '系统' : '仓库' },
     ],
   };
 
   const updated = update('orders', order.id, {
-    status: onSite ? 1 : 6,
+    status: onSite ? 1 : 5,
     payTime: now,
     logistics,
     deliveryType: delivery.deliveryType,
@@ -253,8 +248,12 @@ router.post('/:id/cancel', authMiddleware, (req, res) => {
 router.post('/:id/complete', authMiddleware, (req, res) => {
   const order = queryOne('orders', { id: Number(req.params.id), userId: req.user.id });
   if (!order) return res.status(404).json({ error: '订单不存在' });
-  // Express orders arrive at status 6 (已送达待签收); on-site orders at status 1 (手续办理中/待现场交付)
-  if (order.status !== 6 && order.status !== 1) return res.status(400).json({ error: '当前订单状态不允许确认收货' });
+  // 快递已送达（5 派送中/6 已签收待确认）；现场交付（1 手续办理中）
+  if (order.status !== 6 && order.status !== 5 && order.status !== 1) return res.status(400).json({ error: '当前订单状态不允许确认收货' });
+  // 快递需等待送达时间到达后才能签收
+  if (order.status === 5 && order.deliveryType === 'express' && order.expectedDeliveryDate && new Date() < new Date(order.expectedDeliveryDate)) {
+    return res.status(400).json({ error: '包裹尚未送达，请耐心等待' });
+  }
 
   const now = new Date().toISOString();
   update('orders', order.id, { status: 7, completeTime: now });
