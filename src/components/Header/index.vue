@@ -202,9 +202,13 @@
         </el-badge>
         <span class="nav-label">购物车</span>
       </router-link>
-      <router-link to="/games" class="bottom-nav-item" :class="{ active: route.path === '/games' || route.path === '/leaderboard' }">
+      <router-link to="/games" class="bottom-nav-item" :class="{ active: route.path === '/games' }">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        <span class="nav-label">赚米排行</span>
+        <span class="nav-label">赚米</span>
+      </router-link>
+      <router-link to="/leaderboard" class="bottom-nav-item" :class="{ active: route.path === '/leaderboard' }">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8m-4-4v4"/><path d="M4 17h16l-2-9H6l-2 9z"/><path d="M8 8l2-3h4l2 3"/><path d="M12 2v3"/></svg>
+        <span class="nav-label">排行</span>
       </router-link>
       <router-link to="/user" class="bottom-nav-item" :class="{ active: route.path === '/user' }">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
