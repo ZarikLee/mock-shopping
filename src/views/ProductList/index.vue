@@ -498,13 +498,13 @@ watch(() => route.query, (newQuery) => {
 
 <style scoped>
 .product-list-page {
-  padding: 20px 0;
+  padding: 12px 0 24px;
 }
 
 .breadcrumb {
   font-size: 14px;
   color: #999;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .breadcrumb a {
@@ -752,7 +752,7 @@ watch(() => route.query, (newQuery) => {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 15px;
 }
 

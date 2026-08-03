@@ -326,7 +326,8 @@ const submitOrder = async () => {
       totalAmount: cartStore.totalPrice,
       discountAmount: couponDiscount.value,
       payAmount: totalAmount.value,
-      address
+      address,
+      deliveryMethod: deliveryType.value === 2 ? '京东物流' : '顺丰速运'
     })
 
     cartStore.removeByOrder(cartStore.selectedItems)

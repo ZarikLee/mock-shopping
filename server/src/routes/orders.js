@@ -25,6 +25,7 @@ function formatOrder(order) {
     logistics: order.logistics || { company: '', no: '', status: [] },
     deliveryType: order.deliveryType || 'express',
     deliveryTimeline: order.deliveryTimeline || [],
+    deliveryMethod: order.deliveryMethod || '顺丰速运',
   };
 }
 
@@ -85,7 +86,7 @@ function unlockAchievements(userId) {
 }
 
 router.post('/', authMiddleware, (req, res) => {
-  const { items, address, discountAmount, payAmount } = req.body;
+  const { items, address, discountAmount, payAmount, deliveryMethod } = req.body;
   if (!items || !items.length) {
     return res.status(400).json({ error: '订单商品不能为空' });
   }
@@ -134,6 +135,7 @@ router.post('/', authMiddleware, (req, res) => {
     count,
     deliveryType: delivery.deliveryType,
     deliveryTimeline: delivery.deliveryTimeline,
+    deliveryMethod: deliveryMethod || '顺丰速运',
   });
 
   for (const item of orderItems) {
@@ -200,14 +202,19 @@ router.post('/:id/pay', authMiddleware, (req, res) => {
   let expectedDeliveryDate = null;
   if (delivery.deliveryType === 'express') {
     const expected = new Date();
-    expected.setDate(expected.getDate() + 3 + Math.floor(Math.random() * 5));
+    // 顺丰 2-3 天，京东 1-2 天
+    if (order.deliveryMethod === '京东物流') {
+      expected.setDate(expected.getDate() + 1 + Math.floor(Math.random() * 2));
+    } else {
+      expected.setDate(expected.getDate() + 2 + Math.floor(Math.random() * 2));
+    }
     expectedDeliveryDate = expected.toISOString();
   }
 
   const onSite = delivery.deliveryType === 'on_site';
   const logistics = {
-    company: onSite ? '现场交付' : '模拟物流',
-    no: 'SF' + order.orderNo,
+    company: onSite ? '现场交付' : (order.deliveryMethod || '顺丰速运'),
+    no: (order.deliveryMethod === '京东物流' ? 'JD' : 'SF') + order.orderNo,
     status: [
       { status: '订单已支付', time: now, location: '系统' },
       { status: onSite ? '手续办理中' : '商品已出库', time: now, location: onSite ? '系统' : '仓库' },

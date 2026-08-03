@@ -50,7 +50,7 @@
             <el-button @click="continueShopping">继续购物</el-button>
           </div>
 
-          <div class="logistics-info" v-if="order.logistics.status.length > 0">
+          <div class="logistics-info" v-if="order && order.logistics && order.logistics.status && order.logistics.status.length > 0">
             <h3>物流信息</h3>
             <el-timeline>
               <el-timeline-item
@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Timer, CircleCheck, Coin } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
@@ -102,17 +102,26 @@ const orderStore = useOrderStore()
 const paying = ref(false)
 const paymentSuccess = ref(false)
 const payDialogVisible = ref(false)
+const order = ref(null)
 
 const payBrandName = '余额支付'
 const payBrandIcon = 'Wallet'
 
-onMounted(() => { document.title = '支付 - 淘大宝' })
-
-const order = computed(() => {
-  return orderStore.getOrder(Number(route.params.orderId))
+onMounted(() => {
+  document.title = '支付 - 淘大宝'
+  loadOrder()
 })
 
+const loadOrder = async () => {
+  try {
+    order.value = await orderStore.getOrder(Number(route.params.orderId))
+  } catch {
+    ElMessage.error('订单不存在')
+  }
+}
+
 const handlePay = () => {
+  if (!order.value) return
   if (userStore.balance < order.value.payAmount) {
     ElMessage.error('余额不足')
     return
@@ -139,10 +148,19 @@ const handlePasswordConfirm = async (password) => {
   payDialogVisible.value = false
   await new Promise(resolve => setTimeout(resolve, 1500))
 
-  orderStore.payOrder(order.value.id)
-  paymentSuccess.value = true
-  paying.value = false
-  ElMessage.success('支付成功')
+  try {
+    await orderStore.payOrder(order.value.id)
+    paymentSuccess.value = true
+    ElMessage.success('支付成功')
+    // 跳转到订单详情（物流）页
+    setTimeout(() => {
+      router.push(`/order/${order.value.id}`)
+    }, 1200)
+  } catch (e) {
+    ElMessage.error(e?.message || '支付失败')
+  } finally {
+    paying.value = false
+  }
 }
 
 const cancelPayment = () => {
