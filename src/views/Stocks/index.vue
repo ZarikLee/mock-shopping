@@ -70,9 +70,21 @@
             >{{ opt.label }}</span>
           </div>
 
+          <!-- 类型筛选 -->
+          <div class="sort-toolbar style-filter">
+            <span class="sort-label">类型</span>
+            <span
+              v-for="st in styleOptions"
+              :key="st.value"
+              class="style-chip"
+              :class="{ active: currentStyle === st.value }"
+              @click="changeStyle(st.value)"
+            >{{ st.label }}</span>
+          </div>
+
           <el-table
             v-if="!isMobile"
-            :data="sortedStocks"
+            :data="displayedStocks"
             class="stock-table"
             v-loading="loading"
             @row-click="openTrading"
@@ -106,7 +118,7 @@
 
           <!-- 移动端卡片列表 -->
           <div class="stock-cards" v-if="isMobile" v-loading="loading">
-            <div v-for="s in sortedStocks" :key="s.symbol" class="stock-card" @click="openTrading(s)">
+            <div v-for="s in displayedStocks" :key="s.symbol" class="stock-card" @click="openTrading(s)">
               <div class="sc-main">
                 <div class="sc-name">
                   <span class="sc-stock-name">{{ s.name }}</span>
@@ -327,6 +339,26 @@ const sortedStocks = computed(() => {
   return list
 })
 const changeSort = (val) => { currentSort.value = val }
+
+// 类型筛选
+const currentStyle = ref('all')
+const styleOptions = [
+  { label: '全部', value: 'all' },
+  { label: '稳健', value: '稳健' },
+  { label: '成长', value: '成长' },
+  { label: '价值', value: '价值' },
+  { label: '防御', value: '防御' },
+  { label: '激进', value: '激进' },
+]
+const changeStyle = (val) => { currentStyle.value = val }
+
+const displayedStocks = computed(() => {
+  let list = sortedStocks.value
+  if (currentStyle.value !== 'all') {
+    list = list.filter(s => (s.style || '成长') === currentStyle.value)
+  }
+  return list
+})
 
 const balanceText = computed(() => Number(userStore.balance).toFixed(2))
 
@@ -822,6 +854,31 @@ onUnmounted(() => {
 
 .sort-chip.active {
   background: #ff4400;
+  color: #fff;
+}
+
+.style-filter {
+  padding-top: 4px;
+  padding-bottom: 10px;
+}
+
+.style-chip {
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #666;
+  background: #f5f5f5;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.style-chip:hover {
+  color: #ff4400;
+}
+
+.style-chip.active {
+  background: #722ed1;
   color: #fff;
 }
 

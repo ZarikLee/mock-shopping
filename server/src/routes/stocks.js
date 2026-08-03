@@ -57,21 +57,36 @@ function simulatePrice(stock) {
   const maxPrice = stock.prevClose * 1.15;
   const minPrice = stock.prevClose * 0.85;
 
-  // 趋势偶尔随机转向（更强的波动性）
+  // 不同风格走势不同：
+  // 稳健：持续小幅上涨，适合长期持有
+  // 成长：温和上涨 + 中等波动
+  // 价值：低波动，稳定
+  // 防御：极低波动
+  // 激进：高波动，大起大落（均值回归）
+  const style = stock.style || '成长';
+  let bias = 0, vol = 0.012, trendScale = 0.008;
+  if (style === '稳健') { bias = 0.0009; vol = 0.005; trendScale = 0.004; }
+  else if (style === '成长') { bias = 0.0003; vol = 0.012; trendScale = 0.008; }
+  else if (style === '价值') { bias = 0.0001; vol = 0.007; trendScale = 0.005; }
+  else if (style === '防御') { bias = 0.0001; vol = 0.003; trendScale = 0.003; }
+  else { bias = 0; vol = 0.02; trendScale = 0.012; }
+
+  // 趋势偶尔转向
+  let trendForce = stock.trend || 0;
   if (Math.random() < 0.08) {
-    stock.trend = Math.max(-0.6, Math.min(0.6, stock.trend + (Math.random() * 2 - 1) * 0.45));
+    trendForce = Math.max(-0.6, Math.min(0.6, trendForce + (Math.random() * 2 - 1) * 0.45));
   }
 
-  // 均值回归：涨到高位附近强制转跌，跌到低位附近强制转涨，防止离谱飙升
-  const deviation = (stock.price - stock.prevClose) / stock.prevClose; // 相对昨收偏离
-  if (deviation > 0.12) stock.trend = Math.min(stock.trend, -0.25);
-  if (deviation < -0.12) stock.trend = Math.max(stock.trend, 0.25);
+  // 激进/成长类在偏离较大时均值回归，防止失控
+  const deviation = (stock.price - stock.prevClose) / stock.prevClose;
+  if (style === '激进') {
+    if (deviation > 0.12) trendForce = Math.min(trendForce, -0.25);
+    if (deviation < -0.12) trendForce = Math.max(trendForce, 0.25);
+  }
 
-  // 价格移动：趋势动量 + 随机噪声（单次最大约 ±2.5%）
-  const move = stock.trend * 0.012 + (Math.random() - 0.5) * 0.02;
+  stock.trend = trendForce;
+  const move = bias + trendForce * trendScale + (Math.random() - 0.5) * vol;
   let newPrice = stock.price * (1 + move);
-
-  // 涨跌停硬限制
   newPrice = Math.max(minPrice, Math.min(maxPrice, newPrice));
 
   stock.price = Math.round(newPrice * 100) / 100;
@@ -212,19 +227,29 @@ router.get('/:symbol/positions', authMiddleware, (req, res) => {
 router.post('/:symbol/buy', authMiddleware, (req, res) => {
   const stock = stocks.find(s => s.symbol === req.params.symbol);
   if (!stock) return res.status(404).json({ error: 'Stock not found' });
-  const shares = Math.floor(Number(req.body.shares));
+  let shares = Math.floor(Number(req.body.shares));
   if (!shares || shares <= 0) return res.status(400).json({ error: '请输入有效的股数' });
   const user = queryOne('users', { id: req.user.id });
   if (!user) return res.status(404).json({ error: '用户不存在' });
 
   simulatePrice(stock);
   const price = stock.price;
-  const cost = Math.round(price * shares * 100) / 100;
-  const fee = Math.round(cost * 0.015 * 100) / 100;
-  const total = Math.round((cost + fee) * 100) / 100;
+  let cost = Math.round(price * shares * 100) / 100;
+  let fee = Math.round(cost * 0.015 * 100) / 100;
+  let total = Math.round((cost + fee) * 100) / 100;
 
   const balance = Number(user.balance) || 0;
-  if (balance < total) return res.status(400).json({ error: '余额不足' });
+  // 价格实时变动导致余额不足时，自动按当前价调整可买数量，不卡流程
+  let adjusted = false;
+  if (balance < total) {
+    const maxShares = Math.floor(balance / (price * 1.015));
+    if (maxShares <= 0) return res.status(400).json({ error: '余额不足，请充值后再试' });
+    shares = maxShares;
+    cost = Math.round(price * shares * 100) / 100;
+    fee = Math.round(cost * 0.015 * 100) / 100;
+    total = Math.round((cost + fee) * 100) / 100;
+    adjusted = true;
+  }
 
   const holdings = parseHoldings(user);
   const pos = holdings[stock.symbol] || { shares: 0, avgCost: 0 };
@@ -245,7 +270,7 @@ router.post('/:symbol/buy', authMiddleware, (req, res) => {
   // 买入加经验：活动资金 1%
   const xpResult = addExperience(user.id, Math.floor(cost * 0.01));
 
-  res.json({ success: true, price, shares, cost, fee, total, balance: newBalance, experienceGained: xpResult.gained });
+  res.json({ success: true, price, shares, cost, fee, total, balance: newBalance, experienceGained: xpResult.gained, adjusted });
 });
 
 router.post('/:symbol/sell', authMiddleware, (req, res) => {

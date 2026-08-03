@@ -30,6 +30,10 @@ export const useOrderStore = defineStore('order', () => {
     if (currentOrder.value?.id === orderId) {
       currentOrder.value = data
     }
+    const idx = orders.value.findIndex(o => o.id === orderId)
+    if (idx !== -1) {
+      orders.value[idx] = data
+    }
     return data
   }
 
