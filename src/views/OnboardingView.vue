@@ -7,12 +7,12 @@
       <p class="sub">用于创建属于你的学校 / 企业项目</p>
 
       <div v-if="!chosen" class="role-grid">
-        <button class="role-card" :class="{ on: role === 'student' }" @click="role = 'student'">
+        <button class="role-card" :class="{ on: role === 'student' }" @click="choose('student')">
           <div class="role-icon">学</div>
           <span class="role-name">学生</span>
           <span class="role-desc">记录校园里的每天</span>
         </button>
-        <button class="role-card" :class="{ on: role === 'worker' }" @click="role = 'worker'">
+        <button class="role-card" :class="{ on: role === 'worker' }" @click="choose('worker')">
           <div class="role-icon work">职</div>
           <span class="role-name">职场人</span>
           <span class="role-desc">记录工作里的每天</span>
@@ -57,6 +57,8 @@ const startDate = ref('')
 const error = ref('')
 
 const canCreate = computed(() => name.value.trim() && startDate.value)
+
+const choose = (r) => { role.value = r; chosen.value = true }
 
 const back = () => { chosen.value = false; role.value = '' }
 
