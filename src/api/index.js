@@ -14,7 +14,7 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('dl_token')
       localStorage.removeItem('dl_user')
-      if (location.pathname !== '/') location.href = '/'
+      if (location.pathname !== '/login') location.href = '/login'
     }
     return Promise.reject(err.response?.data || { error: '网络错误' })
   }
