@@ -18,5 +18,5 @@ export const useThemeStore = defineStore('theme', () => {
 
   apply()
 
-  return { theme, toggle }
+  return { theme, toggle, apply }
 })
