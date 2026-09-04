@@ -9,6 +9,7 @@
         </div>
       </div>
       <div class="right">
+        <span class="ver-pill" title="build v3-txt">v3</span>
         <button class="icon-btn" @click="openVersions">版本</button>
         <button class="save-btn" :class="{ dirty: hasDirty }" :disabled="saving" @click="saveAll">
           {{ hasDirty ? '保存修改' : '已保存' }}
@@ -289,6 +290,7 @@ onBeforeUnmount(() => { Object.values(timers).forEach(t => clearTimeout(t)) })
 .pdate { font-size: 11px; color: var(--text-2); margin-top: 2px; }
 .right { display: flex; align-items: center; gap: 8px; }
 .icon-btn { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-size: 13px; cursor: pointer; }
+.ver-pill { font-size: 11px; color: var(--accent); background: var(--surface); border: 1px solid var(--border); padding: 3px 8px; border-radius: 8px; }
 .theme-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
 .save-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-size: 13px; cursor: pointer; }
 .save-btn.dirty { background: var(--accent); border-color: var(--accent); color: #fff; }
