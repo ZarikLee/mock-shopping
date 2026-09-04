@@ -1,26 +1,22 @@
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 10000
-})
+const api = axios.create({ baseURL: '/api', timeout: 15000 })
 
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
+  const token = localStorage.getItem('dl_token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
 api.interceptors.response.use(
-  response => response.data,
-  error => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('userInfo')
+  res => res.data,
+  err => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('dl_token')
+      localStorage.removeItem('dl_user')
+      if (location.pathname !== '/') location.href = '/'
     }
-    return Promise.reject(error.response?.data || error)
+    return Promise.reject(err.response?.data || { error: '网络错误' })
   }
 )
 
