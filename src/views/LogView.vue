@@ -38,11 +38,11 @@
               <span class="dtools">
                 <span v-if="day.items.length" class="dstat">{{ doneOf(day) }}/{{ day.items.length }}</span>
                 <span v-if="day._dirty" class="ddot"></span>
-                <button v-if="day.date > tNow" class="del-day" @click="removeFutureDay(day)" title="删除这天的计划">×</button>
+                <button class="del-day" @click="askDelete(day)" title="删除这一天">×</button>
               </span>
             </div>
             <div class="daybody" contenteditable="true" spellcheck="false" :data-date="day.date"
-              @input="e => onInput(day)" @keydown="e => onKey(e, day)"></div>
+              @input="e => onInput(day)" @keydown="e => onKey(e, day)" @blur="e => blurDay(day, e)"></div>
           </section>
 
           <div v-if="!loading && !days.length" class="ph"><p>还没有记录。</p></div>
@@ -84,6 +84,20 @@
     </div>
 
     <transition name="fade"><div v-if="toast" class="toast">{{ toast }}</div></transition>
+
+    <!-- 删除确认 -->
+    <transition name="fade">
+      <div v-if="delDay" class="center-mask" @click.self="delDay = null">
+        <div class="center-card warn">
+          <h3>删除这一天？</h3>
+          <p class="tip">{{ delDay ? dayLabel(delDay.date) : '' }} 的记录将被删除，此操作无法恢复。</p>
+          <div class="row">
+            <button class="ghost" @click="delDay = null">取消</button>
+            <button class="danger" @click="doDelete">确认删除</button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -136,6 +150,7 @@ function renderBody(day){nextTick(()=>{
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const ol=document.createElement('ol')
   day.items.forEach(it=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''));ol.appendChild(li)})
+  if(!ol.children.length){const li=document.createElement('li');ol.appendChild(li)}
   el.innerHTML='';el.appendChild(ol)
   layout(day)
 })}
@@ -149,26 +164,30 @@ function layout(day){const el=document.querySelector(`.daybody[data-date="${day.
 }
 function readBody(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const lis=[...el.querySelectorAll(':scope ol > li')];day.items=lis.map(li=>({text:li.textContent.replace(/\u00a0/g,'').trim(),done:li.classList.contains('done')}))}
-function compact(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
-  const lis=[...el.querySelectorAll(':scope ol > li')];let changed=false
-  // 删除空行，但始终保留末尾一个用于继续输入
-  lis.forEach(li=>{if(!li.textContent.trim()){li.remove();changed=true}})
-  if(changed)readBody(day)}
-function onInput(day){readBody(day);compact(day);requestAnimationFrame(()=>layout(day));const key=snapDay(day)
+function onInput(day){readBody(day);requestAnimationFrame(()=>layout(day));const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),900);day._last=key}}
 function onKey(e,day){
   if((e.key==='Backspace'||e.key==='Delete') && day.items.length===1 && !day.items[0].text.trim()){ e.preventDefault(); return }
-  if(e.key==='Backspace'||e.key==='Delete'){
-    setTimeout(()=>{ readBody(day); compact(day); const k=snapDay(day)
-      if(!day._last||!same(day._last,k)){ day._dirty=true; unsavedPrompt.value=false; clearTimeout(timers[day.date]); timers[day.date]=setTimeout(()=>autosave(day),900); day._last=k } },0)
-  }
 }
-function removeFutureDay(day){
-  const i=days.value.findIndex(d=>d.date===day.date);if(i<0)return
-  days.value.splice(i,1)
+function blurDay(day,e){
+  const t=e?.relatedTarget
+  if(t && t.nodeType===1 && (t.classList?.contains('sw') || t.closest?.('.rail')))return
+  readBody(day)
+  const prev=snapDay(day)
+  day.items=cleanItems(day.items)
+  if(!day.items.length)day.items=[{text:'',done:false}]
+  renderBody(day)
+  const key=snapDay(day)
+  if(!same(prev,key)&&(!day._last||!same(day._last,key))){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),900);day._last=key}
+}
+const delDay=ref(null)
+function askDelete(day){delDay.value=day}
+function doDelete(){const day=delDay.value;if(!day)return
+  const i=days.value.findIndex(d=>d.date===day.date);if(i>=0)days.value.splice(i,1)
+  delDay.value=null
+  clearTimeout(timers[day.date]);delete timers[day.date]
   projectApi.removeDay(pid.value,day.date).catch(()=>{})
-  showToast('已删除这天的计划')
-}
+  showToast('已删除，无法恢复')}
 function focusLi(day,idx){nextTick(()=>{const el=document.querySelector(`.daybody[data-date="${day.date}"]`);const lis=el?.querySelectorAll('ol>li');const d=lis&&lis[idx!=null?idx:0];if(!d)return
   d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)})}
 function addNextDay(){const last=days.value.reduce((m,d)=>d.date>m?d.date:m,'');let base=last?last:tNow
@@ -282,17 +301,17 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
 .daybody ol>li{list-style:none}
 .daybody ol>li::marker{content:''}
-.daybody ol>li{counter-increment:item;position:relative;padding:9px 56px 9px 2.2em;min-height:1.7em;color:var(--text)}
+.daybody ol>li{counter-increment:item;position:relative;padding:9px 56px 9px 1.8em;min-height:1.7em;color:var(--text)}
 .daybody ol>li::after{content:'';display:block;clear:both}
-.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.6em;text-align:right;padding-right:8px;color:var(--text-2);opacity:.55;font-size:.92em}
+.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.5em;text-align:right;padding-right:5px;color:var(--text-2);opacity:.55;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.75}
 /* iOS 开关叠加层 */
  .dayph{color:var(--text-2);font-size:14px;padding:12px 4px;cursor:text;opacity:.75}
 .rail{position:absolute;right:4px;top:0;width:46px;height:100%;pointer-events:none;z-index:5}
 .rail button{pointer-events:auto;position:absolute;left:0;width:44px;height:24px;border-radius:13px;border:1px solid #dcdce0;background:#e8e8ed;cursor:pointer;transition:background .2s;outline:none;display:block}
-.rail button::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.rail button::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
 .rail button.on{background:var(--accent)}
-.rail button.on::after{left:18px}
+.rail button.on::after{left:22px}
 .card-add-row{display:flex;justify-content:center;padding:8px 0 10px}
 .add-card-btn{border:1px dashed var(--border);background:transparent;color:var(--text-2);border-radius:12px;padding:12px 30px;font-size:14px;cursor:pointer}
 .add-card-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -300,7 +319,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 
 /* AI 小纸（悬浮、可拖、吸附） */
 .ai-ball{position:fixed;right:20px;bottom:32px;z-index:95;width:58px;height:58px;border-radius:50%;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,122,255,.45);line-height:1.15;border:none}
-.ai-ball.open{background:var(--text)}
+.ai-ball.open{background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.28)}
 .bl-name{font-size:13px;font-weight:700;line-height:1}
 .bl-tag{font-style:normal;font-size:9px;font-weight:700;background:rgba(255,255,255,.28);border-radius:4px;padding:0 4px;line-height:1.5}
 .bl-x{font-size:22px;line-height:1;font-weight:400}
@@ -335,13 +354,13 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 /* 运行时注入节点必须用全局样式（scoped 不影响动态元素） */
 .daybody{outline:none}
 .daybody ol{list-style:none!important;counter-reset:item;margin:0;padding:0}
-.daybody ol>li{list-style:none!important;counter-increment:item;position:relative;padding:9px 56px 9px 2.4em;min-height:1.7em;color:var(--text)}
+.daybody ol>li{list-style:none!important;counter-increment:item;position:relative;padding:9px 56px 9px 1.8em;min-height:1.7em;color:var(--text)}
 .daybody ol>li::marker{content:''!important}
-.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:2em;text-align:right;padding-right:8px;color:var(--text-2);opacity:.6;font-size:.92em}
+.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.6em;text-align:right;padding-right:6px;color:var(--text-2);opacity:.6;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.72}
 .daybody .rail{position:absolute;right:4px;top:0;width:46px;height:100%;pointer-events:none;z-index:6}
-.daybody .rail button{pointer-events:auto;position:absolute;left:0;width:42px;height:24px;border-radius:13px;border:1px solid rgba(0,0,0,.12);background:#e8e8ed;cursor:pointer;transition:background .2s;outline:none}
-.daybody .rail button::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.daybody .rail button{pointer-events:auto;position:absolute;left:0;width:44px;height:24px;border-radius:13px;border:1px solid rgba(0,0,0,.14);background:#e8e8ed;cursor:pointer;transition:background .2s;outline:none}
+.daybody .rail button::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
 .daybody .rail button.on{background:#007aff}
-.daybody .rail button.on::after{left:20px}
+.daybody .rail button.on::after{left:22px}
 </style>

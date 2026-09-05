@@ -5,7 +5,14 @@
     </button>
 
     <div class="auth-card">
-      <div class="logo-mark">纸</div>
+      <div class="logo-mark">
+        <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true">
+          <rect x="13" y="10" width="16" height="26" rx="2" fill="#fff"/>
+          <g stroke="#9ecbff" stroke-width="1.6" stroke-linecap="round"><path d="M16.5 16h9"/><path d="M16.5 21h9"/><path d="M16.5 26h5.5"/></g>
+          <path d="M26 33 L40 19" stroke="#ffd60a" stroke-width="5" stroke-linecap="round"/>
+          <path d="M35.6 23.4 L40 19" stroke="#2a2a2a" stroke-width="4.6" stroke-linecap="round"/>
+        </svg>
+      </div>
       <h1 class="title">纸上</h1>
       <p class="subtitle">像写日记一样，记录每天的 todo</p>
 

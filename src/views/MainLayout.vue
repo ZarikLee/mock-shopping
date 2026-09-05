@@ -4,7 +4,14 @@
     <transition name="drawer">
       <aside class="sidebar" v-show="showSidebar">
         <div class="brand" @click="goProjects">
-          <div class="brand-mark">纸</div>
+          <div class="brand-mark">
+            <svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true">
+              <rect x="13" y="10" width="16" height="26" rx="2" fill="#fff"/>
+              <g stroke="#9ecbff" stroke-width="1.6" stroke-linecap="round"><path d="M16.5 16h9"/><path d="M16.5 21h9"/><path d="M16.5 26h5.5"/></g>
+              <path d="M26 33 L40 19" stroke="#ffd60a" stroke-width="5" stroke-linecap="round"/>
+              <path d="M35.6 23.4 L40 19" stroke="#2a2a2a" stroke-width="4.6" stroke-linecap="round"/>
+            </svg>
+          </div>
           <div class="brand-name">纸上</div>
         </div>
         <div class="me">
@@ -22,7 +29,10 @@
         </div>
         <button class="add-proj" @click="goProjects">＋ 新建项目</button>
         <div class="sb-foot">
-          <button class="sb-btn" @click="settingsOpen = true">⚙ 设置</button>
+          <button class="sb-btn" @click="settingsOpen = true">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>设置</span>
+          </button>
           <button class="sb-btn" @click="logout">退出登录</button>
         </div>
       </aside>
@@ -40,9 +50,9 @@
 
           <!-- 菜单 -->
           <div v-if="setPage === 'menu'" class="s-list">
-            <button class="s-row" @click="setPage = 'profile'"><span class="s-ic">👤</span><span>个人信息</span><i>›</i></button>
-            <button class="s-row" @click="setPage = 'about'"><span class="s-ic">ℹ️</span><span>版本信息</span><i>›</i></button>
-            <button class="s-row" @click="setPage = 'feedback'"><span class="s-ic">💬</span><span>建议反馈</span><i>›</i></button>
+            <button class="s-row" @click="setPage = 'profile'"><span class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span>个人信息</span><i>›</i></button>
+            <button class="s-row" @click="setPage = 'about'"><span class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span><span>版本信息</span><i>›</i></button>
+            <button class="s-row" @click="setPage = 'feedback'"><span class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span>建议反馈</span><i>›</i></button>
           </div>
 
           <!-- 个人信息 -->
@@ -187,8 +197,9 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 .add-proj { margin: 8px 0 10px; padding: 10px; border-radius: 8px; border: 1px dashed var(--border); background: transparent; color: var(--text-2); cursor: pointer; font-size: 13px; }
 .add-proj:hover { border-color: var(--accent); color: var(--accent); }
 .sb-foot { padding-top: 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
-.sb-btn { padding: 8px 10px; border: none; background: transparent; color: var(--text-2); font-size: 13px; text-align: left; cursor: pointer; border-radius: 6px; }
+.sb-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: none; background: transparent; color: var(--text-2); font-size: 13px; text-align: left; cursor: pointer; border-radius: 6px; }
 .sb-btn:hover { background: var(--surface-2); color: var(--text); }
+.brand-mark svg { display: block; }
 
 .center-mask { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
 .center-card { width: 100%; max-width: 440px; max-height: 86vh; overflow-y: auto; background: var(--surface); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.25); padding: 20px; }
@@ -198,7 +209,8 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 .s-list { display: flex; flex-direction: column; gap: 4px; }
 .s-row { display: flex; align-items: center; gap: 12px; padding: 13px 12px; border: none; background: transparent; border-radius: 10px; color: var(--text); font-size: 14px; cursor: pointer; text-align: left; }
 .s-row:hover { background: var(--surface-2); }
-.s-ic { font-size: 17px; }
+.s-ic { display: inline-flex; width: 20px; height: 20px; color: var(--text-2); flex-shrink: 0; }
+.s-ic svg { width: 100%; height: 100%; display: block; }
 .s-row i { margin-left: auto; color: var(--text-2); font-style: normal; }
 .s-page { display: flex; flex-direction: column; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
