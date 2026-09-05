@@ -53,7 +53,10 @@
       </div>
     </div>
 
-    <button class="ai-fab" :class="{ open: aiOpen }" @click="aiOpen = !aiOpen">{{ aiOpen ? '×' : 'AI' }}</button>
+    <div class="ai-ball" :class="{ open: aiOpen }" :style="{ left: ball.left + 'px', top: ball.top + 'px' }"
+      @pointerdown="ballDown">
+      <span class="bl-name">{{ aiOpen ? '×' : '小纸' }}</span><i class="bl-tag">AI</i>
+    </div>
     <transition name="fade"><div v-if="aiOpen" class="ai-dialog"><AiPanel :key="'p' + pid" :project-id="pid" @close="aiOpen = false" /></div></transition>
 
     <!-- 版本（居中、选择高亮、二次确认） -->
@@ -128,6 +131,17 @@ const unsavedPrompt=ref(false)
 const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);const confirmRollback=ref(false)
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
 const aiOpen=ref(false)
+const ball=reactive({left:window.innerWidth-92, top:window.innerHeight-100})
+let drag=false, moved=false, sx=0, sy=0, sl=0, st=0
+function ballDown(e){drag=true;moved=false;sx=e.clientX;sy=e.clientY;sl=ball.left;st=ball.top
+  e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId)
+  const mv=ev=>{if(!drag)return;const dx=ev.clientX-sx,dy=ev.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>4)moved=true
+    ball.left=Math.max(4,Math.min(window.innerWidth-76,sl+dx));ball.top=Math.max(4,Math.min(window.innerHeight-80,st+dy))}
+  const up=()=>{drag=false;window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up)
+    if(moved){const snapLeft=ball.left+38 < window.innerWidth/2;const right=window.innerWidth-76
+      ball.left=snapLeft?10:Math.max(10,right);ball.top=Math.max(10,Math.min(window.innerHeight-88,ball.top))}
+    else aiOpen.value=!aiOpen.value}
+  window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up)}
 const toast=ref('');let toastTimer=null;const timers={}
 const sizes=[12,13,14,15,16,18,20,22,24]
 const colors=['#1d1d1f','#ff3b30','#ff9500','#ffcc00','#34c759','#0a84ff','#af52de','#ffffff']
@@ -284,13 +298,13 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .del-day:hover{background:var(--red);color:#fff}
 .daybody{outline:none;min-height:46px;padding:8px 60px 18px}
 .daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
-.daybody ol>li{counter-increment:item;position:relative;padding:9px 0 9px 2.2em;min-height:1.7em;color:var(--text);clear:both}
+.daybody ol>li{counter-increment:item;position:relative;padding:9px 56px 9px 2.2em;min-height:1.7em;color:var(--text)}
 .daybody ol>li::after{content:'';display:block;clear:both}
 .daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.6em;text-align:right;padding-right:8px;color:var(--text-2);opacity:.55;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.75}
-/* iOS 滑动开关 */
-.sw{float:right;position:relative;width:38px;height:22px;border-radius:12px;border:none;background:#e5e5ea;cursor:pointer;transition:background .2s;flex:none;outline:none;margin-top:2px}
-.sw::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+/* iOS 滑动开关：绝对定位在每行右侧 */
+.sw{position:absolute;right:8px;top:8px;width:40px;height:24px;border-radius:13px;border:none;background:#e5e5ea;cursor:pointer;transition:background .2s;outline:none}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
 .sw.on{background:var(--accent)}
 .sw.on::after{left:18px}
 .card-add-row{display:flex;justify-content:center;padding:8px 0 10px}
@@ -298,9 +312,12 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .add-card-btn:hover{border-color:var(--accent);color:var(--accent)}
 .ph{padding:50px 0;color:var(--text-2);text-align:center}
 
-.ai-fab{position:fixed;right:22px;bottom:26px;z-index:95;min-width:54px;height:54px;border-radius:28px;border:none;background:var(--accent);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 28px rgba(0,122,255,.4);padding:0 20px}
-.ai-fab.open{background:var(--text)}
-.ai-dialog{position:fixed;right:22px;bottom:96px;z-index:96;width:min(420px,94vw);height:min(620px,74vh);background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.25);overflow:hidden;display:flex}
+/* AI 小纸（悬浮、可拖、吸附） */
+.ai-ball{position:fixed;z-index:95;display:flex;align-items:center;gap:4px;background:var(--accent);color:#fff;border-radius:22px;padding:7px 14px;cursor:pointer;box-shadow:0 8px 24px rgba(0,122,255,.4);user-select:none;touch-action:none}
+.ai-ball.open{background:var(--text)}
+.bl-name{font-size:14px;font-weight:700;line-height:1}
+.bl-tag{font-style:normal;font-size:9px;font-weight:700;background:rgba(255,255,255,.25);border-radius:4px;padding:0 4px;line-height:1.4}
+.ai-dialog{position:fixed;right:20px;bottom:96px;z-index:96;width:min(420px,94vw);height:min(620px,72vh);background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.25);overflow:hidden;display:flex}
 
 .center-mask{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);z-index:120;padding:20px}
 .center-card{width:340px;background:var(--surface);border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px}

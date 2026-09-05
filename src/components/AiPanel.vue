@@ -2,7 +2,7 @@
   <aside class="ai-panel">
     <header class="ai-head">
       <span class="ai-dot"></span>
-      <span class="ai-title">日志搭子</span>
+      <span class="ai-title">小纸 <i class="ai-tag">AI</i></span>
       <button class="ai-x" @click="emit('close')">×</button>
     </header>
 
@@ -20,11 +20,11 @@
     </div>
 
     <footer class="ai-foot">
-      <div class="suggests">
+      <div class="suggests" v-if="!hideSuggest">
         <button v-for="s in suggests" :key="s" class="sg" @click="useSuggest(s)">{{ s }}</button>
       </div>
       <div class="ai-input">
-        <textarea v-model="draft" rows="1" placeholder="和你的日志聊两句…" @keydown.enter.prevent="send"></textarea>
+        <textarea v-model="draft" rows="1" placeholder="和小纸聊两句…" @keydown.enter.prevent="send"></textarea>
         <button class="send" :disabled="!draft.trim() || typing" @click="send">发送</button>
       </div>
     </footer>
@@ -41,6 +41,7 @@ const suggests = ['帮我总结今天', '帮我写这周周报', '我这周状�
 const draft = ref('')
 const typing = ref(false)
 const bodyEl = ref(null)
+const hideSuggest = ref(false)
 const history = []      // {role, content} 用于后端上下文（完整句）
 let shown = ref([])     // 渲染用（分段）
 let seq = 0
@@ -92,6 +93,7 @@ async function send() {
   const text = draft.value.trim()
   if (!text || typing.value) return
   draft.value = ''
+  hideSuggest.value = true
   shown.value.push({ id: ++seq, role: 'me', content: text })
   history.push({ role: 'me', content: text })
   scrollDown()
@@ -112,6 +114,7 @@ function reset() {
   history.length = 0
   shown.value = []
   sentAny.value = false
+  hideSuggest.value = false
   timers.forEach(t => clearTimeout(t))
   timers = []
   typing.value = false
@@ -125,7 +128,8 @@ onBeforeUnmount(() => timers.forEach(t => clearTimeout(t)))
 .ai-panel{width:100%;height:100%;display:flex;flex-direction:column;background:var(--surface);border-left:1px solid var(--border)}
 .ai-head{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border)}
 .ai-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
-.ai-title{font-weight:600;font-size:14px;flex:1}
+.ai-title{font-weight:600;font-size:14px;flex:1;display:flex;align-items:center;gap:5px}
+.ai-tag{font-style:normal;font-size:9px;font-weight:700;background:var(--accent);color:#fff;border-radius:4px;padding:0 4px;line-height:1.4}
 .ai-x{border:none;background:none;color:var(--text-2);font-size:18px;cursor:pointer;width:26px;height:26px;border-radius:50%}
 .ai-x:hover{background:var(--surface-2)}
 .ai-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
@@ -144,8 +148,9 @@ onBeforeUnmount(() => timers.forEach(t => clearTimeout(t)))
 @keyframes blink{0%,60%,100%{opacity:.2}30%{opacity:1}}
 @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
 .ai-foot{display:flex;flex-direction:column;gap:8px;padding:12px;border-top:1px solid var(--border)}
-.suggests{display:flex;gap:6px;flex-wrap:wrap}
-.sg{border:1px solid var(--border);background:var(--bg);color:var(--accent);font-size:12px;border-radius:14px;padding:4px 10px;cursor:pointer}
+.suggests{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+.suggests::-webkit-scrollbar{display:none}
+.sg{border:1px solid var(--border);background:var(--bg);color:var(--accent);font-size:12px;border-radius:14px;padding:4px 10px;cursor:pointer;white-space:nowrap;flex:none}
 .sg:hover{border-color:var(--accent)}
 .ai-input{display:flex;gap:8px}
 .ai-input textarea{flex:1;resize:none;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:8px 12px;font-size:14px;outline:none;min-height:36px;max-height:120px}

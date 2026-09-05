@@ -104,7 +104,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 .sb-btn { padding: 8px 10px; border: none; background: transparent; color: var(--text-2); font-size: 13px; text-align: left; cursor: pointer; border-radius: 6px; }
 .sb-btn:hover { background: var(--surface-2); color: var(--text); }
 
-.main { flex: 1; min-width: 0; background: var(--bg); }
+.main { flex: 1; min-width: 0; background: var(--bg); height: 100vh; overflow: hidden; }
 .m-topbar { display: none; }
 .mask { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 55; }
 
