@@ -18,14 +18,14 @@ async function callDeepSeek(messages) {
 function gatherContext(user, project) {
   const logs = queryAll('day_logs', { projectId: project.id })
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
-    .slice(0, 5);
+    .slice(0, 7);
   const days = logs.map(l => {
-    const texts = (l.items || []).map(i => (i.done ? '[完成]' : '') + (i.text || '')).filter(Boolean).join('；');
+    const texts = (l.items || []).map(i => (i.done ? '[完成]' : '[未完成]') + (i.text || '')).filter(Boolean).join('；');
     return `${l.date}（${l.weekday}）：${texts || '（空）'}`;
   }).join('\n');
   const name = user.nickname || user.account;
   const kind = project.type === 'school' ? '学校' : '企业';
-  return `用户：${name}（${user.role === 'student' ? '学生' : '职场人'}），在「${project.name}」（${kind}）。近几天记录：\n${days || '暂无记录。'}`;
+  return `用户：${name}（${user.role === 'student' ? '学生' : '职场人'}），在「${project.name}」（${kind}）。近一周记录：\n${days || '暂无记录。'}`;
 }
 
 function fallbackReply(context, msg) {

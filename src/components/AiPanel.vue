@@ -3,6 +3,7 @@
     <header class="ai-head">
       <span class="ai-dot"></span>
       <span class="ai-title">日志搭子</span>
+      <button class="ai-x" @click="emit('close')">×</button>
     </header>
 
     <div class="ai-body" ref="bodyEl">
@@ -19,8 +20,13 @@
     </div>
 
     <footer class="ai-foot">
-      <textarea v-model="draft" rows="1" placeholder="和你的日志聊两句…" @keydown.enter.prevent="send"></textarea>
-      <button class="send" :disabled="!draft.trim() || typing" @click="send">发送</button>
+      <div class="suggests">
+        <button v-for="s in suggests" :key="s" class="sg" @click="useSuggest(s)">{{ s }}</button>
+      </div>
+      <div class="ai-input">
+        <textarea v-model="draft" rows="1" placeholder="和你的日志聊两句…" @keydown.enter.prevent="send"></textarea>
+        <button class="send" :disabled="!draft.trim() || typing" @click="send">发送</button>
+      </div>
     </footer>
   </aside>
 </template>
@@ -30,6 +36,8 @@ import { ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { aiApi } from '../api/ai'
 
 const props = defineProps({ projectId: { type: Number, required: true } })
+const emit = defineEmits(['close'])
+const suggests = ['帮我总结今天', '帮我写这周周报', '我这周状态怎么样', '给我点建议']
 const draft = ref('')
 const typing = ref(false)
 const bodyEl = ref(null)
@@ -99,6 +107,7 @@ async function send() {
   }
 }
 
+function useSuggest(s){ draft.value = s; send() }
 function reset() {
   history.length = 0
   shown.value = []
@@ -116,7 +125,9 @@ onBeforeUnmount(() => timers.forEach(t => clearTimeout(t)))
 .ai-panel{width:100%;height:100%;display:flex;flex-direction:column;background:var(--surface);border-left:1px solid var(--border)}
 .ai-head{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border)}
 .ai-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
-.ai-title{font-weight:600;font-size:14px}
+.ai-title{font-weight:600;font-size:14px;flex:1}
+.ai-x{border:none;background:none;color:var(--text-2);font-size:18px;cursor:pointer;width:26px;height:26px;border-radius:50%}
+.ai-x:hover{background:var(--surface-2)}
 .ai-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
 .ai-welcome{display:flex;gap:10px;color:var(--text-2);font-size:13px;align-items:flex-start;max-width:85%}
 .ai-avatar{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
@@ -132,8 +143,12 @@ onBeforeUnmount(() => timers.forEach(t => clearTimeout(t)))
 .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,60%,100%{opacity:.2}30%{opacity:1}}
 @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
-.ai-foot{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}
-.ai-foot textarea{flex:1;resize:none;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:8px 12px;font-size:14px;outline:none;min-height:36px;max-height:120px}
+.ai-foot{display:flex;flex-direction:column;gap:8px;padding:12px;border-top:1px solid var(--border)}
+.suggests{display:flex;gap:6px;flex-wrap:wrap}
+.sg{border:1px solid var(--border);background:var(--bg);color:var(--accent);font-size:12px;border-radius:14px;padding:4px 10px;cursor:pointer}
+.sg:hover{border-color:var(--accent)}
+.ai-input{display:flex;gap:8px}
+.ai-input textarea{flex:1;resize:none;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:8px 12px;font-size:14px;outline:none;min-height:36px;max-height:120px}
 .send{border:none;border-radius:10px;background:var(--accent);color:#fff;padding:0 16px;font-size:14px;cursor:pointer}
 .send:disabled{opacity:.5}
 </style>
