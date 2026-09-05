@@ -6,6 +6,10 @@
           <div class="t-name"><button class="back-m" @click="router.push('/projects')">‹</button>
             <span class="pn">{{ projectName }}</span><span class="t-sub">{{ projectSub }}</span></div>
           <span class="as-tip" :class="{ on: hasDirty }">{{ savedTip }}</span>
+          <div class="ver-grp">
+            <button class="vbtn" :disabled="!canUndo" @click="verPrev" title="撤销最近一次操作">上一版本</button>
+            <button class="vbtn" :disabled="!canRedo" @click="verNext" title="重做">下一版本</button>
+          </div>
         </div>
         <div class="t-actions">
           <button class="tb blue" @click="importOpen = true">导入历史</button>
@@ -69,7 +73,7 @@
     <div v-if="importOpen" class="center-mask">
       <div class="center-card wide">
         <h3>导入历史记录</h3>
-        <p class="tip">支持 txt / Markdown。每行开头是日期即开新一天，其余行是该天任务；任务前加 [x]/✔ 视为已完成。</p>
+        <p class="tip">支持 txt / Markdown / 纯文本。日期支持：2024-09-01、2024/9/1、2024年9月1日、20240901、9月1日或 9.1（自动就近补年份）等。任务行前加 [x]/✔ 视为已完成；多个日期自动分天、去重合并，可导入后点“上一版本”撤回。</p>
         <textarea v-model="importText" class="imp" placeholder="示例：
 2024-09-01 周日
 - [x] 复习高数
@@ -147,6 +151,9 @@ const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const 
 const aiOpen=ref(false)
 const scrollEl=ref(null)
 const showRemind=ref(false)
+const undoStack=ref([]);const redoStack=ref([])
+const canUndo=computed(()=>undoStack.value.length>0)
+const canRedo=computed(()=>redoStack.value.length>0)
 const pastPendingTotal=ref(0)
 const pastPendingCount=ref(0)
 
@@ -178,10 +185,12 @@ async function maybeRemind(){if(localStorage.getItem('dl_rem_'+pid.value)===tNow
   const u=pastUnfinished();if(!u.total)return
   pastPendingTotal.value=u.total;pastPendingCount.value=u.count;showRemind.value=true}
 function closeRemind(){showRemind.value=false;localStorage.setItem('dl_rem_'+pid.value,tNow)}
-async function markAllPastDone(){const u=pastUnfinished();if(!u.list.length){closeRemind();return}
+async function markAllPastDone(){pushSnap('全部标记完成')
+  const u=pastUnfinished();if(!u.list.length){closeRemind();return}
   const changed=[];u.list.forEach(d=>{d.items.forEach(i=>i.done=true);changed.push(d)})
   await saveDays(changed);changed.forEach(renderBody);closeRemind();showToast('已全部标记完成')}
-async function movePastToToday(){const u=pastUnfinished();const today=ensureToday()
+async function movePastToToday(){pushSnap('未完成搬到今天')
+  const u=pastUnfinished();const today=ensureToday()
   const move=[];u.list.forEach(d=>{d.items.forEach(i=>{if(!i.done){move.push({text:i.text,done:false});i.done=true}})})
   today.items=today.items.concat(move.filter(i=>i.text&&i.text.trim()));renderBody(today)
   await saveDays([today,...u.list]);closeRemind();showToast('已将 '+move.length+' 条搬到今天')}
@@ -231,6 +240,7 @@ function blurDay(day,e){
 const delDay=ref(null)
 function askDelete(day){delDay.value=day}
 function doDelete(){const day=delDay.value;if(!day)return
+  pushSnap('删除 '+dayLabel(day.date))
   const i=days.value.findIndex(d=>d.date===day.date);if(i>=0)days.value.splice(i,1)
   delDay.value=null
   clearTimeout(timers[day.date]);delete timers[day.date]
@@ -241,9 +251,32 @@ function focusLi(day,idx){nextTick(()=>{const el=document.querySelector(`.daybod
 function addNextDay(){const last=days.value.reduce((m,d)=>d.date>m?d.date:m,'');let base=last?last:tNow
   if(base<tNow)base=tNow
   const nd=new Date(base+'T00:00:00');nd.setDate(nd.getDate()+1);const date=dstr(nd)
+  pushSnap('新增 '+dayLabel(date))
   let day=findDay(date);if(!day){day=norm({date,weekday:wk(date),items:[]});days.value.push(day)}
   renderBody(day);onInput(day);focusLi(day,0);document.querySelector('.daybody[data-date="'+date+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})}
 function showToast(m){toast.value=m;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.value='',2000)}
+function clearAllTimers(){Object.values(timers).forEach(t=>clearTimeout(t))}
+function curSnap(){days.value.forEach(readBody);return snapAll()}
+function snapAll(){return days.value.map(d=>({date:d.date,items:cleanItems(d.items).map(i=>({text:i.text,done:!!i.done}))}))}
+function pushSnap(tag){undoStack.value.push({tag,data:curSnap()});if(undoStack.value.length>40)undoStack.value.shift();redoStack.value=[]}
+async function persistDoc(list){for(const d of list){d._dirty=false;d._last=snapDay(d);await projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items}).catch(()=>{})}}
+async function applyVersion(dir){const src=dir==='prev'?undoStack:redoStack;const dst=dir==='prev'?redoStack:undoStack
+  if(!src.value.length)return
+  clearAllTimers()
+  const snap=src.value.pop()
+  const curDates=days.value.map(d=>d.date)
+  dst.value.push({tag:'当前',data:curSnap()})
+  days.value=snap.data.map(r=>({date:r.date,weekday:wk(r.date),items:r.items.map(i=>({text:i.text,done:!!i.done})),_dirty:false,_last:null}))
+  days.value.sort((a,b)=>a.date<b.date?-1:1)
+  const keep=new Set(days.value.map(d=>d.date))
+  for(const rem of curDates.filter(x=>!keep.has(x))){await projectApi.removeDay(pid.value,rem).catch(()=>{})}
+  await persistDoc(days.value)
+  days.value.forEach(renderBody)
+  lastSaved.value=nowStamp()
+  const tag=snap.tag?('（'+snap.tag+'）'):''
+  showToast(dir==='prev'?('已回到上一版本'+tag):('已前进到下一版本'+tag))}
+function verPrev(){applyVersion('prev')}
+function verNext(){applyVersion('next')}
 
 async function load(){loading.value=true;loadError.value=''
   try{const list=await projectApi.list();const arr=Array.isArray(list)?list:(list.projects||[])
@@ -280,28 +313,56 @@ async function doRollback(){confirmRollback.value=false;const v=selVersion.value
 const preview=items=>(items||[]).slice(0,3).map(i=>(i.done?'✓ ':'· ')+(i.text||'')).join('　')+((items||[]).length>3?'…':'')
 
 // 导入解析
-function normDate(y,m,d){return `${y}-${pad(+m)}-${pad(+d)}`}
-function parseLineDate(line){let m=line.match(/^\s*(\d{4})[年.\/-](\d{1,2})[月.\/-](\d{1,2})日?/);if(m)return normDate(m[1],m[2],m[3])
-  m=line.match(/^\s*(\d{1,2})[月.\/-](\d{1,2})日?/);if(m){const n=new Date();let mm=+m[1],dd=+m[2];let yy=n.getFullYear();let base=new Date(yy,mm-1,dd);if(base>n)base=new Date(yy-1,mm-1,dd);return dstr(base)}
+function fw(s){return s.replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0))}
+function normDate(y,m,d){return `${pad(y)}-${pad(+m)}-${pad(+d)}`}
+function validDate(ds){const t=new Date(ds+'T00:00:00');return !isNaN(t.getTime())&&ds===dstr(t)}
+function resolveMd(mm,dd){const y0=new Date().getFullYear();let base=new Date(y0,mm-1,dd)
+  if(base.getMonth()!==mm-1||base.getDate()!==dd)return null
+  if(base>new Date())base=new Date(y0-1,mm-1,dd)
+  return dstr(base)}
+function parseLineDate(line){let s=fw(line).trim()
+  s=s.replace(/^(?:日期|时间)\s*[:：]\s*/i,'')
+  let m=s.match(/^(\d{4})\s*[年.\-\/]\s*(\d{1,2})\s*[月.\-\/]\s*(\d{1,2})\s*[日号]?/)
+  if(m){const ds=normDate(m[1],m[2],m[3]);if(validDate(ds))return ds}
+  m=s.match(/^(\d{4})(\d{2})(\d{2})/)
+  if(m){const ds=normDate(m[1],m[2],m[3]);if(validDate(ds))return ds}
+  m=s.match(/^(\d{1,2})\s*[月.\-\/]\s*(\d{1,2})\s*[日号]?/)
+  if(m)return resolveMd(+m[1],+m[2])
   return null}
+function stripMark(t){let s=fw(t).trim();let q
+  do{q=s.replace(/^(\s*[-*•·]+\s+|\s*\d{1,3}\s*[.、)]\s+|\s*[#>]\s+)/,'');if(q===s)break;s=q}while(true)
+  return s}
+function isWeekdayHeading(t){return /^(星期[一二三四五六日天]|周[一二三四五六日天])$/.test(t)}
 function isDoneLine(t){return /^[✓✔×x]|[\[（(]\s*(x|√|✓|完成)\s*[\]）)]|完成\s*$/.test(t)}
+function cleanText(t){return t.replace(/^[✓✔×x]\s*|[\[（(]\s*(x|√|✓|完成)\s*[\]）)]\s*|\s*完成\s*$/,'').replace(/[。.]$/,'').trim()}
 function parseImport(text){const map=new Map();let cur=null
-  const lines=text.split(/\r?\n/)
-  for(const raw of lines){const line=raw.replace(/^\s*([-*•\d]+\.?)\s*/,'')
-    const dl=parseLineDate(line);if(dl){if(!map.has(dl))map.set(dl,{date:dl,weekday:wk(dl),items:[]});cur=map.get(dl);continue}
+  for(const raw of text.split(/\r?\n/)){const line=raw.trim();if(!line)continue
+    const rawDate=parseLineDate(line)
+    if(rawDate){if(!map.has(rawDate))map.set(rawDate,{date:rawDate,weekday:wk(rawDate),items:[]});cur=map.get(rawDate);continue}
+    const body=stripMark(line)
+    if(!body||isWeekdayHeading(body))continue
     if(!cur){const d=tNow;if(!map.has(d)){map.set(d,{date:d,weekday:wk(d),items:[]})}cur=map.get(d)}
-    const t=line.trim();if(!t)continue
-    const done=isDoneLine(t);const clean=t.replace(/^[✓✔×x]\s*|[\[（(]\s*(x|√|✓|完成)\s*[\]）)]\s*|\s*完成\s*$/,'').trim()
+    const done=isDoneLine(body);const clean=cleanText(body)
     if(clean)cur.items.push({text:clean,done})}
   return [...map.values()].sort((a,b)=>a.date<b.date?-1:1)}
 function previewImport(){parsed.value=parseImport(importText.value)
   importPreview.value=parsed.value.length?`解析到 ${parsed.value.length} 天，共 ${parsed.value.reduce((s,d)=>s+d.items.length,0)} 条任务`:'未识别到内容'}
 function onFile(e){const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=ev=>{importText.value=String(ev.target.result||'');previewImport()};r.readAsText(f)}
 async function doImport(){if(!parsed.value.length)return
-  let ok=0
-  for(const d of parsed.value){try{await projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items});ok++}catch{}}
+  pushSnap('导入历史')
+  clearAllTimers()
+  const upserted=[];let added=0
+  for(const d of parsed.value){
+    let day=findDay(d.date)
+    if(!day){day=norm({date:d.date,weekday:wk(d.date),items:[]});days.value.push(day)}
+    const have=new Set((day.items||[]).map(i=>i.text))
+    for(const it of d.items){if(it.text&&!have.has(it.text)){day.items.push({text:it.text,done:!!it.done});have.add(it.text);added++}}
+    upserted.push(day)}
+  days.value.sort((a,b)=>a.date<b.date?-1:1)
+  await persistDoc(upserted)
+  days.value.forEach(renderBody)
   importOpen.value=false;importText.value='';parsed.value=[];importPreview.value=''
-  showToast('已导入 '+ok+' 天');load()}
+  showToast('已导入 '+added+' 条任务，可点“上一版本”撤回')}
 function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
 function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearTimeout(timers[day.date]);autosave(day)}})}
 
@@ -324,6 +385,10 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .tb.blue{background:var(--accent);border-color:var(--accent);color:#fff}
 .theme-round{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:17px;cursor:pointer;flex-shrink:0;transition:all .2s}
 .as-tip{font-size:13px;color:var(--text-2)}
+.ver-grp{display:flex;gap:6px}
+.vbtn{padding:3px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:12px;cursor:pointer}
+.vbtn:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
+.vbtn:disabled{opacity:.45;cursor:default}
 .fmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
 .fsel{border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:5px 8px;font-size:13px;outline:none}
 .fb{min-width:28px;height:26px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);cursor:pointer;line-height:1;font-weight:600;font-size:13px}
