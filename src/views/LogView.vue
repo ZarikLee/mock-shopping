@@ -31,13 +31,17 @@
       <div v-if="loadError" class="err">{{ loadError }}</div>
       
       <div class="scroll">
+        <div class="docmap" v-if="days.length > 1">
+          <button v-for="(d,i) in days" :key="'m' + d.date" class="map-slot"
+            :class="mapCls(d)" :title="dayLabel(d.date) + ' · ' + doneOf(d) + '/' + (d.items.length||0)" @click="jumpDay(i)"></button>
+        </div>
         <div class="doc" :style="{ fontFamily: prefs.font, fontSize: prefs.size + 'px', lineHeight: prefs.lh }">
           <section v-for="day in days" :key="day.date" class="day-card">
             <div class="dhead">
               <span class="dt">{{ dayLabel(day.date) }}<em> {{ day.weekday }}</em></span>
               <span class="dtools">
-                <span v-if="day.items.length" class="dstat">{{ doneOf(day) }}/{{ day.items.length }}</span>
-                <span v-if="day._dirty" class="ddot"></span>
+                <span v-if="day.items.length" class="dstat" :class="cs(day)">{{ doneOf(day) }}/{{ day.items.length }}</span>
+                <i v-if="day.items.length" class="cstat" :class="cs(day)" :title="'完成 ' + doneOf(day) + '/' + day.items.length"></i>
                 <button class="del-day" @click="askDelete(day)" title="删除这一天">×</button>
               </span>
             </div>
@@ -57,7 +61,9 @@
     <button class="ai-ball" :class="{ open: aiOpen }" @click="aiOpen = !aiOpen">
       <template v-if="!aiOpen"><i class="bl-tag">AI</i><span class="bl-name">小纸</span></template><span v-else class="bl-x">×</span>
     </button>
-    <transition name="fade"><div v-if="aiOpen" class="ai-dialog"><AiPanel :key="'p' + pid" :project-id="pid" @close="aiOpen = false" /></div></transition>
+    <transition name="fade">
+      <div v-show="aiOpen" class="ai-dialog"><AiPanel :project-id="pid" @close="aiOpen = false" /></div>
+    </transition>
 
     <!-- 导入历史 -->
     <div v-if="importOpen" class="center-mask">
@@ -98,6 +104,22 @@
         </div>
       </div>
     </transition>
+
+    <!-- 历史未完成任务提醒 -->
+    <transition name="fade">
+      <div v-if="showRemind" class="center-mask" @click.self="closeRemind">
+        <div class="center-card">
+          <h3>有几条任务还没完成哦</h3>
+          <p class="tip">你在过去的 {{ pastPendingCount }} 个日子里还有 {{ pastPendingTotal }} 条任务未勾选完成。</p>
+          <p class="tip">可以选择一次性把它们都标为完成，或把未完成的搬到今天继续跟进：</p>
+          <div class="col-btns">
+            <button class="primary" @click="markAllPastDone">全部标为完成</button>
+            <button class="ghost-wide" @click="movePastToToday">把未完成搬到今天</button>
+            <button class="linkbtn" @click="closeRemind">暂不处理</button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -123,6 +145,10 @@ const savedTip=computed(()=>hasDirty.value?'正在编辑…':(lastSaved.value?('
 const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);const confirmRollback=ref(false)
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
 const aiOpen=ref(false)
+const scrollEl=ref(null)
+const showRemind=ref(false)
+const pastPendingTotal=ref(0)
+const pastPendingCount=ref(0)
 
 const toast=ref('');let toastTimer=null;const timers={}
 const sizes=[12,13,14,15,16,18,20,22,24]
@@ -137,6 +163,28 @@ function dstr(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDa
 const nowD=new Date();const tNow=dstr(nowD)
 const isToday=d=>d===tNow
 const doneOf=day=>(day.items||[]).filter(i=>i.done).length
+const cs=day=>{const it=day.items||[];if(!it.length)return '';return it.every(i=>i.done)?'ok':'todo'}
+const mapCls=day=>{const it=day.items||[];if(!it.length)return 'none';return it.every(i=>i.done)?'ok':'todo'}
+function jumpDay(i){const d=days.value[i];if(!d||!scrollEl.value)return
+  const el=document.querySelector(`.daybody[data-date="${d.date}"]`)?.closest('.day-card');if(!el)return
+  const sr=scrollEl.value.getBoundingClientRect();const top=scrollEl.value.scrollTop+(el.getBoundingClientRect().top-sr.top)-12
+  scrollEl.value.scrollTo({top:Math.max(0,top),behavior:'smooth'})}
+function pastUnfinished(){const arr=days.value.filter(d=>d.date<tNow&&(d.items||[]).some(i=>!i.done))
+  return {list:arr,total:arr.reduce((n,d)=>n+d.items.filter(i=>!i.done).length,0),count:arr.length}}
+function ensureToday(){let today=findDay(tNow);if(!today){today=norm({date:tNow,weekday:wk(tNow),items:[]});days.value.push(today)}
+  days.value.sort((x,y)=>x.date<y.date?-1:1);renderBody(today);return today}
+function saveDays(arr){return Promise.all(arr.map(d=>projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items}).then(()=>{d._dirty=false;d._last=snapDay(d)}).catch(()=>{})))}
+async function maybeRemind(){if(localStorage.getItem('dl_rem_'+pid.value)===tNow)return
+  const u=pastUnfinished();if(!u.total)return
+  pastPendingTotal.value=u.total;pastPendingCount.value=u.count;showRemind.value=true}
+function closeRemind(){showRemind.value=false;localStorage.setItem('dl_rem_'+pid.value,tNow)}
+async function markAllPastDone(){const u=pastUnfinished();if(!u.list.length){closeRemind();return}
+  const changed=[];u.list.forEach(d=>{d.items.forEach(i=>i.done=true);changed.push(d)})
+  await saveDays(changed);changed.forEach(renderBody);closeRemind();showToast('已全部标记完成')}
+async function movePastToToday(){const u=pastUnfinished();const today=ensureToday()
+  const move=[];u.list.forEach(d=>{d.items.forEach(i=>{if(!i.done){move.push({text:i.text,done:false});i.done=true}})})
+  today.items=today.items.concat(move.filter(i=>i.text&&i.text.trim()));renderBody(today)
+  await saveDays([today,...u.list]);closeRemind();showToast('已将 '+move.length+' 条搬到今天')}
 const dayLabel=d=>{const p=d.split('-');return `${p[0]}年${+p[1]}月${+p[2]}日`}
 const wk=d=>WEEKS[new Date(d+'T00:00:00').getDay()]
 const fmtTime=t=>{if(!t)return'';const d=new Date(t);return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
@@ -205,7 +253,7 @@ async function load(){loading.value=true;loadError.value=''
     if(days.value.length){const last=days.value[days.value.length-1]
       try{const info=await projectApi.log(pid.value,last.date);if(info.dayLog&&info.lastVersion&&!same(snapDay(last),info.lastVersion.items.map(i=>[i.text||'',!!i.done])))unsavedPrompt.value=true}catch{}}
     days.value.forEach(renderBody)
-    requestAnimationFrame(()=>{days.value.forEach(renderBody)})
+    requestAnimationFrame(()=>{days.value.forEach(renderBody);maybeRemind()})
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done})).filter(i=>i.text!=='')}
@@ -286,8 +334,20 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .err{padding:6px 20px;color:var(--red);font-size:13px}
 .hint-line{padding:8px 20px;background:var(--glow);color:var(--glow-border);font-size:13px}
 .hint-line a{cursor:pointer;text-decoration:underline;margin-right:10px}
-.scroll{flex:1;overflow-y:auto}
-.doc{padding:20px clamp(14px,4vw,52px) 200px}
+.scroll{flex:1;overflow-y:auto;position:relative}
+.docmap{position:absolute;right:4px;top:10px;bottom:14px;width:8px;display:flex;flex-direction:column;gap:2px;z-index:5;opacity:.85}
+.map-slot{flex:1;min-height:3px;border:none;border-radius:3px;cursor:pointer;padding:0;background:var(--surface-2);transition:background .2s}
+.map-slot.ok{background:var(--green)}.map-slot.todo{background:var(--glow-border)}.map-slot.none{background:var(--surface-2)}
+.map-slot:hover{box-shadow:0 0 0 1px var(--text-2)}
+.dstat.todo{color:var(--glow-border)}.dstat.ok{color:var(--green)}
+.cstat{width:9px;height:9px;border-radius:50%;background:var(--glow-border);display:inline-block}
+.cstat.ok{background:var(--green)}
+.doc{padding:20px clamp(26px,4vw,52px) 200px}
+.center-card .col-btns{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.col-btns button{width:100%;padding:11px;border-radius:10px;font-size:14px;cursor:pointer;border:none}
+.ghost-wide{background:transparent;border:1px solid var(--border);color:var(--text)}
+.linkbtn{background:transparent;color:var(--text-2);font-size:13px}
+
 .day-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)}
 .dhead{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;user-select:none}
 .dt{font-size:15px;font-weight:600}
@@ -309,7 +369,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
  .dayph{color:var(--text-2);font-size:14px;padding:12px 4px;cursor:text;opacity:.75}
 .rail{position:absolute;right:4px;top:0;width:46px;height:100%;pointer-events:none;z-index:5}
 .rail button{pointer-events:auto;position:absolute;left:0;width:44px;height:24px;border-radius:13px;border:1px solid #dcdce0;background:#e8e8ed;cursor:pointer;transition:background .2s;outline:none;display:block}
-.rail button::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.rail button::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:1px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
 .rail button.on{background:var(--accent)}
 .rail button.on::after{left:22px}
 .card-add-row{display:flex;justify-content:center;padding:8px 0 10px}
@@ -348,7 +408,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .imp{width:100%;height:150px;resize:vertical;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:10px;font-size:13px;outline:none;line-height:1.6}
 .toast{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 22px;border-radius:22px;font-size:14px;z-index:200}
 .fade-enter-active,.fade-leave-active{transition:opacity .2s}.fade-enter-from,.fade-leave-to{opacity:0}
-@media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 8px 150px}.t-sub{display:none}.daybody{padding:8px 40px 16px}.center-card.wide{width:94vw}.ai-dialog{right:8px;bottom:84px;width:calc(100vw - 16px);height:72vh}}
+@media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 8px 150px}.t-sub{display:none}.docmap{display:none}.daybody{padding:8px 40px 16px}.center-card.wide{width:94vw}.ai-dialog{right:8px;bottom:84px;width:calc(100vw - 16px);height:72vh}}
 </style>
 <style>
 /* 运行时注入节点必须用全局样式（scoped 不影响动态元素） */
@@ -360,7 +420,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.72}
 .daybody .rail{position:absolute;right:4px;top:0;width:46px;height:100%;pointer-events:none;z-index:6}
 .daybody .rail button{pointer-events:auto;position:absolute;left:0;width:44px;height:24px;border-radius:13px;border:1px solid rgba(0,0,0,.14);background:#e8e8ed;cursor:pointer;transition:background .2s;outline:none}
-.daybody .rail button::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.daybody .rail button::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:1px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
 .daybody .rail button.on{background:#007aff}
 .daybody .rail button.on::after{left:22px}
 </style>
