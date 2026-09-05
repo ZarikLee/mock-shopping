@@ -53,6 +53,7 @@ const sentAny = ref(false)
 function stripEnd(text){return text.replace(/[。！？!?；;，,、：:．.…~～\s]+$/,'').trim()}
 
 function splitReply(text) {
+  if (/[\r\n]/.test(text)) return text.split(/\r?\n/).map(s => s.trim()).filter(Boolean)
   text = text.replace(/\s+/g, ' ').trim()
   const segs = []
   let cur = ''

@@ -9,6 +9,7 @@
           <div class="ver-grp">
             <button class="vbtn" :disabled="!canUndo" @click="verPrev" title="撤销最近一次操作">上一版本</button>
             <button class="vbtn" :disabled="!canRedo" @click="verNext" title="重做">下一版本</button>
+            <span class="vi-hint" tabindex="0"><i class="vi-q">i</i><span class="vi-tip">上一/下一版本为本次打开页面期间的临时记录，刷新或换设备后会丢失；服务端仅保留最近一次保存的状态。</span></span>
           </div>
         </div>
         <div class="t-actions">
@@ -335,12 +336,24 @@ function stripMark(t){let s=fw(t).trim();let q
 function isWeekdayHeading(t){return /^(星期[一二三四五六日天]|周[一二三四五六日天])$/.test(t)}
 function isDoneLine(t){return /^[✓✔×x]|[\[（(]\s*(x|√|✓|完成)\s*[\]）)]|完成\s*$/.test(t)}
 function cleanText(t){return t.replace(/^[✓✔×x]\s*|[\[（(]\s*(x|√|✓|完成)\s*[\]）)]\s*|\s*完成\s*$/,'').replace(/[。.]$/,'').trim()}
+function detectDate(line){const forms=[];let base=fw(line).trim();if(!base)return null
+  forms.push(base)
+  const rmWk=t=>t.replace(/^(?:星期[一二三四五六日天]|周[一二三四五六日天])\s*[\s（(【]?/,'')
+  forms.push(rmWk(base))
+  let b=base.replace(/^[-*•·#>\s]*/,'').trim()
+  forms.push(b);forms.push(rmWk(b))
+  let n=base.replace(/^\d{1,3}\s*[.、)）]\s*/,'')
+  if(n!==base)forms.push(n)
+  forms.push(base.replace(/^[（(【\[『「]\s*/,''))
+  for(const f of forms){const d=parseLineDate(f);if(d)return d}
+  return null}
 function parseImport(text){const map=new Map();let cur=null
-  for(const raw of text.split(/\r?\n/)){const line=raw.trim();if(!line)continue
-    const rawDate=parseLineDate(line)
-    if(rawDate){if(!map.has(rawDate))map.set(rawDate,{date:rawDate,weekday:wk(rawDate),items:[]});cur=map.get(rawDate);continue}
-    const body=stripMark(line)
+  for(const raw of text.split(/\r?\n/)){let line=fw(raw).trim();if(!line)continue
+    const body=stripMark(line).trim()
+    const headDate=detectDate(line)||detectDate(body)
+    if(headDate){if(!map.has(headDate))map.set(headDate,{date:headDate,weekday:wk(headDate),items:[]});cur=map.get(headDate);continue}
     if(!body||isWeekdayHeading(body))continue
+    if(/^\d{4}\s*[年.\-\/]\s*\d{1,2}\s*[月.\-\/]\s*\d{1,2}/.test(body)||/^\d{1,2}\s*[月.\-\/]\s*\d{1,2}/.test(body))continue
     if(!cur){const d=tNow;if(!map.has(d)){map.set(d,{date:d,weekday:wk(d),items:[]})}cur=map.get(d)}
     const done=isDoneLine(body);const clean=cleanText(body)
     if(clean)cur.items.push({text:clean,done})}
@@ -389,6 +402,10 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .vbtn{padding:3px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:12px;cursor:pointer}
 .vbtn:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
 .vbtn:disabled{opacity:.45;cursor:default}
+.vi-hint{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--border);color:var(--text-2);font-size:10px;font-style:normal;cursor:help;background:var(--bg)}
+.vi-q{font-style:normal;line-height:1}
+.vi-tip{visibility:hidden;opacity:0;position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%) translateY(4px);width:230px;padding:8px 10px;border-radius:8px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;font-style:normal;text-align:left;z-index:30;transition:opacity .15s,transform .15s,visibility .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.vi-hint:hover .vi-tip,.vi-hint:focus .vi-tip{visibility:visible;opacity:1;transform:translateX(-50%) translateY(0)}
 .fmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
 .fsel{border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:5px 8px;font-size:13px;outline:none}
 .fb{min-width:28px;height:26px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);cursor:pointer;line-height:1;font-weight:600;font-size:13px}
