@@ -5,8 +5,8 @@
     </button>
 
     <div class="auth-card">
-      <div class="logo-mark">记</div>
-      <h1 class="title">拾光任务</h1>
+      <div class="logo-mark">纸</div>
+      <h1 class="title">纸上</h1>
       <p class="subtitle">像写日记一样，记录每天的 todo</p>
 
       <div class="tabs">
