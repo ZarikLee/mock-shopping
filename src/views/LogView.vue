@@ -35,11 +35,8 @@
 
       <div v-if="loadError" class="err">{{ loadError }}</div>
       
-      <div class="scroll" @scroll="onDocScroll">
-        <div class="docmap" v-if="days.length" @mousedown.prevent="mapDown">
-          <canvas ref="mapCanvas" class="map-canvas"></canvas>
-          <div class="map-thumb" :style="thumbStyle" @mousedown.prevent="thumbDown"></div>
-        </div>
+      <div class="swrap">
+        <div class="scroll" @scroll="onDocScroll">
         <div class="doc" :style="{ fontFamily: prefs.font, fontSize: prefs.size + 'px', lineHeight: prefs.lh }">
           <section v-for="day in days" :key="day.date" class="day-card">
             <div class="dhead">
@@ -60,6 +57,11 @@
             <button class="add-card-btn" @click="addNextDay">＋ 新增明天 · 提前安排</button>
           </div>
         </div>
+      </div>
+      <div class="docmap" v-if="days.length" @mousedown.prevent="mapDown">
+        <div ref="mapMirror" class="map-mirror" aria-hidden="true"></div>
+        <div class="map-thumb" :style="thumbStyle" @mousedown.prevent="thumbDown"></div>
+      </div>
       </div>
     </div>
 
@@ -173,59 +175,49 @@ const isToday=d=>d===tNow
 const doneOf=day=>(day.items||[]).filter(i=>i.done).length
 const cs=day=>{const it=day.items||[];if(!it.length)return '';return it.every(i=>i.done)?'ok':'todo'}
 const mapCls=day=>{const it=day.items||[];if(!it.length)return 'none';return it.every(i=>i.done)?'ok':'todo'}
-const mapCanvas=ref(null)
+const mapMirror=ref(null)
 const thumb=reactive({top:0,h:16})
 const thumbStyle=computed(()=>({top:thumb.top+'px',height:Math.max(10,thumb.h)+'px'}))
 let mapRaf=0
+const M={r:.5,top:0,mapH:0}
 const clampN=(v,a,b)=>Math.max(a,Math.min(b,v))
-function mapGeom(){const scr=scrollEl.value;if(!scr)return null
-  const docEl=scr.querySelector('.doc');const mapEl=scr.querySelector('.docmap')
-  if(!docEl||!mapEl)return null
-  const H=mapEl.clientHeight;const contentH=docEl.getBoundingClientRect().height
-  if(!H||!contentH)return null
-  return {scr,docEl,mapEl,H,r:H/contentH}}
 function scheduleMap(){if(mapRaf)return;mapRaf=requestAnimationFrame(()=>{mapRaf=0;drawMap()})}
-function computeMapThumb(){const g=mapGeom();if(!g)return
-  const max=g.scr.scrollHeight-g.scr.clientHeight
-  if(max<=0){thumb.top=0;thumb.h=Math.max(10,g.H);return}
-  thumb.h=Math.max(8,g.scr.clientHeight*g.r)
-  const range=Math.max(0,g.H-thumb.h)
-  thumb.top=clampN((g.scr.scrollTop/max)*range,0,range)}
-function drawMap(){const g=mapGeom();const cv=mapCanvas.value
-  if(!g||!cv)return
-  const rect=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||1
-  cv.width=Math.max(1,Math.round(rect.width*dpr));cv.height=Math.max(1,Math.round(rect.height*dpr))
-  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0)
-  const W=rect.width
-  ctx.clearRect(0,0,W,g.H)
-  const dark=document.documentElement.getAttribute('data-theme')==='dark'
-  const textC=dark?'rgba(255,255,255,.4)':'rgba(0,0,0,.3)'
-  const doneC=dark?'rgba(48,209,88,.78)':'rgba(52,199,89,.8)'
-  const headC=dark?'rgba(255,255,255,.78)':'rgba(0,0,0,.66)'
-  const dr=g.docEl.getBoundingClientRect()
-  g.docEl.querySelectorAll('.day-card').forEach(card=>{
-    const hd=card.querySelector('.dhead')
-    if(hd){const top=(hd.getBoundingClientRect().top-dr.top)*g.r;ctx.fillStyle=headC;ctx.fillRect(2,Math.max(0,top),W-4,Math.max(1.5,2.2*g.r))}
-    card.querySelectorAll('ol>li').forEach(li=>{
-      const lr=li.getBoundingClientRect();const top=(lr.top-dr.top)*g.r
-      const len=(li.textContent||'').trim().length
-      const bw=Math.max(3,Math.min(W-6,2+len*((W-8)/32)))
-      ctx.fillStyle=li.classList.contains('done')?doneC:textC
-      ctx.fillRect(3,Math.max(0,top),bw,Math.max(1,(lr.height*g.r)-0.5))})})
+function drawMap(){const scr=scrollEl.value;const docEl=scr?.querySelector('.doc');const mapEl=scr?.querySelector('.docmap');const mw=mapMirror.value
+  if(!scr||!docEl||!mapEl||!mw||!days.value.length)return
+  const H=mapEl.clientHeight;if(!H)return
+  const list=[...docEl.children].filter(el=>el.getBoundingClientRect().height>0)
+  if(!list.length)return
+  const dr=docEl.getBoundingClientRect()
+  let top=Infinity,bottom=-Infinity
+  list.forEach(el=>{const r=el.getBoundingClientRect();const t=r.top-dr.top;const b=r.bottom-dr.top;if(t<top)top=t;if(b>bottom)bottom=b})
+  const range=Math.max(1,bottom-top)
+  const r=Math.min(1,H/range)
+  M.r=r;M.top=top;M.mapH=H
+  const cs=getComputedStyle(docEl)
+  const width=docEl.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0)
+  mw.style.width=Math.max(1,Math.round(width))+'px'
+  mw.style.transform='scale('+r+')'
+  mw.style.top=Math.round(top*r)+'px'
+  mw.innerHTML=list.map(el=>el.outerHTML).join('')
   computeMapThumb()}
+function computeMapThumb(){const scr=scrollEl.value;if(!scr||!M.mapH)return
+  const max=scr.scrollHeight-scr.clientHeight
+  if(max<=0){thumb.top=0;thumb.h=Math.max(10,M.mapH);return}
+  thumb.h=Math.max(8,scr.clientHeight*M.r)
+  const range=Math.max(0,M.mapH-thumb.h)
+  thumb.top=clampN((scr.scrollTop/max)*range,0,range)}
 function onDocScroll(){computeMapThumb()}
-function startThumb(e,g){g=g||mapGeom();if(!g)return
-  const max=g.scr.scrollHeight-g.scr.clientHeight
-  const startY=e.clientY;const startTop=g.scr.scrollTop
-  const mv=ev=>{const dy=ev.clientY-startY;g.scr.scrollTop=clampN(startTop+dy/g.r,0,Math.max(0,max))}
+function startThumb(e){const scr=scrollEl.value;if(!scr||!M.r)return
+  const max=scr.scrollHeight-scr.clientHeight;const startY=e.clientY;const startTop=scr.scrollTop
+  const mv=ev=>{const dy=ev.clientY-startY;scr.scrollTop=clampN(startTop+dy/M.r,0,Math.max(0,max))}
   const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up)}
   window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up)}
 function thumbDown(e){e.preventDefault();startThumb(e)}
-function mapDown(e){const g=mapGeom();if(!g)return
-  const y=e.clientY-g.mapEl.getBoundingClientRect().top
-  const max=g.scr.scrollHeight-g.scr.clientHeight
-  g.scr.scrollTo({top:clampN(y/g.r-g.scr.clientHeight/2,0,Math.max(0,max)),behavior:'smooth'})
-  startThumb(e,g)}
+function mapDown(e){const scr=scrollEl.value;if(!scr||!M.r)return
+  const mapEl=scr.querySelector('.docmap');if(!mapEl)return
+  const y=e.clientY-mapEl.getBoundingClientRect().top
+  const target=clampN((M.top+y/M.r)-scr.clientHeight*0.5,0,Math.max(0,scr.scrollHeight-scr.clientHeight))
+  scr.scrollTo({top:target,behavior:'smooth'})}
 function jumpDay(i){const d=days.value[i];if(!d||!scrollEl.value)return
   const el=document.querySelector(`.daybody[data-date="${d.date}"]`)?.closest('.day-card');if(!el)return
   const sr=scrollEl.value.getBoundingClientRect();const top=scrollEl.value.scrollTop+(el.getBoundingClientRect().top-sr.top)-12
@@ -276,7 +268,7 @@ function layout(day){const el=document.querySelector(`.daybody[data-date="${day.
 }
 function readBody(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const lis=[...el.querySelectorAll(':scope ol > li')];day.items=lis.map(li=>({text:li.textContent.replace(/\u00a0/g,'').trim(),done:li.classList.contains('done')}))}
-function onInput(day){readBody(day);requestAnimationFrame(()=>layout(day));const key=snapDay(day)
+function onInput(day){readBody(day);requestAnimationFrame(()=>{layout(day);scheduleMap()});const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),900);day._last=key}}
 function onKey(e,day){
   if((e.key==='Backspace'||e.key==='Delete') && day.items.length===1 && !day.items[0].text.trim()){ e.preventDefault(); return }
@@ -453,11 +445,11 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .tb.blue{background:var(--accent);border-color:var(--accent);color:#fff}
 .theme-round{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:17px;cursor:pointer;flex-shrink:0;transition:all .2s}
 .as-tip{font-size:13px;color:var(--text-2)}
-.ver-grp{display:flex;gap:6px}
+.ver-grp{display:flex;align-items:center;gap:6px}
 .vbtn{padding:3px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:12px;cursor:pointer}
 .vbtn:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
 .vbtn:disabled{opacity:.45;cursor:default}
-.vi-hint{position:relative;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1px solid var(--border);color:var(--text-2);font-size:10px;font-style:normal;cursor:help;background:var(--bg);vertical-align:middle;margin-left:4px}
+.vi-hint{position:relative;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1px solid var(--border);color:var(--text-2);font-size:10px;font-style:normal;cursor:help;background:var(--bg);margin-left:4px;transform:translateY(2px)}
 .vi-q{font-style:normal;line-height:1}
 .vi-tip{visibility:hidden;opacity:0;position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%) translateY(-4px);width:230px;padding:8px 10px;border-radius:8px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;font-style:normal;text-align:left;z-index:40;transition:opacity .15s,transform .15s,visibility .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .vi-hint:hover .vi-tip,.vi-hint:focus .vi-tip{visibility:visible;opacity:1;transform:translateX(-50%) translateY(0)}
@@ -471,14 +463,15 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .err{padding:6px 20px;color:var(--red);font-size:13px}
 .hint-line{padding:8px 20px;background:var(--glow);color:var(--glow-border);font-size:13px}
 .hint-line a{cursor:pointer;text-decoration:underline;margin-right:10px}
-.scroll{flex:1;overflow-y:auto;position:relative}
-.docmap{position:absolute;right:14px;top:8px;bottom:8px;width:44px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06)}
-.map-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.swrap{position:relative;flex:1;min-height:0;display:flex;overflow:hidden}
+.scroll{flex:1;min-width:0;overflow-y:auto}
+.docmap{position:absolute;right:12px;top:8px;bottom:8px;width:58px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.map-mirror{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;opacity:.92;color:inherit}
 .map-thumb{position:absolute;left:2px;right:2px;border-radius:6px;background:var(--accent);opacity:.32;cursor:ns-resize;pointer-events:auto;border:1px solid rgba(0,0,0,.1);box-sizing:border-box}
 .dstat.todo{color:var(--glow-border)}.dstat.ok{color:var(--green)}
 .cstat{width:9px;height:9px;border-radius:50%;background:var(--glow-border);display:inline-block}
 .cstat.ok{background:var(--green)}
-.doc{padding:20px clamp(62px,6vw,96px) 200px clamp(14px,3vw,40px)}
+.doc{padding:20px clamp(86px,7vw,116px) 200px clamp(10px,2.5vw,36px)}
 .center-card .col-btns{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .col-btns button{width:100%;padding:11px;border-radius:10px;font-size:14px;cursor:pointer;border:none}
 .ghost-wide{background:transparent;border:1px solid var(--border);color:var(--text)}
