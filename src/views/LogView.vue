@@ -5,7 +5,7 @@
         <div class="t-name"><button class="back-m" @click="router.push('/projects')">‹</button>
           <span class="pn">{{ projectName }}</span><span class="t-sub">{{ projectSub }}</span></div>
         <div class="t-actions">
-          <button class="tb" @click="importOpen = true">导入历史</button>
+          <button class="tb blue" @click="importOpen = true">导入历史</button>
           <span class="as-tip" :class="{ on: hasDirty }">{{ status }}</span>
         </div>
       </div>
@@ -70,6 +70,8 @@
 2024/09/02
 - 读论文"></textarea>
         <p v-if="importPreview" class="tip">{{ importPreview }}</p>
+        <div class="uprow"><button class="upfile" @click="$refs.impFile.click()">选择文件上传</button>
+          <input ref="impFile" type="file" accept=".txt,.md,.json,.csv,text/plain" style="display:none" @change="onFile"></div>
         <div class="row">
           <button class="ghost" @click="importOpen = false">取消</button>
           <button class="ghost" @click="previewImport">预览</button>
@@ -117,7 +119,7 @@ const dayLabel=d=>{const p=d.split('-');return `${p[0]}年${+p[1]}月${+p[2]}日
 const wk=d=>WEEKS[new Date(d+'T00:00:00').getDay()]
 const fmtTime=t=>{if(!t)return'';const d=new Date(t);return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
 const hasDirty=computed(()=>days.value.some(d=>d._dirty))
-const norm=l=>({date:l.date,weekday:l.weekday||wk(l.date),items:(l.items||[]).map(i=>({text:i.text||'',done:!!i.done})),_dirty:false,_last:null})
+const norm=l=>({date:l.date,weekday:l.weekday||wk(l.date),items:(l.items||[]).map(i=>({text:(i.text||'').replace(/^[。.]$/,'').trim(),done:!!i.done})),_dirty:false,_last:null})
 const findDay=date=>days.value.find(d=>d.date===date)
 const snapDay=day=>day.items.map(i=>[i.text,i.done])
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b)
@@ -176,6 +178,7 @@ async function load(){loading.value=true;loadError.value=''
     if(days.value.length){const last=days.value[days.value.length-1]
       try{const info=await projectApi.log(pid.value,last.date);if(info.dayLog&&info.lastVersion&&!same(snapDay(last),info.lastVersion.items.map(i=>[i.text||'',!!i.done])))unsavedPrompt.value=true}catch{}}
     days.value.forEach(renderBody)
+    requestAnimationFrame(()=>{days.value.forEach(renderBody)})
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 async function autosave(day){readBody(day);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._dirty=false;day._last=snapDay(day);status.value='已保存'}catch{}}
@@ -217,14 +220,17 @@ function parseImport(text){const map=new Map();let cur=null
   return [...map.values()].sort((a,b)=>a.date<b.date?-1:1)}
 function previewImport(){parsed.value=parseImport(importText.value)
   importPreview.value=parsed.value.length?`解析到 ${parsed.value.length} 天，共 ${parsed.value.reduce((s,d)=>s+d.items.length,0)} 条任务`:'未识别到内容'}
+function onFile(e){const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=ev=>{importText.value=String(ev.target.result||'');previewImport()};r.readAsText(f)}
 async function doImport(){if(!parsed.value.length)return
   let ok=0
   for(const d of parsed.value){try{await projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items});ok++}catch{}}
   importOpen.value=false;importText.value='';parsed.value=[];importPreview.value=''
   showToast('已导入 '+ok+' 天');load()}
 function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
+function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearTimeout(timers[day.date]);autosave(day)}})}
 
-onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load()})
+onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow)})
+function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)})}
 watch(()=>route.params.projectId,()=>{if(!user.isLoggedIn)return;pid.value=Number(route.params.projectId);days.value=[];load()})
 onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer)})
 </script>
@@ -238,6 +244,8 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .t-actions{display:flex;gap:8px}
 .tb{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:13px;cursor:pointer}
 .tb.save.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tb.blue{background:var(--accent);border-color:var(--accent);color:#fff}
+.as-tip{font-size:13px;color:var(--text-2)}
 .fmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
 .fsel{border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:5px 8px;font-size:13px;outline:none}
 .fb{min-width:28px;height:26px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);cursor:pointer;line-height:1;font-weight:600;font-size:13px}
@@ -261,14 +269,16 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .del-day:hover{background:var(--red);color:#fff}
 .daybody{outline:none;min-height:46px;padding:8px 56px 18px;position:relative}
 .daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
+.daybody ol>li{list-style:none}
+.daybody ol>li::marker{content:''}
 .daybody ol>li{counter-increment:item;position:relative;padding:9px 56px 9px 2.2em;min-height:1.7em;color:var(--text)}
 .daybody ol>li::after{content:'';display:block;clear:both}
 .daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.6em;text-align:right;padding-right:8px;color:var(--text-2);opacity:.55;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.75}
 /* iOS 开关叠加层 */
  .dayph{color:var(--text-2);font-size:14px;padding:12px 4px;cursor:text;opacity:.75}
-.rail{position:absolute;right:6px;top:0;width:40px;height:100%;pointer-events:none}
-.rail button{pointer-events:auto;position:absolute;left:0;width:40px;height:24px;border-radius:13px;border:none;background:#e5e5ea;cursor:pointer;transition:background .2s;outline:none}
+.rail{position:absolute;right:4px;top:0;width:46px;height:100%;pointer-events:none;z-index:5}
+.rail button{pointer-events:auto;position:absolute;left:0;width:44px;height:24px;border-radius:13px;border:1px solid #dcdce0;background:#e8e8ed;cursor:pointer;transition:background .2s;outline:none;display:block}
 .rail button::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
 .rail button.on{background:var(--accent)}
 .rail button.on::after{left:18px}
@@ -302,6 +312,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .primary{background:var(--accent);color:#fff;border:none}
 .ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
 .danger{background:var(--red);color:#fff;border:none}
+.uprow{margin:2px 0}.upfile{border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
 .imp{width:100%;height:150px;resize:vertical;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:10px;font-size:13px;outline:none;line-height:1.6}
 .toast{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 22px;border-radius:22px;font-size:14px;z-index:200}
 .fade-enter-active,.fade-leave-active{transition:opacity .2s}.fade-enter-from,.fade-leave-to{opacity:0}

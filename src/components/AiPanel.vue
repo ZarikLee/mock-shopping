@@ -102,6 +102,7 @@ async function send() {
   typing.value = true
   sentAny.value = true
   try {
+    window.dispatchEvent(new Event('dl:flush')); await new Promise(r=>setTimeout(r,400))
     const res = await aiApi.chat({ projectId: props.projectId, message: text, messages: history })
     const reply = (res && (res.reply || res.data?.reply)) || '嗯嗯，我在听～'
     history.push({ role: 'ai', content: reply })
@@ -150,7 +151,7 @@ onBeforeUnmount(() => timers.forEach(t => clearTimeout(t)))
 .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,60%,100%{opacity:.2}30%{opacity:1}}
 @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
-.ai-foot{display:flex;flex-direction:column;gap:8px;padding:12px;border-top:1px solid var(--border)}
+.ai-foot{display:flex;flex-direction:column;gap:6px;padding:12px;border-top:1px solid var(--border)}
 .suggests{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
 .suggests::-webkit-scrollbar{display:none}
 .sg{border:1px solid var(--border);background:var(--bg);color:var(--accent);font-size:12px;border-radius:14px;padding:4px 10px;cursor:pointer;white-space:nowrap;flex:none}
