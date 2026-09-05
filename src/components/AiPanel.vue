@@ -20,8 +20,8 @@
     </div>
 
     <footer class="ai-foot">
-      <div class="sgline" v-if="!hideSuggest"><span class="sgpfx">AI建议：</span><span :key="curSug" class="sgroll" @click="useSuggest(curSug)">{{ curSug }}</span></div>
-      <div class="ai-input">
+      <div class="sgline" @click="useSuggest(curSug)"><span class="sgpfx">AI建议</span><span :key="'s'+curSug" class="sgroll">{{ curSug }}</span></div>
+      <div class="ai-box">
         <textarea v-model="draft" rows="1" placeholder="和小纸聊两句…" @input="autoGrow" @keydown.enter.prevent="send"></textarea>
         <button class="send" :disabled="!draft.trim() || typing" @click="send">发送</button>
       </div>
@@ -39,16 +39,18 @@ const suggests = ['帮我总结今天', '帮我写这周周报', '我这周状�
 const draft = ref('')
 const typing = ref(false)
 const bodyEl = ref(null)
-const hideSuggest = ref(false)
 const curSug=ref(suggests[0])
 let sugTimer=null
-function startSug(){stopSug();sugTimer=setInterval(()=>{const i=suggests.indexOf(curSug.value);curSug.value=suggests[(i+1)%suggests.length]},3000)}
+function nextSug(){const i=suggests.indexOf(curSug.value);curSug.value=suggests[(i+1)%suggests.length]}
+function startSug(){stopSug();sugTimer=setInterval(nextSug,3000)}
 function stopSug(){clearInterval(sugTimer)}
 const history = []      // {role, content} 用于后端上下文（完整句）
 let shown = ref([])     // 渲染用（分段）
 let seq = 0
 let timers = []
 const sentAny = ref(false)
+
+function stripEnd(text){return text.replace(/[。！？!?；;，,、：:．.…~～\s]+$/,'').trim()}
 
 function splitReply(text) {
   text = text.replace(/\s+/g, ' ').trim()
@@ -78,6 +80,8 @@ function pushAiSegments(text) {
   const segs = splitReply(text)
   const total = segs.length
   segs.forEach((seg, i) => {
+    seg = stripEnd(seg)
+    if (!seg) return
     let delay = 700 + Math.min(2400, seg.length * 90)
     if (i > 0) delay += 500
     schedule(i === 0 ? 500 : delay * (i), () => {
@@ -95,12 +99,12 @@ async function send() {
   const text = draft.value.trim()
   if (!text || typing.value) return
   draft.value = ''
-  hideSuggest.value = true; stopSug()
   shown.value.push({ id: ++seq, role: 'me', content: text })
   history.push({ role: 'me', content: text })
   scrollDown()
   typing.value = true
   sentAny.value = true
+  nextSug()
   try {
     window.dispatchEvent(new Event('dl:flush')); await new Promise(r=>setTimeout(r,400))
     const res = await aiApi.chat({ projectId: props.projectId, message: text, messages: history })
@@ -118,14 +122,15 @@ function reset() {
   history.length = 0
   shown.value = []
   sentAny.value = false
-  hideSuggest.value = false; startSug()
+  startSug()
   timers.forEach(t => clearTimeout(t))
   timers = []
   typing.value = false
 }
 
 watch(() => props.projectId, reset)
-onBeforeUnmount(() => timers.forEach(t => clearTimeout(t)))
+onMounted(startSug)
+onBeforeUnmount(() => { timers.forEach(t => clearTimeout(t)); stopSug() })
 </script>
 
 <style scoped>
@@ -151,13 +156,14 @@ onBeforeUnmount(() => timers.forEach(t => clearTimeout(t)))
 .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,60%,100%{opacity:.2}30%{opacity:1}}
 @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
-.ai-foot{display:flex;flex-direction:column;gap:6px;padding:12px;border-top:1px solid var(--border)}
-.suggests{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
-.suggests::-webkit-scrollbar{display:none}
-.sg{border:1px solid var(--border);background:var(--bg);color:var(--accent);font-size:12px;border-radius:14px;padding:4px 10px;cursor:pointer;white-space:nowrap;flex:none}
-.sg:hover{border-color:var(--accent)}
-.ai-input{display:flex;gap:8px}
-.ai-input textarea{flex:1;resize:none;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:8px 12px;font-size:14px;outline:none;min-height:36px;max-height:120px}
-.send{border:none;border-radius:10px;background:var(--accent);color:#fff;padding:0 16px;font-size:14px;cursor:pointer}
+.ai-foot{display:flex;flex-direction:column;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--surface)}
+.sgline{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;max-width:100%;background:var(--accent);color:#fff;border-radius:17px;padding:6px 13px;cursor:pointer;box-shadow:0 2px 8px rgba(0,122,255,.25);transition:transform .15s}
+.sgline:hover{transform:translateY(-1px)}
+.sgpfx{font-size:10px;font-weight:700;background:rgba(255,255,255,.25);border-radius:8px;padding:1px 5px;line-height:1.5}
+.sgroll{font-size:12px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:rollUp .4s ease}
+.ai-box{display:flex;align-items:flex-end;gap:6px;border:1px solid var(--border);border-radius:14px;background:var(--bg);padding:6px;box-shadow:var(--shadow)}
+.ai-box textarea{flex:1;resize:none;border:none;background:transparent;color:var(--text);padding:6px 8px;font-size:14px;outline:none;min-height:32px;max-height:120px;line-height:1.5;font-family:inherit}
+.send{border:none;border-radius:10px;background:var(--accent);color:#fff;padding:0 16px;font-size:14px;cursor:pointer;height:34px;flex-shrink:0}
 .send:disabled{opacity:.5}
+@keyframes rollUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 </style>

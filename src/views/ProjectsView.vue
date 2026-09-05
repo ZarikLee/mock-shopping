@@ -1,6 +1,7 @@
 <template>
   <div class="projects-page">
     <div class="ph">
+      <button class="theme-round" @click="theme.toggle" :title="theme.theme === 'dark' ? '切换到日间' : '切换到暗色'">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
       <h1 class="ph-title">{{ user.roleText === '学生' ? '我的学校' : user.roleText === '职场人' ? '我的企业' : '我的项目' }}</h1>
       <p class="ph-sub">选择一个项目，进入写记录</p>
     </div>
@@ -46,10 +47,12 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { useThemeStore } from '../stores/theme'
 import { projectApi } from '../api/projects'
 
 const router = useRouter()
 const user = useUserStore()
+const theme = useThemeStore()
 const projects = ref([])
 const loading = ref(true)
 const dialog = ref(false)
@@ -76,8 +79,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.projects-page { padding: 26px 30px 50px; max-width: 1000px; }
-.ph-title { font-size: 24px; font-weight: 700; }
+.projects-page { padding: 26px 30px 50px; max-width: 1000px; position: relative; }
+.theme-round { position: absolute; top: 20px; right: 30px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 17px; cursor: pointer; transition: all .2s; }
+.ph-title { font-size: 24px; font-weight: 700; padding-right: 60px; }
 .ph-sub { color: var(--text-2); font-size: 14px; margin: 4px 0 22px; }
 .p-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .p-card { display: flex; align-items: center; gap: 14px; padding: 18px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; text-align: left; transition: transform .15s, box-shadow .15s; }

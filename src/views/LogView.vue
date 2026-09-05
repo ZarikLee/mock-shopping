@@ -2,11 +2,14 @@
   <div class="editor">
     <div class="work">
       <div class="top">
-        <div class="t-name"><button class="back-m" @click="router.push('/projects')">‹</button>
-          <span class="pn">{{ projectName }}</span><span class="t-sub">{{ projectSub }}</span></div>
+        <div class="t-left">
+          <div class="t-name"><button class="back-m" @click="router.push('/projects')">‹</button>
+            <span class="pn">{{ projectName }}</span><span class="t-sub">{{ projectSub }}</span></div>
+          <span class="as-tip" :class="{ on: hasDirty }">{{ savedTip }}</span>
+        </div>
         <div class="t-actions">
           <button class="tb blue" @click="importOpen = true">导入历史</button>
-          <span class="as-tip" :class="{ on: hasDirty }">{{ status }}</span>
+          <button class="theme-round" @click="theme.toggle" :title="theme.theme === 'dark' ? '切换到日间' : '切换到暗色'">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
         </div>
       </div>
 
@@ -52,7 +55,7 @@
     </div>
 
     <button class="ai-ball" :class="{ open: aiOpen }" @click="aiOpen = !aiOpen">
-      <span class="bl-name">{{ aiOpen ? '×' : '小纸' }}</span><i class="bl-tag">AI</i>
+      <template v-if="!aiOpen"><i class="bl-tag">AI</i><span class="bl-name">小纸</span></template><span v-else class="bl-x">×</span>
     </button>
     <transition name="fade"><div v-if="aiOpen" class="ai-dialog"><AiPanel :key="'p' + pid" :project-id="pid" @close="aiOpen = false" /></div></transition>
 
@@ -88,16 +91,21 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { useThemeStore } from '../stores/theme'
 import { projectApi } from '../api/projects'
 import AiPanel from '../components/AiPanel.vue'
 
-const route=useRoute();const router=useRouter();const user=useUserStore()
+const route=useRoute();const router=useRouter();const user=useUserStore();const theme=useThemeStore()
 const pid=ref(Number(route.params.projectId))
 const loading=ref(true);const loadError=ref('')
 const projectName=ref('…');const projectSub=ref('')
 const days=ref([]);const saving=ref(false)
 const unsavedPrompt=ref(false)
 const status=ref('已自动保存')
+const lastSaved=ref('')
+const pad2=n=>String(n).padStart(2,'0')
+const nowStamp=()=>{const d=new Date();return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`}
+const savedTip=computed(()=>hasDirty.value?'正在编辑…':(lastSaved.value?('已自动保存 '+lastSaved.value):'已自动保存'))
 const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);const confirmRollback=ref(false)
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
 const aiOpen=ref(false)
@@ -182,11 +190,11 @@ async function load(){loading.value=true;loadError.value=''
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done})).filter(i=>i.text!=='')}
-async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._dirty=false;day._last=snapDay(day);status.value='已保存'}catch{}}
+async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._dirty=false;day._last=snapDay(day);lastSaved.value=nowStamp()}catch{}}
 async function saveDraft(day){try{await projectApi.draft(pid.value,day.date,{weekday:day.weekday,items:day.items})}catch{}}
 async function saveAll(){saving.value=true
   for(const day of days.value){if(!day._dirty)continue;readBody(day)
-    try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._last=snapDay(day);day._dirty=false}catch(e){loadError.value=e?.error||'保存失败'}}
+    try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._last=snapDay(day);day._dirty=false;lastSaved.value=nowStamp()}catch(e){loadError.value=e?.error||'保存失败'}}
   unsavedPrompt.value=false;saving.value=false;showToast('已保存')}
 async function discardAll(){unsavedPrompt.value=false
   for(const day of days.value){if(!day._dirty)continue;let arr=[]
@@ -239,13 +247,15 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 <style scoped>
 .editor{height:100%;display:flex}
 .work{flex:1;min-width:0;display:flex;flex-direction:column}
-.top{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.t-left{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
 .back-m{display:none}.pn{font-weight:700;font-size:15px}
 .t-sub{font-size:12px;color:var(--text-2);margin-left:10px}
-.t-actions{display:flex;gap:8px}
+.t-actions{display:flex;gap:8px;align-items:center}
 .tb{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:13px;cursor:pointer}
 .tb.save.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .tb.blue{background:var(--accent);border-color:var(--accent);color:#fff}
+.theme-round{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:17px;cursor:pointer;flex-shrink:0;transition:all .2s}
 .as-tip{font-size:13px;color:var(--text-2)}
 .fmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
 .fsel{border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:5px 8px;font-size:13px;outline:none}
@@ -291,8 +301,10 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 /* AI 小纸（悬浮、可拖、吸附） */
 .ai-ball{position:fixed;right:20px;bottom:32px;z-index:95;width:58px;height:58px;border-radius:50%;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,122,255,.45);line-height:1.15;border:none}
 .ai-ball.open{background:var(--text)}
-.bl-name{font-size:14px;font-weight:700;line-height:1}
-.bl-tag{font-style:normal;font-size:9px;font-weight:700;background:rgba(255,255,255,.25);border-radius:4px;padding:0 4px;line-height:1.4}
+.bl-name{font-size:13px;font-weight:700;line-height:1}
+.bl-tag{font-style:normal;font-size:9px;font-weight:700;background:rgba(255,255,255,.28);border-radius:4px;padding:0 4px;line-height:1.5}
+.bl-x{font-size:22px;line-height:1;font-weight:400}
+.ai-ball{gap:3px}
 .ai-dialog{position:fixed;right:20px;bottom:96px;z-index:96;width:min(420px,94vw);height:min(620px,72vh);background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.25);overflow:hidden;display:flex}
 
 .center-mask{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);z-index:120;padding:20px}
