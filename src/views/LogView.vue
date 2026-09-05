@@ -31,6 +31,9 @@
         <span class="sep"></span>
         <div class="swatch"><template v-for="c in colors" :key="c"><i class="dotc" :style="{background:c}" @mousedown.prevent="cmd('foreColor',c)"></i></template></div>
         <div class="swatch hl"><template v-for="c in hl" :key="c"><i class="dotc" :style="{background:c}" @mousedown.prevent="cmd('hiliteColor',c)"></i></template></div>
+        <button class="fmt-ai" :class="{ open: aiOpen }" @click="aiToggle" title="和小纸聊两句">
+          <template v-if="!aiOpen"><i class="fa-tag">AI</i><span class="fa-name">小纸</span></template><span v-else class="fa-x">×</span>
+        </button>
       </div>
 
       <div v-if="loadError" class="err">{{ loadError }}</div>
@@ -65,11 +68,8 @@
       </div>
     </div>
 
-    <button class="ai-ball" :class="{ open: aiOpen }" @click="aiOpen = !aiOpen">
-      <template v-if="!aiOpen"><i class="bl-tag">AI</i><span class="bl-name">小纸</span></template><span v-else class="bl-x">×</span>
-    </button>
     <transition name="fade">
-      <div v-show="aiOpen" class="ai-dialog"><AiPanel :project-id="pid" @close="aiOpen = false" /></div>
+      <div v-show="aiOpen" class="ai-dialog" :style="{ top: aiPos.top + 'px', right: aiPos.right + 'px' }"><AiPanel :project-id="pid" @close="aiOpen = false" /></div>
     </transition>
 
     <!-- 导入历史 -->
@@ -152,6 +152,13 @@ const savedTip=computed(()=>hasDirty.value?'正在编辑…':(lastSaved.value?('
 const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);const confirmRollback=ref(false)
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
 const aiOpen=ref(false)
+const aiPos=reactive({top:70,right:20})
+function placeAi(){const b=document.querySelector('.fmt-ai');if(!b)return
+  const r=b.getBoundingClientRect()
+  aiPos.top=Math.max(52,Math.round(r.bottom+6))
+  aiPos.right=Math.max(8,Math.round(window.innerWidth-r.right))}
+function aiToggle(){aiOpen.value=!aiOpen.value
+  if(aiOpen.value)nextTick(placeAi)}
 const scrollEl=ref(null)
 const showRemind=ref(false)
 const undoStack=ref([]);const redoStack=ref([])
@@ -182,7 +189,7 @@ let mapRaf=0
 const M={r:.5,top:0,mapH:0}
 const clampN=(v,a,b)=>Math.max(a,Math.min(b,v))
 function scheduleMap(){if(mapRaf)return;mapRaf=requestAnimationFrame(()=>{mapRaf=0;drawMap()})}
-function drawMap(){const scr=scrollEl.value;const docEl=scr?.querySelector('.doc');const mapEl=scr?.querySelector('.docmap');const mw=mapMirror.value
+function drawMap(){const scr=scrollEl.value;const docEl=scr?.querySelector('.doc');const mapEl=document.querySelector('.docmap');const mw=mapMirror.value
   if(!scr||!docEl||!mapEl||!mw||!days.value.length)return
   const H=mapEl.clientHeight;if(!H)return
   const list=[...docEl.children].filter(el=>el.getBoundingClientRect().height>0)
@@ -214,7 +221,7 @@ function startThumb(e){const scr=scrollEl.value;if(!scr||!M.r)return
   window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up)}
 function thumbDown(e){e.preventDefault();startThumb(e)}
 function mapDown(e){const scr=scrollEl.value;if(!scr||!M.r)return
-  const mapEl=scr.querySelector('.docmap');if(!mapEl)return
+  const mapEl=document.querySelector('.docmap');if(!mapEl)return
   const y=e.clientY-mapEl.getBoundingClientRect().top
   const target=clampN((M.top+y/M.r)-scr.clientHeight*0.5,0,Math.max(0,scr.scrollHeight-scr.clientHeight))
   scr.scrollTo({top:target,behavior:'smooth'})}
@@ -427,7 +434,7 @@ function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
 function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearTimeout(timers[day.date]);autosave(day)}})}
 
 onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow)})
-function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)})}
+function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)});if(aiOpen.value)placeAi()}
 watch(()=>route.params.projectId,()=>{if(!user.isLoggedIn)return;pid.value=Number(route.params.projectId);days.value=[];load()})
 onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer)})
 </script>
@@ -443,13 +450,13 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .tb{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:13px;cursor:pointer}
 .tb.save.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .tb.blue{background:var(--accent);border-color:var(--accent);color:#fff}
-.theme-round{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:17px;cursor:pointer;flex-shrink:0;transition:all .2s}
+.theme-round{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;cursor:pointer;flex-shrink:0;transition:all .2s}
 .as-tip{font-size:13px;color:var(--text-2)}
 .ver-grp{display:flex;align-items:center;gap:6px}
 .vbtn{padding:3px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:12px;cursor:pointer}
 .vbtn:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
 .vbtn:disabled{opacity:.45;cursor:default}
-.vi-hint{position:relative;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1px solid var(--border);color:var(--text-2);font-size:10px;font-style:normal;cursor:help;background:var(--bg);margin-left:4px;transform:translateY(2px)}
+.vi-hint{position:relative;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1px solid var(--border);color:var(--text-2);font-size:10px;font-style:normal;cursor:help;background:var(--bg);margin-left:4px;transform:translateY(1px)}
 .vi-q{font-style:normal;line-height:1}
 .vi-tip{visibility:hidden;opacity:0;position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%) translateY(-4px);width:230px;padding:8px 10px;border-radius:8px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;font-style:normal;text-align:left;z-index:40;transition:opacity .15s,transform .15s,visibility .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .vi-hint:hover .vi-tip,.vi-hint:focus .vi-tip{visibility:visible;opacity:1;transform:translateX(-50%) translateY(0)}
@@ -506,14 +513,14 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .add-card-btn:hover{border-color:var(--accent);color:var(--accent)}
 .ph{padding:50px 0;color:var(--text-2);text-align:center}
 
-/* AI 小纸（悬浮、可拖、吸附） */
-.ai-ball{position:fixed;right:20px;bottom:32px;z-index:95;width:58px;height:58px;border-radius:50%;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,122,255,.45);line-height:1.15;border:none}
-.ai-ball.open{background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.28)}
-.bl-name{font-size:13px;font-weight:700;line-height:1}
-.bl-tag{font-style:normal;font-size:9px;font-weight:700;background:rgba(255,255,255,.28);border-radius:4px;padding:0 4px;line-height:1.5}
-.bl-x{font-size:22px;line-height:1;font-weight:400}
-.ai-ball{gap:3px}
-.ai-dialog{position:fixed;right:20px;bottom:96px;z-index:96;width:min(420px,94vw);height:min(620px,72vh);background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.25);overflow:hidden;display:flex}
+/* AI 小纸：并入格式栏右侧，与右上角主题圆钮同尺寸 */
+.fmt-ai{margin-left:auto;flex:none;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;box-shadow:0 4px 14px rgba(0,122,255,.35);border:none;line-height:1;transition:background .2s,color .2s}
+.fmt-ai.open{background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.fa-tag{font-style:normal;font-size:8px;font-weight:700;background:rgba(255,255,255,.3);border-radius:3px;padding:0 3px;line-height:1.5}
+.fmt-ai.open .fa-tag{background:var(--surface-2)}
+.fa-name{font-size:11px;font-weight:700;line-height:1}
+.fa-x{font-size:17px;line-height:1;font-weight:400}
+.ai-dialog{position:fixed;z-index:96;width:min(390px,calc(100vw - 16px));height:min(560px,68vh);background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.28);overflow:hidden;display:flex}
 
 .center-mask{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);z-index:120;padding:20px}
 .center-card{width:340px;background:var(--surface);border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px}
