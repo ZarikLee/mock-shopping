@@ -20,6 +20,7 @@ const distPath = join(__dirname, '..', '..', 'dist');
 app.use(express.static(distPath));
 app.use((req, res, next) => {
   if (!req.path.startsWith('/api')) {
+    res.set('Cache-Control', 'no-store, must-revalidate');
     res.sendFile(join(distPath, 'index.html'));
   } else {
     next();

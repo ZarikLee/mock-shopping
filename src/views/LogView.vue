@@ -181,7 +181,8 @@ async function load(){loading.value=true;loadError.value=''
     requestAnimationFrame(()=>{days.value.forEach(renderBody)})
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
-async function autosave(day){readBody(day);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._dirty=false;day._last=snapDay(day);status.value='已保存'}catch{}}
+function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done})).filter(i=>i.text!=='')}
+async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._dirty=false;day._last=snapDay(day);status.value='已保存'}catch{}}
 async function saveDraft(day){try{await projectApi.draft(pid.value,day.date,{weekday:day.weekday,items:day.items})}catch{}}
 async function saveAll(){saving.value=true
   for(const day of days.value){if(!day._dirty)continue;readBody(day)
