@@ -39,19 +39,22 @@
 
     <div class="scroll">
       <div class="doc" :style="{ fontFamily: prefs.font, fontSize: prefs.size + 'px', lineHeight: prefs.lh }">
-        <template v-for="day in days" :key="day.date">
-          <div class="dhead" :class="{ dim: !isToday(day.date) }">
-            {{ dayLabel(day.date) }} <em>{{ day.weekday }}</em>
-            <span class="tools">
-              <span class="mini" :class="{ on: day._dirty }" @click="markCurrentDone(day)" title="将光标所在行标记完成">✓</span>
-              <button class="plus-t" @click="addLine(day)" title="本日新增一行">＋</button>
-            </span>
+        <div v-for="day in days" :key="day.date" class="day-card">
+          <div class="dhead">
+            <div class="dt">
+              {{ dayLabel(day.date) }} <em>{{ day.weekday }}</em>
+            </div>
+            <div class="dtools">
+              <span v-if="day.items.length" class="dstat">{{ doneOf(day) }}/{{ day.items.length }}</span>
+              <span v-if="day._dirty" class="ddot"></span>
+              <span class="mini" @click="markCurrentDone(day)" title="标记光标所在行完成">✓</span>
+              <button class="plus-t" @click="addLine(day)" title="新增一行">＋</button>
+            </div>
           </div>
           <div class="daybody" contenteditable="true" spellcheck="false" :data-date="day.date"
             @input="e => onInput(day, e)"
-            @focus="activeDay = day.date"
             @keydown="e => onKey(e, day)"></div>
-        </template>
+        </div>
         <div v-if="!loading && !days.length" class="ph">
           <p>还没有记录。</p>
           <button class="plus-big" @click="addTodayDay">＋ 开始记录今天</button>
@@ -97,6 +100,7 @@ const WEEKS=['周日','周一','周二','周三','周四','周五','周六']
 const pad=n=>String(n).padStart(2,'0')
 const nowD=new Date();const tNow=`${nowD.getFullYear()}-${pad(nowD.getMonth()+1)}-${pad(nowD.getDate())}`
 const isToday=d=>d===tNow
+const doneOf = day => (day.items||[]).filter(i=>i.done).length
 const dayLabel=d=>{const p=d.split('-');return `${p[0]}年${+p[1]}月${+p[2]}日`}
 const wk=d=>WEEKS[new Date(d+'T00:00:00').getDay()]
 const fmtTime=t=>{if(!t)return'';const d=new Date(t);return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
@@ -129,6 +133,12 @@ function readBody(day){
   const arr=[]
   lis.forEach(li=>arr.push({text:li.textContent.replace(/\u00a0/g,''),done:li.classList.contains('done')}))
   day.items=arr
+  // 至少保留一个编号行
+  if(lis.length===0){
+    const ol=el.querySelector('ol')||el.appendChild(document.createElement('ol'))
+    ol.appendChild(document.createElement('li'))
+    day.items=[{text:'',done:false}]
+  }
 }
 function onInput(day){
   readBody(day)
@@ -240,27 +250,27 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .hint-line a{cursor:pointer;text-decoration:underline;margin-right:8px}
 
 .scroll{flex:1;overflow-y:auto}
-/* 整宽连续文本编辑区 */
-.doc{padding:20px 24px 160px;width:100%}
-.daybody{outline:none;min-height:40px;margin:0;padding:2px 0}
-.daybody ol{list-style:decimal;margin:0;padding-left:2em}
-.daybody li{min-height:1.7em;padding:1px 2px;border-radius:3px}
-.daybody li.done{text-decoration:line-through;color:var(--text-2);opacity:.7}
-.taskline{min-height:1.7em;padding:1px 2px;border-radius:3px}
-.taskline.done{text-decoration:line-through;color:var(--text-2);opacity:.7}
-.dhead{position:sticky;top:0;background:var(--bg);padding:18px 0 4px;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
-.dhead em{font-style:normal;color:var(--text-2);font-size:12px;font-weight:400;margin-left:6px}
-.dhead .tools{display:flex;gap:6px;align-items:center;opacity:0;transition:opacity .2s}
-.dhead:hover .tools{opacity:1}
-.mini{border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:11px;border-radius:6px;padding:2px 8px;cursor:pointer}
-.mini.on{background:var(--glow);color:var(--glow-border)}
-.plus-t{border:none;background:transparent;color:var(--accent);font-size:16px;cursor:pointer}
-.dhead.dim{opacity:.5}
+.doc{padding:18px clamp(14px,3vw,44px) 160px}
 
-/* 当天一整块连续可编辑文本 */
-.daybody{outline:none;min-height:40px;padding:2px 4px}
-.taskline{min-height:1.7em;padding:1px 2px;border-radius:3px}
-.taskline.done{text-decoration:line-through;color:var(--text-2);opacity:.7}
+/* 每日卡片 */
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.dhead{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid var(--border);user-select:none}
+.dt{font-size:16px;font-weight:700}
+.dt em{font-style:normal;color:var(--text-2);font-size:13px;font-weight:400;margin-left:6px}
+.dtools{display:flex;align-items:center;gap:8px}
+.dstat{font-size:12px;color:var(--text-2)}
+.ddot{width:7px;height:7px;border-radius:50%;background:var(--glow-border)}
+.mini{border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:11px;border-radius:6px;padding:3px 9px;cursor:pointer}
+.mini:hover{color:var(--green);border-color:var(--green)}
+.plus-t{border:none;background:transparent;color:var(--accent);font-size:17px;cursor:pointer;line-height:1}
+
+/* 卡片内编号文本区（连续可选中、回车自动编号） */
+.daybody{outline:none;min-height:48px;padding:10px 18px 14px}
+.daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
+.daybody ol > li{counter-increment:item;position:relative;padding:4px 2px 4px 2.2em;min-height:1.7em;border-radius:4px}
+.daybody ol > li::before{content:counter(item) " .";position:absolute;left:0;top:4px;color:var(--text-2);width:2em;text-align:right;padding-right:6px;user-select:none}
+.daybody ol > li.done{text-decoration:line-through;color:var(--text-2);opacity:.7}
+
 .ph{padding:40px 0;color:var(--text-2);text-align:center}
 .plus-big{margin-top:10px;padding:12px 22px;border:none;border-radius:20px;background:var(--accent);color:#fff;cursor:pointer;font-size:15px}
 
@@ -274,5 +284,5 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .primary.full{width:100%;padding:13px;border-radius:10px;font-size:15px;cursor:pointer;margin-top:4px}
 .toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:20px;font-size:14px;z-index:120}
 .fade-enter-active,.fade-leave-active{transition:opacity .2s}.fade-enter-from,.fade-leave-to{opacity:0}
-@media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 12px 80px}.dhead{position:static}}
+@media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 10px 80px}.day-body{padding:8px 12px 12px}}
 </style>
