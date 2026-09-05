@@ -318,3 +318,17 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .fade-enter-active,.fade-leave-active{transition:opacity .2s}.fade-enter-from,.fade-leave-to{opacity:0}
 @media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 8px 150px}.t-sub{display:none}.daybody{padding:8px 40px 16px}.center-card.wide{width:94vw}.ai-dialog{right:8px;bottom:84px;width:calc(100vw - 16px);height:72vh}}
 </style>
+<style>
+/* 运行时注入节点必须用全局样式（scoped 不影响动态元素） */
+.daybody{outline:none}
+.daybody ol{list-style:none!important;counter-reset:item;margin:0;padding:0}
+.daybody ol>li{list-style:none!important;counter-increment:item;position:relative;padding:9px 56px 9px 2.4em;min-height:1.7em;color:var(--text)}
+.daybody ol>li::marker{content:''!important}
+.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:2em;text-align:right;padding-right:8px;color:var(--text-2);opacity:.6;font-size:.92em}
+.daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.72}
+.daybody .rail{position:absolute;right:4px;top:0;width:46px;height:100%;pointer-events:none;z-index:6}
+.daybody .rail button{pointer-events:auto;position:absolute;left:0;width:42px;height:24px;border-radius:13px;border:1px solid rgba(0,0,0,.12);background:#e8e8ed;cursor:pointer;transition:background .2s;outline:none}
+.daybody .rail button::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.daybody .rail button.on{background:#007aff}
+.daybody .rail button.on::after{left:20px}
+</style>
