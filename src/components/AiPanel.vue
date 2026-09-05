@@ -20,9 +20,7 @@
     </div>
 
     <footer class="ai-foot">
-      <div class="suggests" v-if="!hideSuggest">
-        <button v-for="s in suggests" :key="s" class="sg" @click="useSuggest(s)">{{ s }}</button>
-      </div>
+      <div class="sgline" v-if="!hideSuggest" @click="useSuggest(curSug)">{{ curSug }}</div>
       <div class="ai-input">
         <textarea v-model="draft" rows="1" placeholder="和小纸聊两句…" @keydown.enter.prevent="send"></textarea>
         <button class="send" :disabled="!draft.trim() || typing" @click="send">发送</button>
@@ -42,6 +40,10 @@ const draft = ref('')
 const typing = ref(false)
 const bodyEl = ref(null)
 const hideSuggest = ref(false)
+const curSug=ref(suggests[0])
+let sugTimer=null
+function startSug(){stopSug();sugTimer=setInterval(()=>{const i=suggests.indexOf(curSug.value);curSug.value=suggests[(i+1)%suggests.length]},3000)}
+function stopSug(){clearInterval(sugTimer)}
 const history = []      // {role, content} 用于后端上下文（完整句）
 let shown = ref([])     // 渲染用（分段）
 let seq = 0
@@ -93,7 +95,7 @@ async function send() {
   const text = draft.value.trim()
   if (!text || typing.value) return
   draft.value = ''
-  hideSuggest.value = true
+  hideSuggest.value = true; stopSug()
   shown.value.push({ id: ++seq, role: 'me', content: text })
   history.push({ role: 'me', content: text })
   scrollDown()
@@ -114,7 +116,7 @@ function reset() {
   history.length = 0
   shown.value = []
   sentAny.value = false
-  hideSuggest.value = false
+  hideSuggest.value = false; startSug()
   timers.forEach(t => clearTimeout(t))
   timers = []
   typing.value = false

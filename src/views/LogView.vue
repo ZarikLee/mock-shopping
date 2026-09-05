@@ -6,8 +6,7 @@
           <span class="pn">{{ projectName }}</span><span class="t-sub">{{ projectSub }}</span></div>
         <div class="t-actions">
           <button class="tb" @click="importOpen = true">导入历史</button>
-          <button class="tb" @click="openVersions">版本</button>
-          <button class="tb save" :class="{ on: hasDirty }" @click="saveAll">{{ hasDirty ? '保存修改' : '已保存' }}</button>
+          <span class="as-tip" :class="{ on: hasDirty }">{{ status }}</span>
         </div>
       </div>
 
@@ -27,8 +26,7 @@
       </div>
 
       <div v-if="loadError" class="err">{{ loadError }}</div>
-      <div v-if="unsavedPrompt" class="hint-line">有未提交修改 — <a @click="saveAll">保存为版本</a> · <a @click="discardAll">放弃</a></div>
-
+      
       <div class="scroll">
         <div class="doc" :style="{ fontFamily: prefs.font, fontSize: prefs.size + 'px', lineHeight: prefs.lh }">
           <section v-for="day in days" :key="day.date" class="day-card">
@@ -58,36 +56,6 @@
       <span class="bl-name">{{ aiOpen ? '×' : '小纸' }}</span><i class="bl-tag">AI</i>
     </div>
     <transition name="fade"><div v-if="aiOpen" class="ai-dialog"><AiPanel :key="'p' + pid" :project-id="pid" @close="aiOpen = false" /></div></transition>
-
-    <!-- 版本（居中、选择高亮、二次确认） -->
-    <div v-if="showVersions" class="center-mask">
-      <div class="center-card wide">
-        <h3>版本记录（最多保留 5 个）</h3>
-        <div class="vl" v-if="versions.length">
-          <div v-for="v in versions" :key="v.id||v.version" class="vi"
-            :class="{ sel: selVersion && selVersion.id === v.id }" @click="selVersion = v">
-            <div class="vm"><span class="vn">v{{ v.version }}</span><span>{{ fmtTime(v.createdAt) }}</span></div>
-            <div class="vp">{{ preview(v.items) }}</div>
-          </div>
-        </div>
-        <div v-else class="ve">暂无版本</div>
-        <p class="tip" v-if="selVersion">已选择 v{{ selVersion.version }}，点击下方回退会覆盖当前未保存内容</p>
-        <div class="row">
-          <button class="ghost" @click="showVersions = false">关闭</button>
-          <button class="primary" :disabled="!selVersion" @click="askRollback">回退到所选版本</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 回退二次确认 -->
-    <div v-if="confirmRollback" class="center-mask">
-      <div class="center-card">
-        <h3>确认回退？</h3>
-        <p>将回退到 v{{ selVersion && selVersion.version }}，当前未保存的输入不会保留。</p>
-        <div class="row"><button class="ghost" @click="confirmRollback = false">取消</button>
-          <button class="danger" @click="doRollback">确认回退</button></div>
-      </div>
-    </div>
 
     <!-- 导入历史 -->
     <div v-if="importOpen" class="center-mask">
@@ -128,6 +96,7 @@ const loading=ref(true);const loadError=ref('')
 const projectName=ref('…');const projectSub=ref('')
 const days=ref([]);const saving=ref(false)
 const unsavedPrompt=ref(false)
+const status=ref('已自动保存')
 const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);const confirmRollback=ref(false)
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
 const aiOpen=ref(false)
@@ -167,13 +136,18 @@ const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b)
 function renderBody(day){nextTick(()=>{
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const ol=document.createElement('ol');const arr=day.items.length?day.items:[{text:'',done:false}]
-  arr.forEach(it=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''))
-    const dot=document.createElement('button');dot.type='button';dot.setAttribute('contenteditable','false');dot.className='sw'+(it.done?' on':'')
-    dot.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();const idx=[...ol.children].indexOf(li);if(idx<0)return
-      day.items[idx]=day.items[idx]||{text:li.textContent||'',done:false};day.items[idx].done=!day.items[idx].done
-      li.classList.toggle('done',day.items[idx].done);dot.classList.toggle('on',day.items[idx].done);readBody(day);onInput(day)}
-    li.appendChild(dot);ol.appendChild(li)})
-  el.innerHTML='';el.appendChild(ol)})}
+  arr.forEach(it=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''));ol.appendChild(li)})
+  el.innerHTML='';el.appendChild(ol)
+  layout(day)
+})}
+function layout(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
+  const lis=[...el.querySelectorAll('ol>li')]
+  let rail=el.querySelector(':scope > .rail');if(!rail){rail=document.createElement('div');rail.className='rail';rail.setAttribute('contenteditable','false');el.appendChild(rail)}
+  while(rail.children.length<lis.length){rail.appendChild(document.createElement('button'))}
+  while(rail.children.length>lis.length)rail.removeChild(rail.lastChild)
+  lis.forEach((li,i)=>{const bt=rail.children[i];const on=li.classList.contains('done');bt.className='sw'+(on?' on':'');bt.style.top=(li.offsetTop+2)+'px'
+    bt.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();day.items[i]=day.items[i]||{text:li.textContent||'',done:false};day.items[i].done=!day.items[i].done;li.classList.toggle('done',day.items[i].done);readBody(day);onInput(day)}})
+}
 function readBody(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const lis=[...el.querySelectorAll(':scope ol > li')];day.items=lis.map(li=>({text:li.textContent.replace(/\u00a0/g,'').trim(),done:li.classList.contains('done')}))}
 function compact(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
@@ -182,13 +156,13 @@ function compact(day){const el=document.querySelector(`.daybody[data-date="${day
   for(let i=lis.length-2;i>=0;i--){if(!lis[i].textContent.trim()){lis[i].remove();changed=true}}
   if(!lis.length){const ol=el.querySelector('ol')||el.appendChild(document.createElement('ol'));ol.appendChild(document.createElement('li'));changed=true}
   if(changed)readBody(day)}
-function onInput(day){readBody(day);compact(day);const key=snapDay(day)
-  if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>saveDraft(day),600);day._last=key}}
+function onInput(day){readBody(day);compact(day);requestAnimationFrame(()=>layout(day));const key=snapDay(day)
+  if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),900);day._last=key}}
 function onKey(e,day){
   if((e.key==='Backspace'||e.key==='Delete') && day.items.length===1 && !day.items[0].text.trim()){ e.preventDefault(); return }
   if(e.key==='Backspace'||e.key==='Delete'){
     setTimeout(()=>{ readBody(day); compact(day); const k=snapDay(day)
-      if(!day._last||!same(day._last,k)){ day._dirty=true; unsavedPrompt.value=false; clearTimeout(timers[day.date]); timers[day.date]=setTimeout(()=>saveDraft(day),600); day._last=k } },0)
+      if(!day._last||!same(day._last,k)){ day._dirty=true; unsavedPrompt.value=false; clearTimeout(timers[day.date]); timers[day.date]=setTimeout(()=>autosave(day),900); day._last=k } },0)
   }
 }
 function removeFutureDay(day){
@@ -216,6 +190,7 @@ async function load(){loading.value=true;loadError.value=''
     days.value.forEach(renderBody)
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
+async function autosave(day){readBody(day);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._dirty=false;day._last=snapDay(day);status.value='已保存'}catch{}}
 async function saveDraft(day){try{await projectApi.draft(pid.value,day.date,{weekday:day.weekday,items:day.items})}catch{}}
 async function saveAll(){saving.value=true
   for(const day of days.value){if(!day._dirty)continue;readBody(day)
@@ -296,24 +271,25 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .ddot{width:6px;height:6px;border-radius:50%;background:var(--glow-border)}
 .del-day{border:none;background:var(--surface-2);color:var(--text-2);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
 .del-day:hover{background:var(--red);color:#fff}
-.daybody{outline:none;min-height:46px;padding:8px 60px 18px}
+.daybody{outline:none;min-height:46px;padding:8px 56px 18px;position:relative}
 .daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
 .daybody ol>li{counter-increment:item;position:relative;padding:9px 56px 9px 2.2em;min-height:1.7em;color:var(--text)}
 .daybody ol>li::after{content:'';display:block;clear:both}
 .daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.6em;text-align:right;padding-right:8px;color:var(--text-2);opacity:.55;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.75}
-/* iOS 滑动开关：绝对定位在每行右侧 */
-.sw{position:absolute;right:8px;top:8px;width:40px;height:24px;border-radius:13px;border:none;background:#e5e5ea;cursor:pointer;transition:background .2s;outline:none}
-.sw::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
-.sw.on{background:var(--accent)}
-.sw.on::after{left:18px}
+/* iOS 开关叠加层 */
+.rail{position:absolute;right:6px;top:0;width:40px;height:100%;pointer-events:none}
+.rail button{pointer-events:auto;position:absolute;left:0;width:40px;height:24px;border-radius:13px;border:none;background:#e5e5ea;cursor:pointer;transition:background .2s;outline:none}
+.rail button::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.rail button.on{background:var(--accent)}
+.rail button.on::after{left:18px}
 .card-add-row{display:flex;justify-content:center;padding:8px 0 10px}
 .add-card-btn{border:1px dashed var(--border);background:transparent;color:var(--text-2);border-radius:12px;padding:12px 30px;font-size:14px;cursor:pointer}
 .add-card-btn:hover{border-color:var(--accent);color:var(--accent)}
 .ph{padding:50px 0;color:var(--text-2);text-align:center}
 
 /* AI 小纸（悬浮、可拖、吸附） */
-.ai-ball{position:fixed;z-index:95;display:flex;align-items:center;gap:4px;background:var(--accent);color:#fff;border-radius:22px;padding:7px 14px;cursor:pointer;box-shadow:0 8px 24px rgba(0,122,255,.4);user-select:none;touch-action:none}
+.ai-ball{position:fixed;z-index:95;width:58px;height:58px;border-radius:50%;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,122,255,.45);user-select:none;touch-action:none;line-height:1.15}
 .ai-ball.open{background:var(--text)}
 .bl-name{font-size:14px;font-weight:700;line-height:1}
 .bl-tag{font-style:normal;font-size:9px;font-weight:700;background:rgba(255,255,255,.25);border-radius:4px;padding:0 4px;line-height:1.4}

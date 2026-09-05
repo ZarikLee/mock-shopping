@@ -76,7 +76,10 @@ onMounted(() => {
   window.addEventListener('resize', onResize)
   load()
 })
-watch(() => route.path, () => { if (mobile.value) drawerOpen.value = false })
+let iv=null
+watch(() => route.fullPath, () => { load(); if (mobile.value) drawerOpen.value = false })
+onMounted(()=>{ iv=setInterval(load,8000) })
+onBeforeUnmount(()=>clearInterval(iv))
 onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 </script>
 
