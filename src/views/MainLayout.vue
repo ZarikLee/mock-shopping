@@ -12,7 +12,7 @@
               <path d="M35.6 23.4 L40 19" stroke="#2a2a2a" stroke-width="4.6" stroke-linecap="round"/>
             </svg>
           </div>
-          <div class="brand-name">纸上</div>
+          <div class="brand-name">纸上 - Paper Todo</div>
         </div>
         <div class="me">
           <div class="me-name">{{ user.user?.nickname }}</div>
@@ -93,7 +93,7 @@
     <div class="main">
       <header class="m-topbar" v-if="mobile">
         <button class="m-menu" @click="drawerOpen = !drawerOpen">☰</button>
-        <div class="m-brand">纸上</div>
+        <div class="m-brand">纸上 - Paper Todo</div>
         <button class="m-theme" @click="theme.toggle">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
       </header>
       <router-view />
@@ -181,7 +181,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 .sidebar { width: 250px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 18px 12px; position: sticky; top: 0; height: 100vh; z-index: 60; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 0 6px 16px; cursor: pointer; }
 .brand-mark { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-.brand-name { font-size: 17px; font-weight: 700; }
+.brand-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .me { padding: 0 6px 14px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
 .me-name { font-weight: 600; font-size: 15px; }
 .me-role { font-size: 12px; color: var(--text-2); }
@@ -243,7 +243,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
   .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 260px; z-index: 70; }
   .m-topbar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
   .m-menu { border: none; background: none; font-size: 20px; color: var(--text); cursor: pointer; }
-  .m-brand { font-weight: 700; flex: 1; }
+  .m-brand { font-weight: 700; flex: 1; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .m-theme { border: none; background: none; font-size: 18px; cursor: pointer; }
 }
 </style>

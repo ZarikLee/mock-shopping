@@ -13,7 +13,7 @@
           <path d="M35.6 23.4 L40 19" stroke="#2a2a2a" stroke-width="4.6" stroke-linecap="round"/>
         </svg>
       </div>
-      <h1 class="title">纸上</h1>
+      <h1 class="title">纸上 - Paper Todo</h1>
       <p class="subtitle">像写日记一样，记录每天的 todo</p>
 
       <div class="tabs">
@@ -122,7 +122,7 @@ const submit = async () => {
 .theme-btn { position: fixed; top: 18px; right: 18px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 18px; cursor: pointer; transition: all .2s; }
 .auth-card { width: 100%; max-width: 360px; text-align: center; }
 .logo-mark { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 16px; background: var(--accent); color: #fff; font-size: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0,122,255,.3); }
-.title { font-size: 26px; font-weight: 700; letter-spacing: .5px; }
+.title { font-size: 23px; font-weight: 700; letter-spacing: .5px; }
 .subtitle { color: var(--text-2); font-size: 14px; margin: 6px 0 30px; }
 .tabs { position: relative; display: flex; background: var(--surface-2); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
 .tab-slide { position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: calc(100% - 8px); background: var(--accent); border-radius: 8px; transition: transform .25s ease; }

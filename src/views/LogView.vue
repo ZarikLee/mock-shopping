@@ -35,10 +35,10 @@
 
       <div v-if="loadError" class="err">{{ loadError }}</div>
       
-      <div class="scroll">
-        <div class="docmap" v-if="days.length > 1">
-          <button v-for="(d,i) in days" :key="'m' + d.date" class="map-slot"
-            :class="mapCls(d)" :title="dayLabel(d.date) + ' · ' + doneOf(d) + '/' + (d.items.length||0)" @click="jumpDay(i)"></button>
+      <div class="scroll" @scroll="onDocScroll">
+        <div class="docmap" v-if="days.length" @mousedown.prevent="mapDown">
+          <canvas ref="mapCanvas" class="map-canvas"></canvas>
+          <div class="map-thumb" :style="thumbStyle" @mousedown.prevent="thumbDown"></div>
         </div>
         <div class="doc" :style="{ fontFamily: prefs.font, fontSize: prefs.size + 'px', lineHeight: prefs.lh }">
           <section v-for="day in days" :key="day.date" class="day-card">
@@ -173,6 +173,59 @@ const isToday=d=>d===tNow
 const doneOf=day=>(day.items||[]).filter(i=>i.done).length
 const cs=day=>{const it=day.items||[];if(!it.length)return '';return it.every(i=>i.done)?'ok':'todo'}
 const mapCls=day=>{const it=day.items||[];if(!it.length)return 'none';return it.every(i=>i.done)?'ok':'todo'}
+const mapCanvas=ref(null)
+const thumb=reactive({top:0,h:16})
+const thumbStyle=computed(()=>({top:thumb.top+'px',height:Math.max(10,thumb.h)+'px'}))
+let mapRaf=0
+const clampN=(v,a,b)=>Math.max(a,Math.min(b,v))
+function mapGeom(){const scr=scrollEl.value;if(!scr)return null
+  const docEl=scr.querySelector('.doc');const mapEl=scr.querySelector('.docmap')
+  if(!docEl||!mapEl)return null
+  const H=mapEl.clientHeight;const contentH=docEl.getBoundingClientRect().height
+  if(!H||!contentH)return null
+  return {scr,docEl,mapEl,H,r:H/contentH}}
+function scheduleMap(){if(mapRaf)return;mapRaf=requestAnimationFrame(()=>{mapRaf=0;drawMap()})}
+function computeMapThumb(){const g=mapGeom();if(!g)return
+  const max=g.scr.scrollHeight-g.scr.clientHeight
+  if(max<=0){thumb.top=0;thumb.h=Math.max(10,g.H);return}
+  thumb.h=Math.max(8,g.scr.clientHeight*g.r)
+  const range=Math.max(0,g.H-thumb.h)
+  thumb.top=clampN((g.scr.scrollTop/max)*range,0,range)}
+function drawMap(){const g=mapGeom();const cv=mapCanvas.value
+  if(!g||!cv)return
+  const rect=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||1
+  cv.width=Math.max(1,Math.round(rect.width*dpr));cv.height=Math.max(1,Math.round(rect.height*dpr))
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0)
+  const W=rect.width
+  ctx.clearRect(0,0,W,g.H)
+  const dark=document.documentElement.getAttribute('data-theme')==='dark'
+  const textC=dark?'rgba(255,255,255,.4)':'rgba(0,0,0,.3)'
+  const doneC=dark?'rgba(48,209,88,.78)':'rgba(52,199,89,.8)'
+  const headC=dark?'rgba(255,255,255,.78)':'rgba(0,0,0,.66)'
+  const dr=g.docEl.getBoundingClientRect()
+  g.docEl.querySelectorAll('.day-card').forEach(card=>{
+    const hd=card.querySelector('.dhead')
+    if(hd){const top=(hd.getBoundingClientRect().top-dr.top)*g.r;ctx.fillStyle=headC;ctx.fillRect(2,Math.max(0,top),W-4,Math.max(1.5,2.2*g.r))}
+    card.querySelectorAll('ol>li').forEach(li=>{
+      const lr=li.getBoundingClientRect();const top=(lr.top-dr.top)*g.r
+      const len=(li.textContent||'').trim().length
+      const bw=Math.max(3,Math.min(W-6,2+len*((W-8)/32)))
+      ctx.fillStyle=li.classList.contains('done')?doneC:textC
+      ctx.fillRect(3,Math.max(0,top),bw,Math.max(1,(lr.height*g.r)-0.5))})})
+  computeMapThumb()}
+function onDocScroll(){computeMapThumb()}
+function startThumb(e,g){g=g||mapGeom();if(!g)return
+  const max=g.scr.scrollHeight-g.scr.clientHeight
+  const startY=e.clientY;const startTop=g.scr.scrollTop
+  const mv=ev=>{const dy=ev.clientY-startY;g.scr.scrollTop=clampN(startTop+dy/g.r,0,Math.max(0,max))}
+  const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up)}
+  window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up)}
+function thumbDown(e){e.preventDefault();startThumb(e)}
+function mapDown(e){const g=mapGeom();if(!g)return
+  const y=e.clientY-g.mapEl.getBoundingClientRect().top
+  const max=g.scr.scrollHeight-g.scr.clientHeight
+  g.scr.scrollTo({top:clampN(y/g.r-g.scr.clientHeight/2,0,Math.max(0,max)),behavior:'smooth'})
+  startThumb(e,g)}
 function jumpDay(i){const d=days.value[i];if(!d||!scrollEl.value)return
   const el=document.querySelector(`.daybody[data-date="${d.date}"]`)?.closest('.day-card');if(!el)return
   const sr=scrollEl.value.getBoundingClientRect();const top=scrollEl.value.scrollTop+(el.getBoundingClientRect().top-sr.top)-12
@@ -211,6 +264,7 @@ function renderBody(day){nextTick(()=>{
   if(!ol.children.length){const li=document.createElement('li');ol.appendChild(li)}
   el.innerHTML='';el.appendChild(ol)
   layout(day)
+  scheduleMap()
 })}
 function layout(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const lis=[...el.querySelectorAll('ol>li')]
@@ -246,6 +300,7 @@ function doDelete(){const day=delDay.value;if(!day)return
   delDay.value=null
   clearTimeout(timers[day.date]);delete timers[day.date]
   projectApi.removeDay(pid.value,day.date).catch(()=>{})
+  scheduleMap()
   showToast('已删除，无法恢复')}
 function focusLi(day,idx){nextTick(()=>{const el=document.querySelector(`.daybody[data-date="${day.date}"]`);const lis=el?.querySelectorAll('ol>li');const d=lis&&lis[idx!=null?idx:0];if(!d)return
   d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)})}
@@ -402,9 +457,9 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .vbtn{padding:3px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:12px;cursor:pointer}
 .vbtn:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
 .vbtn:disabled{opacity:.45;cursor:default}
-.vi-hint{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--border);color:var(--text-2);font-size:10px;font-style:normal;cursor:help;background:var(--bg)}
+.vi-hint{position:relative;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1px solid var(--border);color:var(--text-2);font-size:10px;font-style:normal;cursor:help;background:var(--bg);vertical-align:middle;margin-left:4px}
 .vi-q{font-style:normal;line-height:1}
-.vi-tip{visibility:hidden;opacity:0;position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%) translateY(4px);width:230px;padding:8px 10px;border-radius:8px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;font-style:normal;text-align:left;z-index:30;transition:opacity .15s,transform .15s,visibility .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.vi-tip{visibility:hidden;opacity:0;position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%) translateY(-4px);width:230px;padding:8px 10px;border-radius:8px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;font-style:normal;text-align:left;z-index:40;transition:opacity .15s,transform .15s,visibility .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .vi-hint:hover .vi-tip,.vi-hint:focus .vi-tip{visibility:visible;opacity:1;transform:translateX(-50%) translateY(0)}
 .fmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
 .fsel{border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:5px 8px;font-size:13px;outline:none}
@@ -417,14 +472,13 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .hint-line{padding:8px 20px;background:var(--glow);color:var(--glow-border);font-size:13px}
 .hint-line a{cursor:pointer;text-decoration:underline;margin-right:10px}
 .scroll{flex:1;overflow-y:auto;position:relative}
-.docmap{position:absolute;right:4px;top:10px;bottom:14px;width:8px;display:flex;flex-direction:column;gap:2px;z-index:5;opacity:.85}
-.map-slot{flex:1;min-height:3px;border:none;border-radius:3px;cursor:pointer;padding:0;background:var(--surface-2);transition:background .2s}
-.map-slot.ok{background:var(--green)}.map-slot.todo{background:var(--glow-border)}.map-slot.none{background:var(--surface-2)}
-.map-slot:hover{box-shadow:0 0 0 1px var(--text-2)}
+.docmap{position:absolute;right:14px;top:8px;bottom:8px;width:44px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.map-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.map-thumb{position:absolute;left:2px;right:2px;border-radius:6px;background:var(--accent);opacity:.32;cursor:ns-resize;pointer-events:auto;border:1px solid rgba(0,0,0,.1);box-sizing:border-box}
 .dstat.todo{color:var(--glow-border)}.dstat.ok{color:var(--green)}
 .cstat{width:9px;height:9px;border-radius:50%;background:var(--glow-border);display:inline-block}
 .cstat.ok{background:var(--green)}
-.doc{padding:20px clamp(26px,4vw,52px) 200px}
+.doc{padding:20px clamp(62px,6vw,96px) 200px clamp(14px,3vw,40px)}
 .center-card .col-btns{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .col-btns button{width:100%;padding:11px;border-radius:10px;font-size:14px;cursor:pointer;border:none}
 .ghost-wide{background:transparent;border:1px solid var(--border);color:var(--text)}
