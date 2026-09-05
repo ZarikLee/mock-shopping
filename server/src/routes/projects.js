@@ -120,8 +120,7 @@ router.delete('/:id', (req, res) => {
   return res.json({ success: true });
 });
 
-router.get('/:id/logs', (req, res) => {
-  const project = findOwnedProject(req, res);
+router.get('/:id/logs', (req, res) => {  const project = findOwnedProject(req, res);
   if (!project) return;
   const full = req.query.full === '1';
   const logs = queryAll('day_logs', { projectId: project.id })
@@ -268,6 +267,19 @@ router.post('/:id/logs/:date/rollback', (req, res) => {
   const items = Array.isArray(ver.items) ? ver.items.map(i => ({ ...i })) : [];
   update('day_logs', dayLog.id, { items, updatedAt: now() });
   return res.json({ items, message: '已回滚到所选版本' });
+});
+
+// 删除某一天（含版本）
+router.delete('/:id/logs/:date', (req, res) => {
+  const project = findOwnedProject(req, res);
+  if (!project) return;
+  const { date } = req.params;
+  if (!isValidDate(date)) return res.status(400).json({ error: '日期格式应为 YYYY-MM-DD' });
+  const dayLog = getLog(project.id, date);
+  if (!dayLog) return res.status(404).json({ error: '该日暂无记录' });
+  queryAll('log_versions', { logId: dayLog.id }).forEach(v => remove('log_versions', v.id));
+  remove('day_logs', dayLog.id);
+  return res.json({ success: true });
 });
 
 export default router;

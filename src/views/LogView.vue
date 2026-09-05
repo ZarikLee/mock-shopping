@@ -33,10 +33,11 @@
         <div class="doc" :style="{ fontFamily: prefs.font, fontSize: prefs.size + 'px', lineHeight: prefs.lh }">
           <section v-for="day in days" :key="day.date" class="day-card">
             <div class="dhead">
-              <span class="dt">{{ dayLabel(day.date) }} <em>{{ day.weekday }}</em></span>
+              <span class="dt">{{ dayLabel(day.date) }}<em> {{ day.weekday }}</em></span>
               <span class="dtools">
                 <span v-if="day.items.length" class="dstat">{{ doneOf(day) }}/{{ day.items.length }}</span>
                 <span v-if="day._dirty" class="ddot"></span>
+                <button v-if="day.date > tNow" class="del-day" @click="removeFutureDay(day)" title="删除这天的计划">×</button>
               </span>
             </div>
             <div class="daybody" contenteditable="true" spellcheck="false" :data-date="day.date"
@@ -153,7 +154,7 @@ function renderBody(day){nextTick(()=>{
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const ol=document.createElement('ol');const arr=day.items.length?day.items:[{text:'',done:false}]
   arr.forEach(it=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''))
-    const dot=document.createElement('button');dot.type='button';dot.setAttribute('contenteditable','false');dot.className='line-dot'+(it.done?' on':'')
+    const dot=document.createElement('button');dot.type='button';dot.setAttribute('contenteditable','false');dot.className='sw'+(it.done?' on':'')
     dot.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();const idx=[...ol.children].indexOf(li);if(idx<0)return
       day.items[idx]=day.items[idx]||{text:li.textContent||'',done:false};day.items[idx].done=!day.items[idx].done
       li.classList.toggle('done',day.items[idx].done);dot.classList.toggle('on',day.items[idx].done);readBody(day);onInput(day)}
@@ -169,7 +170,19 @@ function compact(day){const el=document.querySelector(`.daybody[data-date="${day
   if(changed)readBody(day)}
 function onInput(day){readBody(day);compact(day);const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>saveDraft(day),600);day._last=key}}
-function onKey(){}
+function onKey(e,day){
+  if((e.key==='Backspace'||e.key==='Delete') && day.items.length===1 && !day.items[0].text.trim()){ e.preventDefault(); return }
+  if(e.key==='Backspace'||e.key==='Delete'){
+    setTimeout(()=>{ readBody(day); compact(day); const k=snapDay(day)
+      if(!day._last||!same(day._last,k)){ day._dirty=true; unsavedPrompt.value=false; clearTimeout(timers[day.date]); timers[day.date]=setTimeout(()=>saveDraft(day),600); day._last=k } },0)
+  }
+}
+function removeFutureDay(day){
+  const i=days.value.findIndex(d=>d.date===day.date);if(i<0)return
+  days.value.splice(i,1)
+  projectApi.removeDay(pid.value,day.date).catch(()=>{})
+  showToast('已删除这天的计划')
+}
 function focusLi(day,idx){nextTick(()=>{const el=document.querySelector(`.daybody[data-date="${day.date}"]`);const lis=el?.querySelectorAll('ol>li');const d=lis&&lis[idx!=null?idx:0];if(!d)return
   d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)})}
 function addNextDay(){const last=days.value.reduce((m,d)=>d.date>m?d.date:m,'');let base=last?last:tNow
@@ -263,17 +276,23 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .day-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)}
 .dhead{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;user-select:none}
 .dt{font-size:15px;font-weight:600}
-.dt em{font-style:normal;color:var(--text-2);font-weight:400;font-size:12px;margin-left:8px}
+.dt em{font-style:normal;color:inherit;font-weight:inherit;font-size:inherit;margin-left:4px}
 .dtools{display:flex;align-items:center;gap:10px}
 .dstat{font-size:12px;color:var(--text-2)}
 .ddot{width:6px;height:6px;border-radius:50%;background:var(--glow-border)}
-.daybody{outline:none;min-height:46px;padding:8px 44px 18px}
+.del-day{border:none;background:var(--surface-2);color:var(--text-2);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
+.del-day:hover{background:var(--red);color:#fff}
+.daybody{outline:none;min-height:46px;padding:8px 60px 18px}
 .daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
-.daybody ol>li{counter-increment:item;position:relative;padding:7px 6px 7px 2.4em;min-height:1.7em;color:var(--text);border-radius:6px}
-.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:7px;width:1.7em;text-align:right;padding-right:9px;color:var(--text-2);opacity:.6;font-size:.92em}
+.daybody ol>li{counter-increment:item;position:relative;padding:9px 0 9px 2.2em;min-height:1.7em;color:var(--text);clear:both}
+.daybody ol>li::after{content:'';display:block;clear:both}
+.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.6em;text-align:right;padding-right:8px;color:var(--text-2);opacity:.55;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.75}
-.line-dot{float:right;margin-top:5px;width:15px;height:15px;border-radius:50%;border:2px solid var(--red);background:transparent;cursor:pointer}
-.line-dot.on{border-color:var(--green);background:var(--green)}
+/* iOS 滑动开关 */
+.sw{float:right;position:relative;width:38px;height:22px;border-radius:12px;border:none;background:#e5e5ea;cursor:pointer;transition:background .2s;flex:none;outline:none;margin-top:2px}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.sw.on{background:var(--accent)}
+.sw.on::after{left:18px}
 .card-add-row{display:flex;justify-content:center;padding:8px 0 10px}
 .add-card-btn{border:1px dashed var(--border);background:transparent;color:var(--text-2);border-radius:12px;padding:12px 30px;font-size:14px;cursor:pointer}
 .add-card-btn:hover{border-color:var(--accent);color:var(--accent)}

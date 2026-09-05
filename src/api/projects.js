@@ -11,5 +11,6 @@ export const projectApi = {
   draft: (pid, date, d) => api.post(`/projects/${pid}/logs/${date}/draft`, d),
   commit: (pid, date, d) => api.post(`/projects/${pid}/logs/${date}/commit`, d),
   versions: (pid, date) => api.get(`/projects/${pid}/logs/${date}/versions`),
-  rollback: (pid, date, vId) => api.post(`/projects/${pid}/logs/${date}/rollback`, { versionId: vId })
+  rollback: (pid, date, vId) => api.post(`/projects/${pid}/logs/${date}/rollback`, { versionId: vId }),
+  removeDay: (pid, date) => api.delete(`/projects/${pid}/logs/${date}`)
 }
