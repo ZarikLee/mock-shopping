@@ -110,45 +110,41 @@ function renderBody(day){
   nextTick(()=>{
     const el=document.querySelector(`.daybody[data-date="${day.date}"]`)
     if(!el)return
-    el.innerHTML=''
-    day.items.forEach(it=>{
-      const div=document.createElement('div')
-      div.className='taskline'+(it.done?' done':'')
-      div.appendChild(document.createTextNode(it.text||''))
-      el.appendChild(div)
+    const ol=document.createElement('ol')
+    const arr = day.items.length ? day.items : [{ text: '', done: false }]
+    arr.forEach(it=>{
+      const li=document.createElement('li')
+      if(it.done)li.classList.add('done')
+      li.appendChild(document.createTextNode(it.text||''))
+      ol.appendChild(li)
     })
+    el.innerHTML=''
+    el.appendChild(ol)
   })
 }
 function readBody(day){
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`)
   if(!el)return
-  const divs=el.querySelectorAll(':scope > div')
+  const lis=el.querySelectorAll(':scope ol > li')
   const arr=[]
-  divs.forEach(div=>arr.push({text:div.textContent.replace(/\u00a0/g,''),done:div.classList.contains('done')}))
-  // 去掉末尾空行
-  while(arr.length&&!arr[arr.length-1].text)arr.pop()
+  lis.forEach(li=>arr.push({text:li.textContent.replace(/\u00a0/g,''),done:li.classList.contains('done')}))
   day.items=arr
 }
 function onInput(day){
   readBody(day)
-  // 若有变动（相对上次渲染的副本），标记 dirty
   const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>saveDraft(day),600);day._last=key}
 }
-function onKey(e,day){
-  if(e.key==='Enter'&&!e.shiftKey){
-    // 允许浏览器自然分段，但我们随后只保留有内容的行——先让默认创建，再折叠多余空行由下一次输入处理
-    return
-  }
-  if(e.key==='Backspace'){
-    // 空段落自动合并交由浏览器，稍后 onInput 折叠
-  }
-}
+function onKey(){}
 function addLine(day){
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`)
   day.items.push({text:'',done:false})
   renderBody(day);onInput(day)
-  nextTick(()=>{const d=el?.lastElementChild;if(d){d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)}})
+  nextTick(()=>{
+    const lis=el?.querySelectorAll('ol > li')
+    const d=lis&&lis[lis.length-1]
+    if(d){d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)}
+  })
 }
 function addTodayDay(){
   let day=findDay(tNow)
@@ -162,12 +158,12 @@ function currentLineEl(day){
   if(!el||!sel||!sel.anchorNode)return null
   let node=sel.anchorNode
   if(node.nodeType===3)node=node.parentElement
-  while(node&&node!==el&&!(node.classList&&node.classList.contains('taskline')))node=node.parentElement
-  return node&&node!==el?node:null
+  while(node&&node!==el&&node.tagName!=='LI')node=node.parentElement
+  return node&&node.tagName==='LI'?node:null
 }
 function markCurrentDone(day){
   const line=currentLineEl(day)
-  if(!line){showToast('先把光标放在某一行上');return}
+  if(!line){showToast('请先把光标放在某一行的文字里');return}
   const i=[...line.parentElement.children].indexOf(line)
   if(i<0)return
   day.items[i]=day.items[i]||{text:line.textContent||'',done:false}
@@ -244,7 +240,14 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .hint-line a{cursor:pointer;text-decoration:underline;margin-right:8px}
 
 .scroll{flex:1;overflow-y:auto}
-.doc{padding:20px clamp(16px,7vw,120px) 160px;max-width:1000px;margin:0 auto}
+/* 整宽连续文本编辑区 */
+.doc{padding:20px 24px 160px;width:100%}
+.daybody{outline:none;min-height:40px;margin:0;padding:2px 0}
+.daybody ol{list-style:decimal;margin:0;padding-left:2em}
+.daybody li{min-height:1.7em;padding:1px 2px;border-radius:3px}
+.daybody li.done{text-decoration:line-through;color:var(--text-2);opacity:.7}
+.taskline{min-height:1.7em;padding:1px 2px;border-radius:3px}
+.taskline.done{text-decoration:line-through;color:var(--text-2);opacity:.7}
 .dhead{position:sticky;top:0;background:var(--bg);padding:18px 0 4px;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
 .dhead em{font-style:normal;color:var(--text-2);font-size:12px;font-weight:400;margin-left:6px}
 .dhead .tools{display:flex;gap:6px;align-items:center;opacity:0;transition:opacity .2s}
