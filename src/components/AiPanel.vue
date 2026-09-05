@@ -20,9 +20,9 @@
     </div>
 
     <footer class="ai-foot">
-      <div class="sgline" v-if="!hideSuggest" @click="useSuggest(curSug)">{{ curSug }}</div>
+      <div class="sgline" v-if="!hideSuggest"><span class="sgpfx">AI建议：</span><span :key="curSug" class="sgroll" @click="useSuggest(curSug)">{{ curSug }}</span></div>
       <div class="ai-input">
-        <textarea v-model="draft" rows="1" placeholder="和小纸聊两句…" @keydown.enter.prevent="send"></textarea>
+        <textarea v-model="draft" rows="1" placeholder="和小纸聊两句…" @input="autoGrow" @keydown.enter.prevent="send"></textarea>
         <button class="send" :disabled="!draft.trim() || typing" @click="send">发送</button>
       </div>
     </footer>
@@ -112,6 +112,7 @@ async function send() {
 }
 
 function useSuggest(s){ draft.value = s; send() }
+function autoGrow(e){e.target.style.height='auto';e.target.style.height=Math.min(160,e.target.scrollHeight)+'px'}
 function reset() {
   history.length = 0
   shown.value = []

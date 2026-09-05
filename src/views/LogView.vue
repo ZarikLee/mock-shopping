@@ -51,10 +51,9 @@
       </div>
     </div>
 
-    <div class="ai-ball" :class="{ open: aiOpen }" :style="{ left: ball.left + 'px', top: ball.top + 'px' }"
-      @pointerdown="ballDown">
+    <button class="ai-ball" :class="{ open: aiOpen }" @click="aiOpen = !aiOpen">
       <span class="bl-name">{{ aiOpen ? '×' : '小纸' }}</span><i class="bl-tag">AI</i>
-    </div>
+    </button>
     <transition name="fade"><div v-if="aiOpen" class="ai-dialog"><AiPanel :key="'p' + pid" :project-id="pid" @close="aiOpen = false" /></div></transition>
 
     <!-- 导入历史 -->
@@ -100,17 +99,7 @@ const status=ref('已自动保存')
 const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);const confirmRollback=ref(false)
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
 const aiOpen=ref(false)
-const ball=reactive({left:window.innerWidth-92, top:window.innerHeight-100})
-let drag=false, moved=false, sx=0, sy=0, sl=0, st=0
-function ballDown(e){drag=true;moved=false;sx=e.clientX;sy=e.clientY;sl=ball.left;st=ball.top
-  e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId)
-  const mv=ev=>{if(!drag)return;const dx=ev.clientX-sx,dy=ev.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>4)moved=true
-    ball.left=Math.max(4,Math.min(window.innerWidth-76,sl+dx));ball.top=Math.max(4,Math.min(window.innerHeight-80,st+dy))}
-  const up=()=>{drag=false;window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up)
-    if(moved){const snapLeft=ball.left+38 < window.innerWidth/2;const right=window.innerWidth-76
-      ball.left=snapLeft?10:Math.max(10,right);ball.top=Math.max(10,Math.min(window.innerHeight-88,ball.top))}
-    else aiOpen.value=!aiOpen.value}
-  window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up)}
+
 const toast=ref('');let toastTimer=null;const timers={}
 const sizes=[12,13,14,15,16,18,20,22,24]
 const colors=['#1d1d1f','#ff3b30','#ff9500','#ffcc00','#34c759','#0a84ff','#af52de','#ffffff']
@@ -135,8 +124,8 @@ const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b)
 
 function renderBody(day){nextTick(()=>{
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
-  const ol=document.createElement('ol');const arr=day.items.length?day.items:[{text:'',done:false}]
-  arr.forEach(it=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''));ol.appendChild(li)})
+  const ol=document.createElement('ol')
+  day.items.forEach(it=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''));ol.appendChild(li)})
   el.innerHTML='';el.appendChild(ol)
   layout(day)
 })}
@@ -153,8 +142,7 @@ function readBody(day){const el=document.querySelector(`.daybody[data-date="${da
 function compact(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const lis=[...el.querySelectorAll(':scope ol > li')];let changed=false
   // 删除空行，但始终保留末尾一个用于继续输入
-  for(let i=lis.length-2;i>=0;i--){if(!lis[i].textContent.trim()){lis[i].remove();changed=true}}
-  if(!lis.length){const ol=el.querySelector('ol')||el.appendChild(document.createElement('ol'));ol.appendChild(document.createElement('li'));changed=true}
+  lis.forEach(li=>{if(!li.textContent.trim()){li.remove();changed=true}})
   if(changed)readBody(day)}
 function onInput(day){readBody(day);compact(day);requestAnimationFrame(()=>layout(day));const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),900);day._last=key}}
@@ -278,6 +266,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.6em;text-align:right;padding-right:8px;color:var(--text-2);opacity:.55;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.75}
 /* iOS 开关叠加层 */
+ .dayph{color:var(--text-2);font-size:14px;padding:12px 4px;cursor:text;opacity:.75}
 .rail{position:absolute;right:6px;top:0;width:40px;height:100%;pointer-events:none}
 .rail button{pointer-events:auto;position:absolute;left:0;width:40px;height:24px;border-radius:13px;border:none;background:#e5e5ea;cursor:pointer;transition:background .2s;outline:none}
 .rail button::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
@@ -289,7 +278,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .ph{padding:50px 0;color:var(--text-2);text-align:center}
 
 /* AI 小纸（悬浮、可拖、吸附） */
-.ai-ball{position:fixed;z-index:95;width:58px;height:58px;border-radius:50%;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,122,255,.45);user-select:none;touch-action:none;line-height:1.15}
+.ai-ball{position:fixed;right:20px;bottom:32px;z-index:95;width:58px;height:58px;border-radius:50%;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,122,255,.45);line-height:1.15;border:none}
 .ai-ball.open{background:var(--text)}
 .bl-name{font-size:14px;font-weight:700;line-height:1}
 .bl-tag{font-style:normal;font-size:9px;font-weight:700;background:rgba(255,255,255,.25);border-radius:4px;padding:0 4px;line-height:1.4}
