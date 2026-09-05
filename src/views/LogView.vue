@@ -1,30 +1,22 @@
 <template>
   <div class="editor">
-    <!-- 左侧书写区 -->
     <div class="work">
       <div class="top">
         <div class="t-name"><button class="back-m" @click="router.push('/projects')">‹</button>
           <span class="pn">{{ projectName }}</span><span class="t-sub">{{ projectSub }}</span></div>
         <div class="t-actions">
+          <button class="tb" @click="importOpen = true">导入历史</button>
           <button class="tb" @click="openVersions">版本</button>
           <button class="tb save" :class="{ on: hasDirty }" @click="saveAll">{{ hasDirty ? '保存修改' : '已保存' }}</button>
         </div>
       </div>
 
       <div class="fmt">
-        <select class="fsel" v-model="prefs.font" @change="applyPrefs" title="字体">
-          <option value="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">系统</option>
-          <option value="'Songti SC','SimSun',serif">宋体</option>
-          <option value="'Times New Roman',serif">Times</option>
-          <option value="ui-monospace,Menlo,Consolas,monospace">等宽</option>
-        </select>
-        <select class="fsel" v-model.number="prefs.size" @change="applyPrefs" title="字号">
-          <option v-for="s in sizes" :key="s" :value="s">{{ s }}</option>
-        </select>
-        <select class="fsel" v-model.number="prefs.lh" @change="applyPrefs" title="行距">
-          <option :value="1.2">1.2</option><option :value="1.4">1.4</option><option :value="1.6">1.6</option>
-          <option :value="1.8">1.8</option><option :value="2">2.0</option><option :value="2.2">2.2</option>
-        </select>
+        <select class="fsel" v-model="prefs.font" @change="applyPrefs"><option value="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">系统</option>
+          <option value="'Songti SC','SimSun',serif">宋体</option><option value="'Times New Roman',serif">Times</option>
+          <option value="ui-monospace,Menlo,Consolas,monospace">等宽</option></select>
+        <select class="fsel" v-model.number="prefs.size" @change="applyPrefs"><option v-for="s in sizes" :key="s" :value="s">{{ s }}</option></select>
+        <select class="fsel" v-model.number="prefs.lh" @change="applyPrefs"><option :value="1.2">1.2</option><option :value="1.4">1.4</option><option :value="1.6">1.6</option><option :value="1.8">1.8</option><option :value="2">2.0</option></select>
         <span class="sep"></span>
         <button class="fb" @mousedown.prevent="cmd('bold')">B</button>
         <button class="fb it" @mousedown.prevent="cmd('italic')">I</button>
@@ -45,40 +37,76 @@
               <span class="dtools">
                 <span v-if="day.items.length" class="dstat">{{ doneOf(day) }}/{{ day.items.length }}</span>
                 <span v-if="day._dirty" class="ddot"></span>
-                <span class="mini" @click="markCurrentDone(day)" title="标记光标所在行完成">✓</span>
-                <button class="plus-t" @click="addLine(day)">＋</button>
               </span>
             </div>
             <div class="daybody" contenteditable="true" spellcheck="false" :data-date="day.date"
-              @input="e => onInput(day, e)" @keydown="e => onKey(e, day)"></div>
+              @input="e => onInput(day)" @keydown="e => onKey(e, day)"></div>
           </section>
-          <div v-if="!loading && !days.length" class="ph">
-            <p>还没有记录。</p>
-            <button class="plus-big" @click="addTodayDay">＋ 开始记录今天</button>
+
+          <div v-if="!loading && !days.length" class="ph"><p>还没有记录。</p></div>
+
+          <div class="card-add-row">
+            <button class="add-card-btn" @click="addNextDay">＋ 新增明天 · 提前安排</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 右侧 AI 搭子（悬浮卡片，不占布局） -->
-    <button class="ai-fab" :class="{ open: aiOpen }" @click="aiOpen = !aiOpen">
-      {{ aiOpen ? '×' : 'AI' }}
-    </button>
-    <transition name="fade">
-      <div v-if="aiOpen" class="ai-dialog">
-        <AiPanel :key="'p' + pid" :project-id="pid" @close="aiOpen = false" />
-      </div>
-    </transition>
+    <button class="ai-fab" :class="{ open: aiOpen }" @click="aiOpen = !aiOpen">{{ aiOpen ? '×' : 'AI' }}</button>
+    <transition name="fade"><div v-if="aiOpen" class="ai-dialog"><AiPanel :key="'p' + pid" :project-id="pid" @close="aiOpen = false" /></div></transition>
 
-    <div v-if="showVersions" class="mask" @click.self="showVersions = false">
-      <div class="vs"><h3>版本记录</h3>
-        <div class="vl" v-if="versions.length"><div v-for="(v,i) in versions" :key="i" class="vi">
-          <div class="vm"><span class="vn">v{{ v.version }}</span><span>{{ fmtTime(v.createdAt) }}</span></div>
-          <div class="vp">{{ preview(v.items) }}</div>
-          <button class="ghost" @click="rollback(v)">回退到此处</button></div></div>
+    <!-- 版本（居中、选择高亮、二次确认） -->
+    <div v-if="showVersions" class="center-mask">
+      <div class="center-card wide">
+        <h3>版本记录（最多保留 5 个）</h3>
+        <div class="vl" v-if="versions.length">
+          <div v-for="v in versions" :key="v.id||v.version" class="vi"
+            :class="{ sel: selVersion && selVersion.id === v.id }" @click="selVersion = v">
+            <div class="vm"><span class="vn">v{{ v.version }}</span><span>{{ fmtTime(v.createdAt) }}</span></div>
+            <div class="vp">{{ preview(v.items) }}</div>
+          </div>
+        </div>
         <div v-else class="ve">暂无版本</div>
-        <button class="primary full" @click="showVersions = false">关闭</button></div>
+        <p class="tip" v-if="selVersion">已选择 v{{ selVersion.version }}，点击下方回退会覆盖当前未保存内容</p>
+        <div class="row">
+          <button class="ghost" @click="showVersions = false">关闭</button>
+          <button class="primary" :disabled="!selVersion" @click="askRollback">回退到所选版本</button>
+        </div>
+      </div>
     </div>
+
+    <!-- 回退二次确认 -->
+    <div v-if="confirmRollback" class="center-mask">
+      <div class="center-card">
+        <h3>确认回退？</h3>
+        <p>将回退到 v{{ selVersion && selVersion.version }}，当前未保存的输入不会保留。</p>
+        <div class="row"><button class="ghost" @click="confirmRollback = false">取消</button>
+          <button class="danger" @click="doRollback">确认回退</button></div>
+      </div>
+    </div>
+
+    <!-- 导入历史 -->
+    <div v-if="importOpen" class="center-mask">
+      <div class="center-card wide">
+        <h3>导入历史记录</h3>
+        <p class="tip">支持 txt / Markdown。每行开头是日期即开新一天，其余行是该天任务；任务前加 [x]/✔ 视为已完成。</p>
+        <textarea v-model="importText" class="imp" placeholder="示例：
+2024-09-01 周日
+- [x] 复习高数
+1. 写作业
+2. 跑步
+
+2024/09/02
+- 读论文"></textarea>
+        <p v-if="importPreview" class="tip">{{ importPreview }}</p>
+        <div class="row">
+          <button class="ghost" @click="importOpen = false">取消</button>
+          <button class="ghost" @click="previewImport">预览</button>
+          <button class="primary" :disabled="!parsed" @click="doImport">导入</button>
+        </div>
+      </div>
+    </div>
+
     <transition name="fade"><div v-if="toast" class="toast">{{ toast }}</div></transition>
   </div>
 </template>
@@ -95,20 +123,21 @@ const pid=ref(Number(route.params.projectId))
 const loading=ref(true);const loadError=ref('')
 const projectName=ref('…');const projectSub=ref('')
 const days=ref([]);const saving=ref(false)
-const unsavedPrompt=ref(false);const versions=ref([]);const showVersions=ref(false)
+const unsavedPrompt=ref(false)
+const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);const confirmRollback=ref(false)
+const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
+const aiOpen=ref(false)
 const toast=ref('');let toastTimer=null;const timers={}
-const isSmall=ref(window.innerWidth<=1080);const aiOpen=ref(false)
-const onResize=()=>{isSmall.value=window.innerWidth<=1080}
-const sizes=[12,13,14,15,16,18,20,22,24,28,32]
+const sizes=[12,13,14,15,16,18,20,22,24]
 const colors=['#1d1d1f','#ff3b30','#ff9500','#ffcc00','#34c759','#0a84ff','#af52de','#ffffff']
 const hl=['#ffe08a','#b1ff9e','#9ecbff','#ffd1d1','#e0d0ff','transparent']
 function lp(){try{return JSON.parse(localStorage.getItem('dl_prefs')||'null')}catch{return null}}
 const prefs=reactive(lp()||{font:"-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif",size:16,lh:1.6})
 function applyPrefs(){localStorage.setItem('dl_prefs',JSON.stringify(prefs))}
-
 const WEEKS=['周日','周一','周二','周三','周四','周五','周六']
 const pad=n=>String(n).padStart(2,'0')
-const nowD=new Date();const tNow=`${nowD.getFullYear()}-${pad(nowD.getMonth()+1)}-${pad(nowD.getDate())}`
+function dstr(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+const nowD=new Date();const tNow=dstr(nowD)
 const isToday=d=>d===tNow
 const doneOf=day=>(day.items||[]).filter(i=>i.done).length
 const dayLabel=d=>{const p=d.split('-');return `${p[0]}年${+p[1]}月${+p[2]}日`}
@@ -123,45 +152,32 @@ const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b)
 function renderBody(day){nextTick(()=>{
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const ol=document.createElement('ol');const arr=day.items.length?day.items:[{text:'',done:false}]
-  arr.forEach(it=>{
-    const li=document.createElement('li');if(it.done)li.classList.add('done')
-    li.appendChild(document.createTextNode(it.text||''))
-    const dot=document.createElement('button');dot.type='button';dot.setAttribute('contenteditable','false')
-    dot.className='line-dot'+(it.done?' on':'')
-    dot.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();const idx=[...ol.children].indexOf(li)
-      if(idx<0)return;day.items[idx]=day.items[idx]||{text:li.textContent||'',done:false}
-      day.items[idx].done=!day.items[idx].done
-      li.classList.toggle('done',day.items[idx].done);dot.classList.toggle('on',day.items[idx].done)
-      readBody(day);onInput(day)}
-    li.appendChild(dot);ol.appendChild(li)
-  })
-  el.innerHTML='';el.appendChild(ol)
-})}
-function readBody(day){
-  const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
-  const lis=el.querySelectorAll(':scope ol > li');const arr=[]
-  lis.forEach(li=>arr.push({text:li.textContent.replace(/\u00a0/g,''),done:li.classList.contains('done')}))
-  day.items=arr
-  if(lis.length===0){const ol=el.querySelector('ol')||el.appendChild(document.createElement('ol'));ol.appendChild(document.createElement('li'));day.items=[{text:'',done:false}]}
-}
-function onInput(day){readBody(day);const key=snapDay(day)
+  arr.forEach(it=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''))
+    const dot=document.createElement('button');dot.type='button';dot.setAttribute('contenteditable','false');dot.className='line-dot'+(it.done?' on':'')
+    dot.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();const idx=[...ol.children].indexOf(li);if(idx<0)return
+      day.items[idx]=day.items[idx]||{text:li.textContent||'',done:false};day.items[idx].done=!day.items[idx].done
+      li.classList.toggle('done',day.items[idx].done);dot.classList.toggle('on',day.items[idx].done);readBody(day);onInput(day)}
+    li.appendChild(dot);ol.appendChild(li)})
+  el.innerHTML='';el.appendChild(ol)})}
+function readBody(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
+  const lis=[...el.querySelectorAll(':scope ol > li')];day.items=lis.map(li=>({text:li.textContent.replace(/\u00a0/g,'').trim(),done:li.classList.contains('done')}))}
+function compact(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
+  const lis=[...el.querySelectorAll(':scope ol > li')];let changed=false
+  // 删除空行，但始终保留末尾一个用于继续输入
+  for(let i=lis.length-2;i>=0;i--){if(!lis[i].textContent.trim()){lis[i].remove();changed=true}}
+  if(!lis.length){const ol=el.querySelector('ol')||el.appendChild(document.createElement('ol'));ol.appendChild(document.createElement('li'));changed=true}
+  if(changed)readBody(day)}
+function onInput(day){readBody(day);compact(day);const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>saveDraft(day),600);day._last=key}}
 function onKey(){}
-function addLine(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`)
-  day.items.push({text:'',done:false});renderBody(day);onInput(day)
-  nextTick(()=>{const lis=el?.querySelectorAll('ol>li');const d=lis&&lis[lis.length-1]
-    if(d){d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)}})}
-function addTodayDay(){let day=findDay(tNow);if(!day){day=norm({date:tNow,weekday:wk(tNow),items:[]});days.value.push(day)}renderBody(day);addLine(day)
-  document.querySelector('.daybody[data-date="'+tNow+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})}
-function markCurrentDone(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);const sel=window.getSelection()
-  if(!el||!sel||!sel.anchorNode){showToast('先把光标放在某一行');return}
-  let node=sel.anchorNode;if(node.nodeType===3)node=node.parentElement
-  while(node&&node!==el&&node.tagName!=='LI')node=node.parentElement
-  if(!node||node.tagName!=='LI'){showToast('先把光标放在某一行');return}
-  const i=[...node.parentElement.children].indexOf(node);if(i<0)return
-  day.items[i]=day.items[i]||{text:node.textContent||'',done:false};day.items[i].done=!day.items[i].done
-  node.classList.toggle('done',day.items[i].done);readBody(day);onInput(day)}
-function showToast(m){toast.value=m;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.value='',1800)}
+function focusLi(day,idx){nextTick(()=>{const el=document.querySelector(`.daybody[data-date="${day.date}"]`);const lis=el?.querySelectorAll('ol>li');const d=lis&&lis[idx!=null?idx:0];if(!d)return
+  d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)})}
+function addNextDay(){const last=days.value.reduce((m,d)=>d.date>m?d.date:m,'');let base=last?last:tNow
+  if(base<tNow)base=tNow
+  const nd=new Date(base+'T00:00:00');nd.setDate(nd.getDate()+1);const date=dstr(nd)
+  let day=findDay(date);if(!day){day=norm({date,weekday:wk(date),items:[]});days.value.push(day)}
+  renderBody(day);onInput(day);focusLi(day,0);document.querySelector('.daybody[data-date="'+date+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})}
+function showToast(m){toast.value=m;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.value='',2000)}
 
 async function load(){loading.value=true;loadError.value=''
   try{const list=await projectApi.list();const arr=Array.isArray(list)?list:(list.projects||[])
@@ -182,17 +198,45 @@ async function discardAll(){unsavedPrompt.value=false
   for(const day of days.value){if(!day._dirty)continue;let arr=[]
     try{const info=await projectApi.log(pid.value,day.date);arr=(info.lastVersion?info.lastVersion.items:[]).map(i=>({text:i.text||'',done:!!i.done}))}catch{}
     day.items=arr;day._dirty=false;day._last=snapDay(day);renderBody(day)}showToast('已放弃修改')}
-async function openVersions(){const day=days.value[days.value.length-1];if(!day)return;showVersions.value=true
-  try{versions.value=await projectApi.versions(pid.value,day.date)}catch{versions.value=[]}}
-async function rollback(v){const day=days.value[days.value.length-1];if(!day)return
+
+async function openVersions(){const day=days.value[days.value.length-1];if(!day)return
+  showVersions.value=true;selVersion.value=null;confirmRollback.value=false
+  try{versions.value=(await projectApi.versions(pid.value,day.date)).slice(0,5)}catch{versions.value=[]}}
+function askRollback(){if(selVersion.value)confirmRollback.value=true}
+async function doRollback(){confirmRollback.value=false;const v=selVersion.value;if(!v)return
+  const day=days.value[days.value.length-1]
   try{await projectApi.rollback(pid.value,day.date,v.id!=null?v.id:v.version)
-    day.items=(v.items||[]).map(i=>({text:i.text||'',done:!!i.done}));day._dirty=false;day._last=snapDay(day);renderBody(day);showVersions.value=false;showToast('已回退 v'+v.version)}catch(e){loadError.value=e?.error||'回退失败'}}
+    day.items=(v.items||[]).map(i=>({text:i.text||'',done:!!i.done}));day._dirty=false;day._last=snapDay(day);renderBody(day);showVersions.value=false;showToast('已回退到 v'+v.version)}
+  catch(e){loadError.value=e?.error||'回退失败'}}
 const preview=items=>(items||[]).slice(0,3).map(i=>(i.done?'✓ ':'· ')+(i.text||'')).join('　')+((items||[]).length>3?'…':'')
+
+// 导入解析
+function normDate(y,m,d){return `${y}-${pad(+m)}-${pad(+d)}`}
+function parseLineDate(line){let m=line.match(/^\s*(\d{4})[年.\/-](\d{1,2})[月.\/-](\d{1,2})日?/);if(m)return normDate(m[1],m[2],m[3])
+  m=line.match(/^\s*(\d{1,2})[月.\/-](\d{1,2})日?/);if(m){const n=new Date();let mm=+m[1],dd=+m[2];let yy=n.getFullYear();let base=new Date(yy,mm-1,dd);if(base>n)base=new Date(yy-1,mm-1,dd);return dstr(base)}
+  return null}
+function isDoneLine(t){return /^[✓✔×x]|[\[（(]\s*(x|√|✓|完成)\s*[\]）)]|完成\s*$/.test(t)}
+function parseImport(text){const map=new Map();let cur=null
+  const lines=text.split(/\r?\n/)
+  for(const raw of lines){const line=raw.replace(/^\s*([-*•\d]+\.?)\s*/,'')
+    const dl=parseLineDate(line);if(dl){if(!map.has(dl))map.set(dl,{date:dl,weekday:wk(dl),items:[]});cur=map.get(dl);continue}
+    if(!cur){const d=tNow;if(!map.has(d)){map.set(d,{date:d,weekday:wk(d),items:[]})}cur=map.get(d)}
+    const t=line.trim();if(!t)continue
+    const done=isDoneLine(t);const clean=t.replace(/^[✓✔×x]\s*|[\[（(]\s*(x|√|✓|完成)\s*[\]）)]\s*|\s*完成\s*$/,'').trim()
+    if(clean)cur.items.push({text:clean,done})}
+  return [...map.values()].sort((a,b)=>a.date<b.date?-1:1)}
+function previewImport(){parsed.value=parseImport(importText.value)
+  importPreview.value=parsed.value.length?`解析到 ${parsed.value.length} 天，共 ${parsed.value.reduce((s,d)=>s+d.items.length,0)} 条任务`:'未识别到内容'}
+async function doImport(){if(!parsed.value.length)return
+  let ok=0
+  for(const d of parsed.value){try{await projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items});ok++}catch{}}
+  importOpen.value=false;importText.value='';parsed.value=[];importPreview.value=''
+  showToast('已导入 '+ok+' 天');load()}
 function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
 
-onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',onResize)})
+onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load()})
 watch(()=>route.params.projectId,()=>{if(!user.isLoggedIn)return;pid.value=Number(route.params.projectId);days.value=[];load()})
-onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer);window.removeEventListener('resize',onResize)})
+onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer)})
 </script>
 
 <style scoped>
@@ -202,7 +246,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .back-m{display:none}.pn{font-weight:700;font-size:15px}
 .t-sub{font-size:12px;color:var(--text-2);margin-left:10px}
 .t-actions{display:flex;gap:8px}
-.tb{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:13px;cursor:pointer;transition:all .2s}
+.tb{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:13px;cursor:pointer}
 .tb.save.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .fmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
 .fsel{border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:5px 8px;font-size:13px;outline:none}
@@ -214,48 +258,51 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .err{padding:6px 20px;color:var(--red);font-size:13px}
 .hint-line{padding:8px 20px;background:var(--glow);color:var(--glow-border);font-size:13px}
 .hint-line a{cursor:pointer;text-decoration:underline;margin-right:10px}
-
 .scroll{flex:1;overflow-y:auto}
-.doc{padding:20px clamp(14px,4vw,52px) 180px}
-
-.day-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)}
-.dhead{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;user-select:none}
-.dt{font-size:15px;font-weight:600;color:var(--text)}
+.doc{padding:20px clamp(14px,4vw,52px) 200px}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.dhead{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;user-select:none}
+.dt{font-size:15px;font-weight:600}
 .dt em{font-style:normal;color:var(--text-2);font-weight:400;font-size:12px;margin-left:8px}
 .dtools{display:flex;align-items:center;gap:10px}
 .dstat{font-size:12px;color:var(--text-2)}
 .ddot{width:6px;height:6px;border-radius:50%;background:var(--glow-border)}
-.mini{border:1px solid var(--border);background:var(--bg);color:var(--text-2);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer}
-.mini:hover{color:var(--green);border-color:var(--green)}
-.plus-t{border:none;background:transparent;color:var(--accent);font-size:16px;cursor:pointer;line-height:1}
-
-.daybody{outline:none;min-height:46px;padding:10px 40px 18px}
+.daybody{outline:none;min-height:46px;padding:8px 44px 18px}
 .daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
-.daybody ol>li{counter-increment:item;position:relative;padding:6px 52px 6px 2.4em;min-height:1.7em;border-radius:6px;color:var(--text)}
-.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:6px;width:1.6em;text-align:right;padding-right:8px;color:var(--text-2);font-variant-numeric:tabular-nums;opacity:.6;font-size:.92em}
+.daybody ol>li{counter-increment:item;position:relative;padding:7px 6px 7px 2.4em;min-height:1.7em;color:var(--text);border-radius:6px}
+.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:7px;width:1.7em;text-align:right;padding-right:9px;color:var(--text-2);opacity:.6;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.75}
-.line-dot{float:right;margin-top:6px;width:15px;height:15px;border-radius:50%;border:2px solid var(--red);background:transparent;cursor:pointer;flex:none}
+.line-dot{float:right;margin-top:5px;width:15px;height:15px;border-radius:50%;border:2px solid var(--red);background:transparent;cursor:pointer}
 .line-dot.on{border-color:var(--green);background:var(--green)}
-.line-dot:hover{opacity:.85}
-
+.card-add-row{display:flex;justify-content:center;padding:8px 0 10px}
+.add-card-btn{border:1px dashed var(--border);background:transparent;color:var(--text-2);border-radius:12px;padding:12px 30px;font-size:14px;cursor:pointer}
+.add-card-btn:hover{border-color:var(--accent);color:var(--accent)}
 .ph{padding:50px 0;color:var(--text-2);text-align:center}
-.plus-big{margin-top:12px;padding:11px 24px;border:none;border-radius:22px;background:var(--accent);color:#fff;cursor:pointer;font-size:14px;box-shadow:0 6px 16px rgba(0,122,255,.28)}
 
-/* AI 悬浮气泡窗口 */
-.ai-fab{position:fixed;right:22px;bottom:26px;z-index:95;min-width:52px;height:52px;border-radius:26px;border:none;background:var(--accent);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 28px rgba(0,122,255,.4);padding:0 18px}
-.ai-fab.open{background:var(--text);box-shadow:var(--shadow)}
-.ai-dialog{position:fixed;right:22px;bottom:92px;z-index:96;width:min(420px,94vw);height:min(620px,78vh);background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.25);overflow:hidden;display:flex;flex-direction:column}
+.ai-fab{position:fixed;right:22px;bottom:26px;z-index:95;min-width:54px;height:54px;border-radius:28px;border:none;background:var(--accent);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 28px rgba(0,122,255,.4);padding:0 20px}
+.ai-fab.open{background:var(--text)}
+.ai-dialog{position:fixed;right:22px;bottom:96px;z-index:96;width:min(420px,94vw);height:min(620px,74vh);background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.25);overflow:hidden;display:flex}
 
-.mask{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center;z-index:90}
-.vs{width:100%;max-width:560px;background:var(--surface);border-radius:20px 20px 0 0;padding:22px 20px 26px}
-.vs h3{margin-bottom:14px}.vl{max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.vi{border:1px solid var(--border);border-radius:10px;padding:10px 12px}
-.vm{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2)}.vn{color:var(--accent);font-weight:600}
-.vp{font-size:13px;margin:6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ve{text-align:center;color:var(--text-2);padding:20px}
-.primary{background:var(--accent);color:#fff;border:none}.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
-.primary.full{width:100%;padding:13px;border-radius:10px;font-size:15px;cursor:pointer;margin-top:4px}
-.toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:22px;font-size:14px;z-index:120}
+.center-mask{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);z-index:120;padding:20px}
+.center-card{width:340px;background:var(--surface);border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px}
+.center-card.wide{width:480px;max-width:94vw}
+.center-card h3{margin:0}
+.center-card .tip{color:var(--text-2);font-size:12px;margin:0}
+.center-card .row{display:flex;gap:10px}.center-card .row button{flex:1;padding:10px;border-radius:10px;font-size:14px;cursor:pointer}
+.vl{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.vi{border:1px solid var(--border);border-radius:10px;padding:9px 12px;cursor:pointer;transition:all .15s}
+.vi.sel{border-color:var(--accent);background:var(--accent);color:#fff}
+.vi.sel .vn{color:#fff}
+.vm{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2)}
+.vi.sel .vm{color:rgba(255,255,255,.8)}
+.vn{font-weight:600}
+.vp{font-size:13px;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ve{text-align:center;color:var(--text-2);padding:20px}
+.primary{background:var(--accent);color:#fff;border:none}
+.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.danger{background:var(--red);color:#fff;border:none}
+.imp{width:100%;height:150px;resize:vertical;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:10px;font-size:13px;outline:none;line-height:1.6}
+.toast{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 22px;border-radius:22px;font-size:14px;z-index:200}
 .fade-enter-active,.fade-leave-active{transition:opacity .2s}.fade-enter-from,.fade-leave-to{opacity:0}
-
-@media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 8px 130px}.t-sub{display:none}.ai-dialog{right:10px;bottom:80px;width:calc(100vw - 20px);height:76vh}.ai-fab{right:14px}}
+@media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 8px 150px}.t-sub{display:none}.daybody{padding:8px 40px 16px}.center-card.wide{width:94vw}.ai-dialog{right:8px;bottom:84px;width:calc(100vw - 16px);height:72vh}}
 </style>

@@ -5,7 +5,7 @@
       <aside class="sidebar" v-show="showSidebar">
         <div class="brand" @click="goProjects">
           <div class="brand-mark">记</div>
-          <div class="brand-name">每日记录</div>
+          <div class="brand-name">拾光任务</div>
         </div>
         <div class="me">
           <div class="me-name">{{ user.user?.nickname }}</div>
@@ -32,7 +32,7 @@
     <div class="main">
       <header class="m-topbar" v-if="mobile">
         <button class="m-menu" @click="drawerOpen = !drawerOpen">☰</button>
-        <div class="m-brand">每日记录</div>
+        <div class="m-brand">拾光任务</div>
         <button class="m-theme" @click="theme.toggle">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
       </header>
       <router-view />

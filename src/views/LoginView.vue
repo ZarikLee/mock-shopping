@@ -6,7 +6,7 @@
 
     <div class="auth-card">
       <div class="logo-mark">记</div>
-      <h1 class="title">每日记录</h1>
+      <h1 class="title">拾光任务</h1>
       <p class="subtitle">像写日记一样，记录每天的 todo</p>
 
       <div class="tabs">
