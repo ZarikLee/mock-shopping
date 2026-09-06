@@ -4,7 +4,7 @@
     <transition name="drawer">
       <aside class="sidebar" v-show="showSidebar">
         <div class="brand" @click="goProjects">
-          <div class="brand-mark"><img src="/papertodo_logo.jpg" alt="纸上" /></div>
+          <div class="brand-mark"><img src="/papertodo_logo.png" alt="纸上" /></div>
           <div class="brand-name">纸上 - Paper Todo</div>
         </div>
         <div class="me">

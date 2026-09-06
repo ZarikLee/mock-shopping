@@ -275,10 +275,11 @@ function drawMap(){
 function computeMapThumb(){const scr=scrollEl.value;if(!scr)return
   const H=document.querySelector('.docmap')?.clientHeight||Math.max(10,M.mapH)
   const max=scr.scrollHeight-scr.clientHeight
-  if(max<=0){thumb.top=0;thumb.h=Math.max(10,H);return}
-  const scale=Math.min(1,scr.clientHeight/scr.scrollHeight)
-  thumb.h=Math.max(8,H*scale)
-  const range=Math.max(0,H-thumb.h)
+  const filled=Math.min(M.sH||H,H)
+  if(max<=0||filled<=0){thumb.top=0;thumb.h=Math.max(10,Math.min(filled||H,H));return}
+  const vr=Math.min(1,scr.clientHeight/scr.scrollHeight)
+  thumb.h=Math.max(8, Math.min(filled, Math.max(10, filled*vr)))
+  const range=Math.max(0, filled-thumb.h)
   thumb.top=clampN((scr.scrollTop/max)*range,0,range)}
 function updateMirror(){const mw=mapMirror.value;const scr=scrollEl.value;if(!mw||!scr||!M.r)return
   const shift=(M.sH>M.mapH)?scr.scrollTop*M.r:0

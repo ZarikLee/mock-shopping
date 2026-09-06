@@ -5,7 +5,7 @@
     </button>
 
     <div class="auth-card">
-      <div class="logo-mark"><img src="/papertodo_logo.jpg" alt="纸上" /></div>
+      <div class="logo-mark"><img src="/papertodo_logo.png" alt="纸上" /></div>
       <h1 class="title">纸上 - Paper Todo</h1>
       <p class="subtitle">像写日记一样，记录每天的 todo</p>
 
