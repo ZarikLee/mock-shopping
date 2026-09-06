@@ -110,8 +110,15 @@ async function send() {
     window.dispatchEvent(new Event('dl:flush')); await new Promise(r=>setTimeout(r,400))
     const res = await aiApi.chat({ projectId: props.projectId, message: text, messages: history })
     const reply = (res && (res.reply || res.data?.reply)) || '嗯嗯，我在听～'
+    const isSkill = !!(res && (res.skill || res.data?.skill))
     history.push({ role: 'ai', content: reply })
-    pushAiSegments(reply)
+    if (isSkill) {
+      shown.value.push({ id: ++seq, role: 'ai', content: reply })
+      scrollDown()
+      typing.value = false
+    } else {
+      pushAiSegments(reply)
+    }
   } catch {
     pushAiSegments('网络开小差了，稍后再试好吗')
   }

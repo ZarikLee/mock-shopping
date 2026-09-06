@@ -35,16 +35,18 @@ function buildWeekly(logs, name) {
   const last = logs.slice(-7);
   const total = last.reduce((n, l) => n + l.items.length, 0);
   const done = last.reduce((n, l) => n + l.items.filter(i => i.done).length, 0);
-  const undone = last.flatMap(l => l.items.filter(i => !i.done).map(i => i.text)).slice(0, 8);
+  const doneList = [...new Set(last.flatMap(l => l.items.filter(i => i.done).map(i => i.text)))];
+  const undoList = [...new Set(last.flatMap(l => l.items.filter(i => !i.done).map(i => i.text)))].slice(0, 8);
   const out = [];
   out.push(`「${name}」本周周报`);
-  out.push(`共记录 ${last.length} 天 · 完成 ${done}/${total} 条（${pct(done, total)}%）`);
-  last.forEach(l => {
-    out.push(dayLine(l));
-    l.items.forEach(i => out.push((i.done ? '· 完成 ' : '· 待办 ') + i.text));
-  });
-  if (undone.length) out.push(`下周待推进：${undone.join('、')}`);
-  else out.push('这周都收尾了，下周轻松点，继续保持');
+  out.push(`共记录 ${last.length} 天，完成 ${done}/${total} 条（${pct(done, total)}%）。`);
+  out.push('');
+  out.push('已完成工作内容：');
+  doneList.forEach((t, i) => out.push(`${i + 1}. ${t}`));
+  out.push('');
+  out.push('下周计划：');
+  if (undoList.length) undoList.forEach((t, i) => out.push(`${i + 1}. ${t}`));
+  else out.push('目前没有遗留，可以先轻松一点，再安排新的目标。');
   return out.join('\n');
 }
 
@@ -187,7 +189,7 @@ router.post('/', authMiddleware, async (req, res) => {
   // —— Skill：命中具体功能时直接给出完整、真实的结果 ——
   const logs = loadLogs(project.id);
   const skilled = detectSkill(text, logs, project);
-  if (skilled) return res.json({ reply: skilled });
+  if (skilled) return res.json({ reply: skilled, skill: true });
 
   const sys = [
     '你是一个很亲近的朋友式聊天 AI，用户在用一款极简的每日记录工具。',
