@@ -35,7 +35,8 @@
         <span class="chip"><i></i> 像写日记一样，把每天写下来</span>
         <h1>
           <span class="row">每天一点记录，</span>
-          <span class="row r2"><span class="grad">积成看得见的</span><span class="type">{{ typed }}<i class="caret"></i></span></span>
+          <span class="row"><span class="grad">积成看得见的</span></span>
+          <span class="row type-line">{{ typed }}<i class="caret"></i></span>
         </h1>
         <p class="sub">纸上 · Paper Todo 帮你把待办写成一页页的「日志」——回车即下一项、随手滑动标记完成、AI 自动生成周报。所有内容自动保存，来了就写，走了也没关系。</p>
         <div class="cta-row">
@@ -156,6 +157,7 @@ const typed = ref('')
 const words = ['把今天记下来', '每天自动保存', '随手滑动完成', 'AI 帮我写周报']
 const TITLES = ['纸上 · Paper Todo｜把每天写下来', '纸上 - Paper Todo']
 let wTimer = null
+let wTimers = []
 
 const go = p => router.push(p)
 const scrollTo = sel => document.querySelector(sel)?.scrollIntoView({ behavior: 'smooth' })
@@ -189,20 +191,26 @@ function reveal() {
   document.querySelectorAll('.rv').forEach(el => io.observe(el))
 }
 function typeLoop() {
-  let wi = 0, ci = 0, del = false
-  const el = typed
-  wTimer = setInterval(() => {
-    const word = words[wi]
-    if (!del) {
-      ci++
-      el.value = word.slice(0, ci)
-      if (ci === word.length) { del = true }
+  let wi = 0, timers = []
+  const fire = (fn, d) => { const t = setTimeout(fn, d); timers.push(t) }
+  const type = i => {
+    const w = words[wi]
+    if (i <= w.length) {
+      typed.value = w.slice(0, i)
+      fire(() => type(i + 1), i === w.length ? 2000 : 110)
     } else {
-      ci--
-      el.value = word.slice(0, ci)
-      if (ci === 0) { del = false; wi = (wi + 1) % words.length }
+      let j = w.length
+      const del = () => {
+        j--
+        typed.value = w.slice(0, j)
+        if (j > 0) fire(del, 55)
+        else { wi = (wi + 1) % words.length; typed.value = ''; fire(() => type(1), 600) }
+      }
+      del()
     }
-  }, 160)
+  }
+  fire(() => type(1), 400)
+  wTimers = timers
 }
 function countUp() {
   const io2 = new IntersectionObserver(es => {
@@ -239,7 +247,7 @@ onMounted(() => {
   document.title = TITLES[0]
   reveal(); typeLoop(); countUp(); tiltFx()
 })
-onBeforeUnmount(() => { clearInterval(wTimer); if (io) io.disconnect(); document.title = TITLES[1] })
+onBeforeUnmount(() => { clearInterval(wTimer); (wTimers || []).forEach(clearTimeout); if (io) io.disconnect(); document.title = TITLES[1] })
 </script>
 
 <style scoped>
@@ -282,9 +290,9 @@ onBeforeUnmount(() => { clearInterval(wTimer); if (io) io.disconnect(); document
 h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.12; letter-spacing: -1px; font-weight: 800; margin: 0 0 20px; }
 .grad { background: linear-gradient(100deg, #0a84ff 0%, #7b6cff 55%, #ff5f9e 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .row { display: block; }
-.r2 { display: inline-flex; align-items: baseline; max-width: 100%; overflow: hidden; }
-.r2 .grad { flex: none; white-space: nowrap; }
-.type { color: var(--accent); flex: none; white-space: nowrap; }
+.type-line { display: block; color: var(--accent); white-space: nowrap; max-width: 100%; overflow: hidden; min-height: 1.06em; }
+
+
 .caret { font-style: normal; margin-left: 2px; border-right: 3px solid var(--accent); animation: blink 1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 .sub { font-size: 16px; line-height: 1.8; color: var(--text-2); max-width: 520px; margin: 0 0 28px; }
