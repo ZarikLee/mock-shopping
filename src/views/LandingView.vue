@@ -33,7 +33,10 @@
     <section class="hero">
       <div class="hero-text rv">
         <span class="chip"><i></i> 像写日记一样，把每天写下来</span>
-        <h1>每天一点记录，<br /><span class="grad">积成看得见的</span> <span class="type">{{ typed }}<i class="caret"></i></span></h1>
+        <h1>
+          <span class="row">每天一点记录，</span>
+          <span class="row r2"><span class="grad">积成看得见的</span><span class="type">{{ typed }}<i class="caret"></i></span></span>
+        </h1>
         <p class="sub">纸上 · Paper Todo 帮你把待办写成一页页的「日志」——回车即下一项、随手滑动标记完成、AI 自动生成周报。所有内容自动保存，来了就写，走了也没关系。</p>
         <div class="cta-row">
           <button class="primary big" @click="go('/login')">免费开始使用 <span class="arr">→</span></button>
@@ -278,7 +281,9 @@ onBeforeUnmount(() => { clearInterval(wTimer); if (io) io.disconnect(); document
 .chip.violet i { background: #7b6cff; }
 h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.12; letter-spacing: -1px; font-weight: 800; margin: 0 0 20px; }
 .grad { background: linear-gradient(100deg, #0a84ff 0%, #7b6cff 55%, #ff5f9e 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.type { color: var(--accent); display: inline-block; min-width: 2.4em; }
+.row { display: block; }
+.r2 { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: clip; }
+.type { color: var(--accent); display: inline-block; vertical-align: baseline; }
 .caret { font-style: normal; margin-left: 2px; border-right: 3px solid var(--accent); animation: blink 1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 .sub { font-size: 16px; line-height: 1.8; color: var(--text-2); max-width: 520px; margin: 0 0 28px; }
