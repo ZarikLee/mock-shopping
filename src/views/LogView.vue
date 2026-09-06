@@ -267,6 +267,10 @@ async function maybeRemind(){if(localStorage.getItem('dl_rem_'+pid.value)===tNow
   const u=pastUnfinished();if(!u.total)return
   pastPendingTotal.value=u.total;pastPendingCount.value=u.count;showRemind.value=true}
 function closeRemind(){showRemind.value=false;localStorage.setItem('dl_rem_'+pid.value,tNow)}
+function scrollToBottomEntry(){const el=scrollEl.value;if(!el||!days.value.length)return
+  const max=el.scrollHeight-el.clientHeight;if(max<=0)return
+  el.scrollTop=Math.max(0,max-200)
+  requestAnimationFrame(()=>{el.scrollTo({top:max,behavior:'smooth'})})}
 async function markAllPastDone(){pushSnap('全部标记完成')
   const u=pastUnfinished();if(!u.list.length){closeRemind();return}
   const changed=[];u.list.forEach(d=>{d.items.forEach(i=>i.done=true);changed.push(d)})
@@ -370,7 +374,7 @@ async function load(){loading.value=true;loadError.value=''
     if(days.value.length){const last=days.value[days.value.length-1]
       try{const info=await projectApi.log(pid.value,last.date);if(info.dayLog&&info.lastVersion&&!same(snapDay(last),info.lastVersion.items.map(i=>[i.text||'',!!i.done])))unsavedPrompt.value=true}catch{}}
     days.value.forEach(renderBody)
-    requestAnimationFrame(()=>{days.value.forEach(renderBody);maybeRemind()})
+    requestAnimationFrame(()=>{days.value.forEach(renderBody);maybeRemind();scrollToBottomEntry()})
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done})).filter(i=>i.text!=='')}
@@ -504,7 +508,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .docmap{position:absolute;right:12px;top:8px;bottom:8px;width:58px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06)}
 .map-mirror{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;opacity:.92;color:inherit}
 .map-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:block}
-.map-thumb{position:absolute;left:0;right:0;border-radius:6px;background:rgba(255,255,255,.22);backdrop-filter:blur(5px) saturate(1.4);-webkit-backdrop-filter:blur(5px) saturate(1.4);cursor:ns-resize;pointer-events:auto;border:1px solid rgba(255,255,255,.55);box-shadow:0 1px 6px rgba(0,0,0,.16);box-sizing:border-box}
+.map-thumb{position:absolute;left:0;right:0;border-radius:6px;background:rgba(255,255,255,.3);backdrop-filter:blur(6px) saturate(1.6);-webkit-backdrop-filter:blur(6px) saturate(1.6);cursor:ns-resize;pointer-events:auto;border:1px solid rgba(255,255,255,.95);box-shadow:0 0 0 1px rgba(255,255,255,.35),inset 0 0 10px rgba(255,255,255,.45),0 2px 8px rgba(0,0,0,.14);box-sizing:border-box}
 .dstat.todo{color:var(--glow-border)}.dstat.ok{color:var(--green)}
 .cstat{width:9px;height:9px;border-radius:50%;background:var(--glow-border);display:inline-block}
 .cstat.ok{background:var(--green)}
