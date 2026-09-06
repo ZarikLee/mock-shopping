@@ -207,7 +207,7 @@ const calTitle=computed(()=>calMonth.y+'年'+calMonth.m+'月')
 function dayRatio(date){const d=findDay(date);if(!d||!d.items.length)return 0;return d.items.filter(i=>i.done).length/d.items.length}
 const calDays=computed(()=>{const y=calMonth.y,m=calMonth.m;const first=new Date(y,m-1,1).getDay();const dim=new Date(y,m,0).getDate();const today=tNow;const arr=[]
   for(let i=0;i<first;i++)arr.push({key:'e'+i,num:'',cur:false,today:false,style:{},title:''})
-  for(let n=1;n<=dim;n++){const date=`${y}-${pad2(m)}-${pad2(n)}`;const ratio=dayRatio(date);const alpha=ratio>0?(0.15+0.85*ratio):0
+  for(let n=1;n<=dim;n++){const date=`${y}-${pad2(m)}-${pad2(n)}`;const ratio=dayRatio(date);const alpha=ratio>0?(0.18+0.82*ratio):0
     arr.push({key:date,num:n,cur:true,today:date===today,date,title:date+' · '+Math.round(ratio*100)+'%',style:{background:alpha?`rgba(10,132,255,${alpha.toFixed(2)})`:'transparent'}})}
   return arr})
 function calPick(d){if(!d.cur)return;calOpen.value=false;if(dayRatio(d.date)>=0&&findDay(d.date)){scrollToDay(d.date,0);return}showToast('这一天没有记录')}
@@ -291,11 +291,14 @@ function startThumb(e){const scr=scrollEl.value;if(!scr||!M.r)return
   const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up)}
   window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up)}
 function thumbDown(e){e.preventDefault();startThumb(e)}
-function mapDown(e){const scr=scrollEl.value;if(!scr||!M.r)return
+function mapDown(e){const scr=scrollEl.value;if(!scr)return
   const mapEl=document.querySelector('.docmap');if(!mapEl)return
   const y=e.clientY-mapEl.getBoundingClientRect().top
-  const target=clampN((scr.scrollTop+y/M.r)-scr.clientHeight*0.5,0,Math.max(0,scr.scrollHeight-scr.clientHeight))
-  scr.scrollTo({top:target,behavior:'smooth'})}
+  const H=M.mapH||mapEl.clientHeight
+  const filled=Math.min(M.sH||H,H)
+  const frac=clampN(y/Math.max(1,filled),0,1)
+  const max=Math.max(0,scr.scrollHeight-scr.clientHeight)
+  scr.scrollTo({top:frac*max,behavior:'smooth'})}
 function jumpDay(i){const d=days.value[i];if(!d||!scrollEl.value)return
   const el=document.querySelector(`.daybody[data-date="${d.date}"]`)?.closest('.day-card');if(!el)return
   const sr=scrollEl.value.getBoundingClientRect();const top=scrollEl.value.scrollTop+(el.getBoundingClientRect().top-sr.top)-12
@@ -563,8 +566,8 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .cm:hover{background:var(--surface-2)}
 .cal-week{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 6px 0}
 .cal-week span{text-align:center;font-size:9px;color:var(--text-2)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:4px 6px 8px}
-.cal-d{border:none;border-radius:4px;font-size:9px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;height:20px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:4px 6px 8px}
+.cal-d{border:none;border-radius:6px;font-size:10px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;aspect-ratio:1;width:100%}
 .cal-d.dim{visibility:hidden}
 .cal-d.today{box-shadow:inset 0 0 0 2px var(--accent)}
 .cal-d:hover{outline:2px solid var(--accent)}
