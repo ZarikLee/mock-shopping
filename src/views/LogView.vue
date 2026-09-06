@@ -63,6 +63,7 @@
       </div>
       <div class="docmap" v-if="days.length" @mousedown.prevent="mapDown">
         <div ref="mapMirror" class="map-mirror" aria-hidden="true"></div>
+        <canvas ref="mapOverlay" class="map-overlay"></canvas>
         <div class="map-thumb" :style="thumbStyle" @mousedown.prevent="thumbDown"></div>
       </div>
       </div>
@@ -183,29 +184,57 @@ const doneOf=day=>(day.items||[]).filter(i=>i.done).length
 const cs=day=>{const it=day.items||[];if(!it.length)return '';return it.every(i=>i.done)?'ok':'todo'}
 const mapCls=day=>{const it=day.items||[];if(!it.length)return 'none';return it.every(i=>i.done)?'ok':'todo'}
 const mapMirror=ref(null)
+const mapOverlay=ref(null)
 const thumb=reactive({top:0,h:16})
 const thumbStyle=computed(()=>({top:thumb.top+'px',height:Math.max(10,thumb.h)+'px'}))
 let mapRaf=0
 const M={r:.5,top:0,mapH:0}
 const clampN=(v,a,b)=>Math.max(a,Math.min(b,v))
 function scheduleMap(){if(mapRaf)return;mapRaf=requestAnimationFrame(()=>{mapRaf=0;drawMap()})}
-function drawMap(){const scr=scrollEl.value;const docEl=scr?.querySelector('.doc');const mapEl=document.querySelector('.docmap');const mw=mapMirror.value
+function drawMap(){
+  const scr=scrollEl.value;const docEl=scr?.querySelector('.doc');const mapEl=document.querySelector('.docmap')
+  const mw=mapMirror.value;const ov=mapOverlay.value
   if(!scr||!docEl||!mapEl||!mw||!days.value.length)return
   const H=mapEl.clientHeight;if(!H)return
   const list=[...docEl.children].filter(el=>el.getBoundingClientRect().height>0)
   if(!list.length)return
   const dr=docEl.getBoundingClientRect()
   let top=Infinity,bottom=-Infinity
-  list.forEach(el=>{const r=el.getBoundingClientRect();const t=r.top-dr.top;const b=r.bottom-dr.top;if(t<top)top=t;if(b>bottom)bottom=b})
+  const bands=[]
+  list.forEach(el=>{
+    const r=el.getBoundingClientRect();const t=r.top-dr.top;const b=r.bottom-dr.top
+    if(t<top)top=t;if(b>bottom)bottom=b
+    if(el.classList.contains('day-card')){
+      const lis=[...el.querySelectorAll('ol>li')]
+      let color=null
+      if(lis.length){const all=lis.every(li=>li.classList.contains('done'));color=all?'green':'orange'}
+      bands.push({t,b,color})
+    }
+  })
   const range=Math.max(1,bottom-top)
   const r=Math.min(1,H/range)
   M.r=r;M.top=top;M.mapH=H
   const cs=getComputedStyle(docEl)
   const width=docEl.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0)
   mw.style.width=Math.max(1,Math.round(width))+'px'
-  mw.style.transform='scale('+r+')'
   mw.style.top=Math.round(top*r)+'px'
+  mw.style.transform='scale('+r+')'
   mw.innerHTML=list.map(el=>el.outerHTML).join('')
+  if(ov){
+    const rect=ov.getBoundingClientRect();const dpr=window.devicePixelRatio||1
+    ov.width=Math.max(1,Math.round(rect.width*dpr));ov.height=Math.max(1,Math.round(rect.height*dpr))
+    const ctx=ov.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0)
+    ctx.clearRect(0,0,rect.width,H)
+    ctx.save()
+    try{ctx.filter='blur(6px)'}catch{}
+    bands.forEach(bd=>{
+      if(!bd.color)return
+      const y=bd.t*r;const h=(bd.b-bd.t)*r
+      ctx.fillStyle=bd.color==='green'?'rgba(52,199,89,0.18)':'rgba(255,149,0,0.24)'
+      ctx.fillRect(2,Math.max(0,y-3),rect.width-4,h+6)
+    })
+    ctx.restore()
+  }
   computeMapThumb()}
 function computeMapThumb(){const scr=scrollEl.value;if(!scr||!M.mapH)return
   const max=scr.scrollHeight-scr.clientHeight
@@ -474,6 +503,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .scroll{flex:1;min-width:0;overflow-y:auto}
 .docmap{position:absolute;right:12px;top:8px;bottom:8px;width:58px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06)}
 .map-mirror{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;opacity:.92;color:inherit}
+.map-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:block}
 .map-thumb{position:absolute;left:2px;right:2px;border-radius:6px;background:var(--accent);opacity:.32;cursor:ns-resize;pointer-events:auto;border:1px solid rgba(0,0,0,.1);box-sizing:border-box}
 .dstat.todo{color:var(--glow-border)}.dstat.ok{color:var(--green)}
 .cstat{width:9px;height:9px;border-radius:50%;background:var(--glow-border);display:inline-block}
@@ -493,13 +523,13 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .ddot{width:6px;height:6px;border-radius:50%;background:var(--glow-border)}
 .del-day{border:none;background:var(--surface-2);color:var(--text-2);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
 .del-day:hover{background:var(--red);color:#fff}
-.daybody{outline:none;min-height:46px;padding:8px 56px 18px;position:relative}
+.daybody{outline:none;min-height:46px;padding:8px 56px 18px 20px;position:relative}
 .daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
 .daybody ol>li{list-style:none}
 .daybody ol>li::marker{content:''}
-.daybody ol>li{counter-increment:item;position:relative;padding:9px 56px 9px 1.8em;min-height:1.7em;color:var(--text)}
+.daybody ol>li{counter-increment:item;position:relative;padding:9px 56px 9px 1.5em;min-height:1.7em;color:var(--text)}
 .daybody ol>li::after{content:'';display:block;clear:both}
-.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.5em;text-align:right;padding-right:5px;color:var(--text-2);opacity:.55;font-size:.92em}
+.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.4em;text-align:right;padding-right:5px;color:var(--text-2);opacity:.55;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.75}
 /* iOS 开关叠加层 */
  .dayph{color:var(--text-2);font-size:14px;padding:12px 4px;cursor:text;opacity:.75}
@@ -544,15 +574,15 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .imp{width:100%;height:150px;resize:vertical;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:10px;font-size:13px;outline:none;line-height:1.6}
 .toast{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 22px;border-radius:22px;font-size:14px;z-index:200}
 .fade-enter-active,.fade-leave-active{transition:opacity .2s}.fade-enter-from,.fade-leave-to{opacity:0}
-@media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 8px 150px}.t-sub{display:none}.docmap{display:none}.daybody{padding:8px 40px 16px}.center-card.wide{width:94vw}.ai-dialog{right:8px;bottom:84px;width:calc(100vw - 16px);height:72vh}}
+@media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 8px 150px}.t-sub{display:none}.docmap{display:none} .daybody{padding:8px 40px 16px 14px}.center-card.wide{width:94vw}.ai-dialog{right:8px;bottom:84px;width:calc(100vw - 16px);height:72vh}}
 </style>
 <style>
 /* 运行时注入节点必须用全局样式（scoped 不影响动态元素） */
 .daybody{outline:none}
 .daybody ol{list-style:none!important;counter-reset:item;margin:0;padding:0}
-.daybody ol>li{list-style:none!important;counter-increment:item;position:relative;padding:9px 56px 9px 1.8em;min-height:1.7em;color:var(--text)}
+.daybody ol>li{list-style:none!important;counter-increment:item;position:relative;padding:9px 56px 9px 1.5em;min-height:1.7em;color:var(--text)}
 .daybody ol>li::marker{content:''!important}
-.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.6em;text-align:right;padding-right:6px;color:var(--text-2);opacity:.6;font-size:.92em}
+.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.4em;text-align:right;padding-right:6px;color:var(--text-2);opacity:.6;font-size:.92em}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.72}
 .daybody .rail{position:absolute;right:4px;top:0;width:46px;height:100%;pointer-events:none;z-index:6}
 .daybody .rail button{pointer-events:auto;position:absolute;left:0;width:44px;height:24px;border-radius:13px;border:1px solid rgba(0,0,0,.14);background:#e8e8ed;cursor:pointer;transition:background .2s;outline:none}
