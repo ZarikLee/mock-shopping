@@ -269,7 +269,7 @@ async function maybeRemind(){if(localStorage.getItem('dl_rem_'+pid.value)===tNow
 function closeRemind(){showRemind.value=false;localStorage.setItem('dl_rem_'+pid.value,tNow)}
 function scrollToBottomEntry(){const el=scrollEl.value;if(!el||!days.value.length)return
   const max=el.scrollHeight-el.clientHeight;if(max<=0)return
-  el.scrollTop=Math.max(0,max-200)
+  el.scrollTop=Math.max(0,max-520)
   requestAnimationFrame(()=>{el.scrollTo({top:max,behavior:'smooth'})})}
 async function markAllPastDone(){pushSnap('全部标记完成')
   const u=pastUnfinished();if(!u.list.length){closeRemind();return}
