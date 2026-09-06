@@ -14,7 +14,16 @@
         </div>
         <div class="t-actions">
           <button class="tb blue" @click="importOpen = true">导入任务</button>
-          <button class="cal-btn" @click="calToggle" title="按日历查看"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></button>
+          <span class="cal-wrap">
+            <button class="cal-btn" @click="calToggle" title="按日历查看"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></button>
+            <transition name="fade"><div v-if="calOpen" class="cal-pane">
+              <div class="cal-head"><button class="cm" @click="calShift(-1)">‹</button><span class="cal-title">{{ calTitle }}</span><button class="cm" @click="calShift(1)">›</button></div>
+              <div class="cal-week"><span v-for="w in ['日','一','二','三','四','五','六']" :key="w">{{ w }}</span></div>
+              <div class="cal-grid">
+                <button v-for="d in calDays" :key="d.key" class="cal-d" :class="{ dim: !d.cur, today: d.today }" :style="d.style" :title="d.title" @click="calPick(d)">{{ d.num }}</button>
+              </div>
+            </div></transition>
+          </span>
           <button class="theme-round" @click="theme.toggle" :title="theme.theme === 'dark' ? '切换到日间' : '切换到暗色'">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
         </div>
       </div>
@@ -32,7 +41,16 @@
         <span class="sep"></span>
         <div class="swatch"><template v-for="c in colors" :key="c"><i class="dotc" :style="{background:c}" @mousedown.prevent="cmd('foreColor',c)"></i></template></div>
         <div class="swatch hl"><template v-for="c in hl" :key="c"><i class="dotc" :style="{background:c}" @mousedown.prevent="cmd('hiliteColor',c)"></i></template></div>
-        <span class="fmt-search"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input v-model="searchQ" placeholder="搜索记录 / 日期…" @input="openSearch" @focus="openSearch" @blur="closeSearch" @keydown.enter="goFirstResult" /></span>
+        <span class="sr-wrap">
+          <span class="fmt-search"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input v-model="searchQ" placeholder="搜索记录 / 日期…" @input="openSearch" @focus="openSearch" @blur="closeSearch" @keydown.enter="goFirstResult" /></span>
+          <transition name="fade"><div v-if="searchOpen && searchResults.length" class="search-pane">
+            <div v-for="r in searchResults" :key="r.date + '-' + r.idx" class="search-item" @mousedown.prevent="openSearchItem(r)">
+              <span class="ss-day">{{ dayLabel(r.date) }} <em>{{ r.weekday }}</em></span>
+              <span class="ss-text" :class="{ ok: r.done }">{{ r.text || '（当天记录）' }}</span>
+            </div>
+            <div v-if="!searchResults.length" class="search-empty">没有匹配的记录</div>
+          </div></transition>
+        </span>
         <button class="fmt-ai" :class="{ open: aiOpen }" @click="aiToggle" title="和小纸聊两句">
           <template v-if="!aiOpen"><i class="fa-tag">AI</i><span class="fa-name">小纸</span></template><span v-else class="fa-x">×</span>
         </button>
@@ -74,27 +92,7 @@
       <div v-show="aiOpen" class="ai-dialog" :style="{ top: aiPos.top + 'px', right: aiPos.right + 'px' }"><AiPanel :project-id="pid" @close="aiOpen = false" /></div>
     </transition>
 
-    <!-- 搜索下拉 -->
-    <transition name="fade">
-      <div v-if="searchOpen && searchResults.length" class="search-pane" :style="searchStyle">
-        <div v-for="r in searchResults" :key="r.date + '-' + r.idx" class="search-item" @mousedown.prevent="openSearchItem(r)">
-          <span class="ss-day">{{ dayLabel(r.date) }} <em>{{ r.weekday }}</em></span>
-          <span class="ss-text" :class="{ ok: r.done }">{{ r.text || '（当天记录）' }}</span>
-        </div>
-        <div v-if="!searchResults.length" class="search-empty">没有匹配的记录</div>
-      </div>
-    </transition>
 
-    <!-- 日历下拉 -->
-    <transition name="fade">
-      <div v-if="calOpen" class="cal-pane" :style="calStyle">
-        <div class="cal-head"><button class="cm" @click="calShift(-1)">‹</button><span class="cal-title">{{ calTitle }}</span><button class="cm" @click="calShift(1)">›</button></div>
-        <div class="cal-week"><span v-for="w in ['日','一','二','三','四','五','六']" :key="w">{{ w }}</span></div>
-        <div class="cal-grid">
-          <button v-for="d in calDays" :key="d.key" class="cal-d" :class="{ dim: !d.cur, today: d.today }" :style="d.style" :title="d.title" @click="calPick(d)">{{ d.num }}</button>
-        </div>
-      </div>
-    </transition>
 
     <!-- 导入历史 -->
     <div v-if="importOpen" class="center-mask">
@@ -184,7 +182,6 @@ function aiToggle(){aiOpen.value=!aiOpen.value
   if(aiOpen.value)nextTick(placeAi)}
 const searchQ=ref('')
 const searchOpen=ref(false)
-const searchStyle=reactive({top:0,right:20})
 function normalizeDateQ(q){let s=q.replace(/\s/g,'')
   let m=s.match(/^(\d{4})[年.\-\/]?(\d{1,2})[月.\-\/](\d{1,2})日?$/);if(m)return `${m[1]}-${pad2(+m[2])}-${pad2(+m[3])}`
   m=s.match(/^(\d{1,2})[月.\-\/](\d{1,2})日?$/);if(m){const y=new Date().getFullYear();return `${y}-${pad2(+m[1])}-${pad2(+m[2])}`}
@@ -198,18 +195,13 @@ const searchResults=computed(()=>{const q=searchQ.value.trim().toLowerCase();if(
       if(th||(dateHit&&idx===0))res.push({date:day.date,weekday:day.weekday,idx,text:it.text||'',done:!!it.done})})
     if(dateHit&&!day.items.length)res.push({date:day.date,weekday:day.weekday,idx:0,text:'',done:false})}
   return res.slice(0,40)})
-function placeSearch(){const b=document.querySelector('.fmt-search');if(!b)return
-  const r=b.getBoundingClientRect();searchStyle.top=Math.max(52,Math.round(r.bottom+6));searchStyle.right=Math.max(8,Math.round(window.innerWidth-r.right))}
-function openSearch(){searchOpen.value=true;nextTick(placeSearch)}
+function openSearch(){searchOpen.value=true}
 function closeSearch(){setTimeout(()=>{searchOpen.value=false},120)}
 function goFirstResult(){if(searchResults.value.length)openSearchItem(searchResults.value[0])}
 function openSearchItem(r){searchOpen.value=false;scrollToDay(r.date,r.idx)}
 const calOpen=ref(false)
-const calStyle=reactive({top:0,right:20})
 const calMonth=reactive({y:(()=>{const d=new Date();return d.getFullYear()})(),m:(()=>{const d=new Date();return d.getMonth()+1})()})
-function placeCal(){const b=document.querySelector('.cal-btn');if(!b)return
-  const r=b.getBoundingClientRect();calStyle.top=Math.max(52,Math.round(r.bottom+6));calStyle.right=Math.max(8,Math.round(window.innerWidth-r.right))}
-function calToggle(){calOpen.value=!calOpen.value;if(calOpen.value)nextTick(placeCal)}
+function calToggle(){calOpen.value=!calOpen.value}
 function calShift(d){let y=calMonth.y,m=calMonth.m+d;if(m<1){m=12;y--}if(m>12){m=1;y++}calMonth.y=y;calMonth.m=m}
 const calTitle=computed(()=>calMonth.y+'年'+calMonth.m+'月')
 function dayRatio(date){const d=findDay(date);if(!d||!d.items.length)return 0;return d.items.filter(i=>i.done).length/d.items.length}
@@ -268,7 +260,7 @@ function drawMap(){
   const contentW=Math.max(1,docEl.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0))
   const mapW=Math.max(1,mapEl.clientWidth)
   const r=Math.max(0.04,Math.min(1,mapW/contentW))
-  M.r=r;M.top=top;M.mapH=mapEl.clientHeight
+  M.r=r;M.top=top;M.mapH=mapEl.clientHeight;M.sH=Math.max(bottom-top,0)*r
   mw.style.width=Math.round(contentW)+'px'
   mw.style.transform='scale('+r+')'
   updateMirror()
@@ -289,7 +281,8 @@ function computeMapThumb(){const scr=scrollEl.value;if(!scr)return
   const range=Math.max(0,H-thumb.h)
   thumb.top=clampN((scr.scrollTop/max)*range,0,range)}
 function updateMirror(){const mw=mapMirror.value;const scr=scrollEl.value;if(!mw||!scr||!M.r)return
-  mw.style.top=Math.round(M.top*M.r-scr.scrollTop*M.r)+'px'}
+  const shift=(M.sH>M.mapH)?scr.scrollTop*M.r:0
+  mw.style.top=Math.round(M.top*M.r-shift)+'px'}
 function onDocScroll(){computeMapThumb();updateMirror()}
 function startThumb(e){const scr=scrollEl.value;if(!scr||!M.r)return
   const max=scr.scrollHeight-scr.clientHeight;const startY=e.clientY;const startTop=scr.scrollTop
@@ -515,7 +508,7 @@ function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
 function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearTimeout(timers[day.date]);autosave(day)}})}
 
 onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow)})
-function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)});if(aiOpen.value)placeAi();if(calOpen.value)placeCal();if(searchOpen.value )placeSearch()}
+function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)});if(aiOpen.value)placeAi()}
 watch(()=>route.params.projectId,()=>{if(!user.isLoggedIn)return;pid.value=Number(route.params.projectId);days.value=[];load()})
 onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer)})
 </script>
@@ -542,14 +535,18 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .vi-tip{visibility:hidden;opacity:0;position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%) translateY(-4px);width:230px;padding:8px 10px;border-radius:8px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;font-style:normal;text-align:left;z-index:40;transition:opacity .15s,transform .15s,visibility .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .vi-hint:hover .vi-tip,.vi-hint:focus .vi-tip{visibility:visible;opacity:1;transform:translateX(-50%) translateY(0)}
 .fmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
-.fmt-search{margin-left:auto;flex:none;display:flex;align-items:center;gap:6px;width:220px;max-width:40vw;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);cursor:text}
+.sr-wrap{position:relative;margin-left:auto;flex:none}
+.fmt-search{display:flex;align-items:center;gap:6px;width:220px;max-width:40vw;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);cursor:text}
 .fmt-search:focus-within{border-color:var(--accent)}
 .fmt-search svg{flex-shrink:0}
 .fmt-search input{flex:1;min-width:0;border:none;background:transparent;color:var(--text);font-size:13px;outline:none}
 .fmt-search:focus{border-color:var(--accent)}
 .cal-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s}
 .cal-btn:hover{border-color:var(--accent);color:var(--accent)}
-.search-pane,.cal-pane{position:fixed;z-index:97;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column}
+.search-pane,.cal-pane{position:absolute;z-index:97;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column}
+.search-pane{top:calc(100% + 8px);right:0;width:min(300px,60vw)}
+.cal-wrap{position:relative;display:inline-flex}
+.cal-pane{top:calc(100% + 8px);right:0}
 .search-pane{width:min(340px,calc(100vw - 16px));max-height:60vh;overflow-y:auto}
 .search-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border)}
 .search-item:hover{background:var(--surface-2)}

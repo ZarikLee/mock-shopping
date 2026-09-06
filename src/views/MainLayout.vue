@@ -4,14 +4,7 @@
     <transition name="drawer">
       <aside class="sidebar" v-show="showSidebar">
         <div class="brand" @click="goProjects">
-          <div class="brand-mark">
-            <svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true">
-              <rect x="13" y="10" width="16" height="26" rx="2" fill="#fff"/>
-              <g stroke="#9ecbff" stroke-width="1.6" stroke-linecap="round"><path d="M16.5 16h9"/><path d="M16.5 21h9"/><path d="M16.5 26h5.5"/></g>
-              <path d="M26 33 L40 19" stroke="#ffd60a" stroke-width="5" stroke-linecap="round"/>
-              <path d="M35.6 23.4 L40 19" stroke="#2a2a2a" stroke-width="4.6" stroke-linecap="round"/>
-            </svg>
-          </div>
+          <div class="brand-mark"><img src="/papertodo_logo.jpg" alt="纸上" /></div>
           <div class="brand-name">纸上 - Paper Todo</div>
         </div>
         <div class="me">
@@ -265,7 +258,8 @@ onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document
 .shell { display: flex; min-height: 100vh; }
 .sidebar { width: 250px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 18px 12px; position: sticky; top: 0; height: 100vh; z-index: 60; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 0 6px 16px; cursor: pointer; }
-.brand-mark { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.brand-mark { width: 34px; height: 34px; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.brand-mark img { width: 100%; height: 100%; object-fit: cover; }
 .brand-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .me { padding: 0 6px 14px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
 .me-name { font-weight: 600; font-size: 15px; }
@@ -295,7 +289,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document
 .proj-empty { color: var(--text-2); font-size: 13px; padding: 8px; }
 .add-proj { margin: 8px 0 10px; padding: 10px; border-radius: 8px; border: 1px dashed var(--border); background: transparent; color: var(--text-2); cursor: pointer; font-size: 13px; }
 .add-proj:hover { border-color: var(--accent); color: var(--accent); }
-.sb-foot { padding-top: 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+.sb-foot { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
 .sb-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: none; background: transparent; color: var(--text-2); font-size: 13px; text-align: left; cursor: pointer; border-radius: 6px; }
 .sb-btn:hover { background: var(--surface-2); color: var(--text); }
 .brand-mark svg { display: block; }

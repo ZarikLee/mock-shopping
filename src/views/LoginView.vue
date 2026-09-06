@@ -5,14 +5,7 @@
     </button>
 
     <div class="auth-card">
-      <div class="logo-mark">
-        <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true">
-          <rect x="13" y="10" width="16" height="26" rx="2" fill="#fff"/>
-          <g stroke="#9ecbff" stroke-width="1.6" stroke-linecap="round"><path d="M16.5 16h9"/><path d="M16.5 21h9"/><path d="M16.5 26h5.5"/></g>
-          <path d="M26 33 L40 19" stroke="#ffd60a" stroke-width="5" stroke-linecap="round"/>
-          <path d="M35.6 23.4 L40 19" stroke="#2a2a2a" stroke-width="4.6" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <div class="logo-mark"><img src="/papertodo_logo.jpg" alt="纸上" /></div>
       <h1 class="title">纸上 - Paper Todo</h1>
       <p class="subtitle">像写日记一样，记录每天的 todo</p>
 
@@ -121,7 +114,8 @@ const submit = async () => {
 .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; padding: 20px; }
 .theme-btn { position: fixed; top: 18px; right: 18px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 18px; cursor: pointer; transition: all .2s; }
 .auth-card { width: 100%; max-width: 360px; text-align: center; }
-.logo-mark { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 16px; background: var(--accent); color: #fff; font-size: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0,122,255,.3); }
+.logo-mark { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0,122,255,.3); }
+.logo-mark img { width: 100%; height: 100%; object-fit: cover; }
 .title { font-size: 23px; font-weight: 700; letter-spacing: .5px; }
 .subtitle { color: var(--text-2); font-size: 14px; margin: 6px 0 30px; }
 .tabs { position: relative; display: flex; background: var(--surface-2); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
