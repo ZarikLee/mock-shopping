@@ -63,7 +63,6 @@
       </div>
       <div class="docmap" v-if="days.length" @mousedown.prevent="mapDown">
         <div ref="mapMirror" class="map-mirror" aria-hidden="true"></div>
-        <canvas ref="mapOverlay" class="map-overlay"></canvas>
         <div class="map-thumb" :style="thumbStyle" @mousedown.prevent="thumbDown"></div>
       </div>
       </div>
@@ -185,7 +184,6 @@ const doneOf=day=>(day.items||[]).filter(i=>i.done).length
 const cs=day=>{const it=day.items||[];if(!it.length)return '';return it.every(i=>i.done)?'ok':'todo'}
 const mapCls=day=>{const it=day.items||[];if(!it.length)return 'none';return it.every(i=>i.done)?'ok':'todo'}
 const mapMirror=ref(null)
-const mapOverlay=ref(null)
 const thumb=reactive({top:0,h:16})
 const thumbStyle=computed(()=>({top:thumb.top+'px',height:Math.max(10,thumb.h)+'px'}))
 let mapRaf=0
@@ -194,56 +192,40 @@ const clampN=(v,a,b)=>Math.max(a,Math.min(b,v))
 function scheduleMap(){if(mapRaf)return;mapRaf=requestAnimationFrame(()=>{mapRaf=0;drawMap()})}
 function drawMap(){
   const scr=scrollEl.value;const docEl=scr?.querySelector('.doc');const mapEl=document.querySelector('.docmap')
-  const mw=mapMirror.value;const ov=mapOverlay.value
+  const mw=mapMirror.value
   if(!scr||!docEl||!mapEl||!mw||!days.value.length)return
-  const H=mapEl.clientHeight;if(!H)return
   const list=[...docEl.children].filter(el=>el.getBoundingClientRect().height>0)
   if(!list.length)return
   const dr=docEl.getBoundingClientRect()
   let top=Infinity,bottom=-Infinity
-  const bands=[]
-  list.forEach(el=>{
-    const r=el.getBoundingClientRect();const t=r.top-dr.top;const b=r.bottom-dr.top
-    if(t<top)top=t;if(b>bottom)bottom=b
-    if(el.classList.contains('day-card')){
-      const lis=[...el.querySelectorAll('ol>li')]
-      let color=null
-      if(lis.length){const all=lis.every(li=>li.classList.contains('done'));color=all?'green':'orange'}
-      bands.push({t,b,color})
-    }
-  })
-  const range=Math.max(1,bottom-top)
-  const r=Math.min(1,H/range)
-  M.r=r;M.top=top;M.mapH=H
+  list.forEach(el=>{const r=el.getBoundingClientRect();const t=r.top-dr.top;const b=r.bottom-dr.top;if(t<top)top=t;if(b>bottom)bottom=b})
   const cs=getComputedStyle(docEl)
-  const width=docEl.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0)
-  mw.style.width=Math.max(1,Math.round(width))+'px'
-  mw.style.top=Math.round(top*r)+'px'
+  const contentW=Math.max(1,docEl.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0))
+  const mapW=Math.max(1,mapEl.clientWidth)
+  const r=Math.max(0.04,Math.min(1,mapW/contentW))
+  M.r=r;M.top=top;M.mapH=mapEl.clientHeight
+  mw.style.width=Math.round(contentW)+'px'
   mw.style.transform='scale('+r+')'
+  updateMirror()
   mw.innerHTML=list.map(el=>el.outerHTML).join('')
-  if(ov){
-    const rect=ov.getBoundingClientRect();const dpr=window.devicePixelRatio||1
-    ov.width=Math.max(1,Math.round(rect.width*dpr));ov.height=Math.max(1,Math.round(rect.height*dpr))
-    const ctx=ov.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0)
-    ctx.clearRect(0,0,rect.width,H)
-    ctx.save()
-    try{ctx.filter='blur(6px)'}catch{}
-    bands.forEach(bd=>{
-      if(!bd.color)return
-      const y=bd.t*r;const h=(bd.b-bd.t)*r
-      ctx.fillStyle=bd.color==='green'?'rgba(52,199,89,0.18)':'rgba(255,149,0,0.24)'
-      ctx.fillRect(2,Math.max(0,y-3),rect.width-4,h+6)
-    })
-    ctx.restore()
-  }
+  ;[...mw.querySelectorAll('.day-card')].forEach(card=>{
+    const lis=[...card.querySelectorAll('ol>li')]
+    const undone=lis.some(li=>!li.classList.contains('done'))
+    card.style.background=undone?'rgba(255,149,0,0.16)':'transparent'
+    card.style.borderRadius='6px'
+  })
   computeMapThumb()}
-function computeMapThumb(){const scr=scrollEl.value;if(!scr||!M.mapH)return
+function computeMapThumb(){const scr=scrollEl.value;if(!scr)return
+  const H=document.querySelector('.docmap')?.clientHeight||Math.max(10,M.mapH)
   const max=scr.scrollHeight-scr.clientHeight
-  if(max<=0){thumb.top=0;thumb.h=Math.max(10,M.mapH);return}
-  thumb.h=Math.max(8,scr.clientHeight*M.r)
-  const range=Math.max(0,M.mapH-thumb.h)
+  if(max<=0){thumb.top=0;thumb.h=Math.max(10,H);return}
+  const scale=Math.min(1,scr.clientHeight/scr.scrollHeight)
+  thumb.h=Math.max(8,H*scale)
+  const range=Math.max(0,H-thumb.h)
   thumb.top=clampN((scr.scrollTop/max)*range,0,range)}
-function onDocScroll(){computeMapThumb()}
+function updateMirror(){const mw=mapMirror.value;const scr=scrollEl.value;if(!mw||!scr||!M.r)return
+  mw.style.top=Math.round(M.top*M.r-scr.scrollTop*M.r)+'px'}
+function onDocScroll(){computeMapThumb();updateMirror()}
 function startThumb(e){const scr=scrollEl.value;if(!scr||!M.r)return
   const max=scr.scrollHeight-scr.clientHeight;const startY=e.clientY;const startTop=scr.scrollTop
   const mv=ev=>{const dy=ev.clientY-startY;scr.scrollTop=clampN(startTop+dy/M.r,0,Math.max(0,max))}
@@ -253,7 +235,7 @@ function thumbDown(e){e.preventDefault();startThumb(e)}
 function mapDown(e){const scr=scrollEl.value;if(!scr||!M.r)return
   const mapEl=document.querySelector('.docmap');if(!mapEl)return
   const y=e.clientY-mapEl.getBoundingClientRect().top
-  const target=clampN((M.top+y/M.r)-scr.clientHeight*0.5,0,Math.max(0,scr.scrollHeight-scr.clientHeight))
+  const target=clampN((scr.scrollTop+y/M.r)-scr.clientHeight*0.5,0,Math.max(0,scr.scrollHeight-scr.clientHeight))
   scr.scrollTo({top:target,behavior:'smooth'})}
 function jumpDay(i){const d=days.value[i];if(!d||!scrollEl.value)return
   const el=document.querySelector(`.daybody[data-date="${d.date}"]`)?.closest('.day-card');if(!el)return
@@ -508,7 +490,6 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .scroll{flex:1;min-width:0;overflow-y:auto}
 .docmap{position:absolute;right:12px;top:8px;bottom:8px;width:58px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06)}
 .map-mirror{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;opacity:.92;color:inherit}
-.map-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:block}
 .map-thumb{position:absolute;left:0;right:0;border-radius:6px;background:rgba(255,255,255,.3);backdrop-filter:blur(6px) saturate(1.6);-webkit-backdrop-filter:blur(6px) saturate(1.6);cursor:ns-resize;pointer-events:auto;border:1px solid rgba(255,255,255,.95);box-shadow:0 0 0 1px rgba(255,255,255,.35),inset 0 0 10px rgba(255,255,255,.45),0 2px 8px rgba(0,0,0,.14);box-sizing:border-box}
 .dstat.todo{color:var(--glow-border)}.dstat.ok{color:var(--green)}
 .cstat{width:9px;height:9px;border-radius:50%;background:var(--glow-border);display:inline-block}
