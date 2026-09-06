@@ -20,12 +20,21 @@
         </div>
         <div class="proj-drop">
           <span class="pd-label">当前项目</span>
-          <select class="pd-select" :value="currentProjId" @change="onProjChange">
-            <option value="" disabled>选择或新建项目…</option>
-            <option v-for="p in projects" :key="p.id" :value="String(p.id)">{{ p.type === 'school' ? '学' : '企' }} · {{ p.name }}</option>
-            <option value="new">＋ 新建{{ user.roleText === '学生' ? '学校' : user.roleText === '职场人' ? '企业' : '项目' }}</option>
-          </select>
-          <p v-if="!projects.length" class="pd-hint">还没有项目，点上面“＋新建”创建</p>
+          <div class="pd" ref="pdRef">
+            <button class="pd-btn" @click="pdOpen = !pdOpen">
+              <span class="pd-cur">{{ currentName || '选择项目…' }}</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <transition name="fade"><div v-if="pdOpen" class="pd-list">
+              <button v-for="p in projects" :key="p.id" class="pd-item" :class="{ cur: currentProjId === String(p.id) }" @click="pickProj(p.id)">
+                <span class="pd-it">{{ p.type === 'school' ? '学' : '企' }} · {{ p.name }}</span>
+                <span v-if="currentProjId === String(p.id)" class="pd-ok">✓</span>
+              </button>
+              <button class="pd-item new" @click="newProj">＋ 新建{{ user.roleText === '学生' ? '学校' : user.roleText === '职场人' ? '企业' : '项目' }}</button>
+              <div v-if="!projects.length" class="pd-empty">还没有项目</div>
+            </div></transition>
+          </div>
+          <p v-if="!projects.length" class="pd-hint">还没有项目，点“＋新建”创建</p>
         </div>
         <div class="sb-foot">
           <button class="sb-btn" @click="settingsOpen = true">
@@ -214,13 +223,14 @@ const load = async () => {
   catch { projects.value = [] }
 }
 const currentProjId = computed(() => route.name === 'log' ? String(route.params.projectId) : '')
+const pdOpen = ref(false)
+const pdRef = ref(null)
+const currentName = computed(() => { const p = projects.value.find(x => String(x.id) === currentProjId.value); return p ? p.name : '' })
+const pickProj = id => { pdOpen.value = false; if (id) { router.push('/log/' + id); if (mobile.value) drawerOpen.value = false } }
+const newProj = () => { pdOpen.value = false; showNewProj.value = true }
+const onPdDown = e => { if (pdRef.value && pdOpen.value && !pdRef.value.contains(e.target)) pdOpen.value = false }
 const showNewProj = ref(false)
 const np = ref({ name: '', startDate: '' })
-const onProjChange = e => {
-  const v = e.target.value
-  if (v === 'new') { showNewProj.value = true; return }
-  if (v) { router.push('/log/' + v); if (mobile.value) drawerOpen.value = false }
-}
 const createProject = async () => {
   if (!np.value.name.trim() || !np.value.startDate) return
   saving.value = true
@@ -241,13 +251,14 @@ onMounted(() => {
   if (!user.isLoggedIn) { router.push('/login'); return }
   onResize()
   window.addEventListener('resize', onResize)
+  document.addEventListener('mousedown', onPdDown)
   load()
 })
 let iv=null
 watch(() => route.fullPath, () => { load(); if (mobile.value) drawerOpen.value = false })
 onMounted(()=>{ iv=setInterval(load,8000) })
 onBeforeUnmount(()=>clearInterval(iv))
-onBeforeUnmount(() => window.removeEventListener('resize', onResize))
+onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document.removeEventListener('mousedown', onPdDown) })
 </script>
 
 <style scoped>
@@ -261,7 +272,17 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 .me-role { font-size: 12px; color: var(--text-2); }
 .proj-drop { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
 .pd-label { font-size: 11px; color: var(--text-2); padding: 0 6px; }
-.pd-select { padding: 9px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; width: 100%; cursor: pointer; appearance: auto; }
+ .pd { position: relative; }
+.pd-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; cursor: pointer; }
+.pd-btn:hover { border-color: var(--accent); }
+.pd-cur { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pd-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 14px 40px rgba(0,0,0,.18); padding: 4px; max-height: 260px; overflow-y: auto; z-index: 30; }
+.pd-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 9px 10px; border: none; background: transparent; color: var(--text); font-size: 13px; border-radius: 7px; cursor: pointer; text-align: left; }
+.pd-item:hover { background: var(--surface-2); }
+.pd-item.cur { color: var(--accent); font-weight: 600; }
+.pd-item.new { color: var(--accent); border-top: 1px solid var(--border); margin-top: 3px; }
+.pd-ok { color: var(--accent); }
+.pd-empty { text-align: center; color: var(--text-2); font-size: 12px; padding: 10px; }
 .pd-hint { font-size: 12px; color: var(--text-2); padding: 0 6px; }
 .sec-title { font-size: 11px; color: var(--text-2); text-transform: uppercase; padding: 0 6px 8px; }
 .proj-nav { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; min-height: 0; }

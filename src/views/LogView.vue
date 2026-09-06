@@ -13,7 +13,7 @@
           </div>
         </div>
         <div class="t-actions">
-          <button class="tb blue" @click="importOpen = true">导入历史</button>
+          <button class="tb blue" @click="importOpen = true">导入任务</button>
           <button class="cal-btn" @click="calToggle" title="按日历查看"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></button>
           <button class="theme-round" @click="theme.toggle" :title="theme.theme === 'dark' ? '切换到日间' : '切换到暗色'">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
         </div>
@@ -32,7 +32,7 @@
         <span class="sep"></span>
         <div class="swatch"><template v-for="c in colors" :key="c"><i class="dotc" :style="{background:c}" @mousedown.prevent="cmd('foreColor',c)"></i></template></div>
         <div class="swatch hl"><template v-for="c in hl" :key="c"><i class="dotc" :style="{background:c}" @mousedown.prevent="cmd('hiliteColor',c)"></i></template></div>
-        <input class="fmt-search" v-model="searchQ" placeholder="搜索记录 / 日期…" @input="searchOpen = true" @focus="searchOpen = true" @blur="closeSearch" @keydown.enter="goFirstResult" />
+        <span class="fmt-search"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input v-model="searchQ" placeholder="搜索记录 / 日期…" @input="openSearch" @focus="openSearch" @blur="closeSearch" @keydown.enter="goFirstResult" /></span>
         <button class="fmt-ai" :class="{ open: aiOpen }" @click="aiToggle" title="和小纸聊两句">
           <template v-if="!aiOpen"><i class="fa-tag">AI</i><span class="fa-name">小纸</span></template><span v-else class="fa-x">×</span>
         </button>
@@ -99,7 +99,7 @@
     <!-- 导入历史 -->
     <div v-if="importOpen" class="center-mask">
       <div class="center-card wide">
-        <h3>导入历史记录</h3>
+        <h3>导入任务记录</h3>
         <p class="tip">支持 txt / Markdown / 纯文本。日期支持：2024-09-01、2024/9/1、2024年9月1日、20240901、9月1日或 9.1（自动就近补年份）等。任务行前加 [x]/✔ 视为已完成；多个日期自动分天、去重合并，可导入后点“上一版本”撤回。</p>
         <textarea v-model="importText" class="imp" placeholder="示例：
 2024-09-01 周日
@@ -200,6 +200,7 @@ const searchResults=computed(()=>{const q=searchQ.value.trim().toLowerCase();if(
   return res.slice(0,40)})
 function placeSearch(){const b=document.querySelector('.fmt-search');if(!b)return
   const r=b.getBoundingClientRect();searchStyle.top=Math.max(52,Math.round(r.bottom+6));searchStyle.right=Math.max(8,Math.round(window.innerWidth-r.right))}
+function openSearch(){searchOpen.value=true;nextTick(placeSearch)}
 function closeSearch(){setTimeout(()=>{searchOpen.value=false},120)}
 function goFirstResult(){if(searchResults.value.length)openSearchItem(searchResults.value[0])}
 function openSearchItem(r){searchOpen.value=false;scrollToDay(r.date,r.idx)}
@@ -541,7 +542,10 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .vi-tip{visibility:hidden;opacity:0;position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%) translateY(-4px);width:230px;padding:8px 10px;border-radius:8px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;font-style:normal;text-align:left;z-index:40;transition:opacity .15s,transform .15s,visibility .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .vi-hint:hover .vi-tip,.vi-hint:focus .vi-tip{visibility:visible;opacity:1;transform:translateX(-50%) translateY(0)}
 .fmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
-.fmt-search{flex:1;min-width:160px;max-width:360px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;outline:none}
+.fmt-search{margin-left:auto;flex:none;display:flex;align-items:center;gap:6px;width:220px;max-width:40vw;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);cursor:text}
+.fmt-search:focus-within{border-color:var(--accent)}
+.fmt-search svg{flex-shrink:0}
+.fmt-search input{flex:1;min-width:0;border:none;background:transparent;color:var(--text);font-size:13px;outline:none}
 .fmt-search:focus{border-color:var(--accent)}
 .cal-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s}
 .cal-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -554,15 +558,15 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .ss-text{font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ss-text.ok{color:var(--text-2);text-decoration:line-through}
 .search-empty{padding:20px;text-align:center;color:var(--text-2);font-size:13px}
-.cal-pane{width:min(300px,calc(100vw - 16px))}
-.cal-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border)}
-.cal-title{font-size:14px;font-weight:600}
-.cm{width:28px;height:28px;border:none;background:transparent;color:var(--text-2);font-size:16px;cursor:pointer;border-radius:6px}
+.cal-pane{width:min(196px,calc(100vw - 16px))}
+.cal-head{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px solid var(--border)}
+.cal-title{font-size:12px;font-weight:600}
+.cm{width:22px;height:22px;border:none;background:transparent;color:var(--text-2);font-size:13px;cursor:pointer;border-radius:5px}
 .cm:hover{background:var(--surface-2)}
-.cal-week{display:grid;grid-template-columns:repeat(7,1fr);padding:6px 8px 0}
-.cal-week span{text-align:center;font-size:11px;color:var(--text-2)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:6px 8px 12px}
-.cal-d{aspect-ratio:1;border:none;border-radius:8px;font-size:12px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 6px 0}
+.cal-week span{text-align:center;font-size:9px;color:var(--text-2)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:4px 6px 8px}
+.cal-d{border:none;border-radius:4px;font-size:9px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;height:20px}
 .cal-d.dim{visibility:hidden}
 .cal-d.today{box-shadow:inset 0 0 0 2px var(--accent)}
 .cal-d:hover{outline:2px solid var(--accent)}
@@ -586,7 +590,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .dstat.todo{color:var(--glow-border)}.dstat.ok{color:var(--green)}
 .cstat{width:9px;height:9px;border-radius:50%;background:var(--glow-border);display:inline-block}
 .cstat.ok{background:var(--green)}
-.doc{padding:20px clamp(86px,7vw,116px) 200px clamp(10px,2.5vw,36px)}
+.doc{padding:20px clamp(86px,7vw,116px) 56px clamp(10px,2.5vw,36px)}
 .center-card .col-btns{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .col-btns button{width:100%;padding:11px;border-radius:10px;font-size:14px;cursor:pointer;border:none}
 .ghost-wide{background:transparent;border:1px solid var(--border);color:var(--text)}
@@ -623,7 +627,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .ph{padding:50px 0;color:var(--text-2);text-align:center}
 
 /* AI 小纸：并入格式栏右侧，与右上角主题圆钮同尺寸 */
-.fmt-ai{margin-left:auto;flex:none;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;box-shadow:0 4px 14px rgba(0,122,255,.35);border:none;line-height:1;transition:background .2s,color .2s}
+.fmt-ai{margin-left:6px;flex:none;width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;box-shadow:0 4px 14px rgba(0,122,255,.35);border:none;line-height:1;transition:background .2s,color .2s}
 .fmt-ai.open{background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,.2)}
 .fa-tag{font-style:normal;font-size:8px;font-weight:700;background:rgba(255,255,255,.3);border-radius:3px;padding:0 3px;line-height:1.5}
 .fmt-ai.open .fa-tag{background:var(--surface-2)}
