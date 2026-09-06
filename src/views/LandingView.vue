@@ -282,8 +282,9 @@ onBeforeUnmount(() => { clearInterval(wTimer); if (io) io.disconnect(); document
 h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.12; letter-spacing: -1px; font-weight: 800; margin: 0 0 20px; }
 .grad { background: linear-gradient(100deg, #0a84ff 0%, #7b6cff 55%, #ff5f9e 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .row { display: block; }
-.r2 { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: clip; }
-.type { color: var(--accent); display: inline-block; vertical-align: baseline; }
+.r2 { display: inline-flex; align-items: baseline; max-width: 100%; overflow: hidden; }
+.r2 .grad { flex: none; white-space: nowrap; }
+.type { color: var(--accent); flex: none; white-space: nowrap; }
 .caret { font-style: normal; margin-left: 2px; border-right: 3px solid var(--accent); animation: blink 1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 .sub { font-size: 16px; line-height: 1.8; color: var(--text-2); max-width: 520px; margin: 0 0 28px; }
