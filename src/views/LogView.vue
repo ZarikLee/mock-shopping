@@ -116,14 +116,13 @@
     <!-- 历史未完成任务提醒 -->
     <transition name="fade">
       <div v-if="showRemind" class="center-mask" @click.self="closeRemind">
-        <div class="center-card">
+        <div class="center-card remind">
           <h3>有几条任务还没完成哦</h3>
-          <p class="tip">你在过去的 {{ pastPendingCount }} 个日子里还有 {{ pastPendingTotal }} 条任务未勾选完成。</p>
-          <p class="tip">可以选择一次性把它们都标为完成，或把未完成的搬到今天继续跟进：</p>
+          <p class="tip">过去 {{ pastPendingCount }} 个日子还有 {{ pastPendingTotal }} 条未完成，建议尽快处理：</p>
+          <label class="remind-chk"><input type="checkbox" v-model="remindOff" @change="saveRemindOff" /> 不再提醒我（后续登录/刷新不再弹出）</label>
           <div class="col-btns">
-            <button class="primary" @click="markAllPastDone">全部标为完成</button>
-            <button class="ghost-wide" @click="movePastToToday">把未完成搬到今天</button>
-            <button class="linkbtn" @click="closeRemind">暂不处理</button>
+            <button class="primary" @click="markAllPastDone">全部转为已完成</button>
+            <button class="ghost-wide" @click="movePastToToday">全部未完成加到今天</button>
           </div>
         </div>
       </div>
@@ -162,6 +161,8 @@ function aiToggle(){aiOpen.value=!aiOpen.value
   if(aiOpen.value)nextTick(placeAi)}
 const scrollEl=ref(null)
 const showRemind=ref(false)
+const remindOff=ref(localStorage.getItem('dl_rem_off')==='1')
+function saveRemindOff(){if(remindOff.value)localStorage.setItem('dl_rem_off','1');else localStorage.removeItem('dl_rem_off')}
 const undoStack=ref([]);const redoStack=ref([])
 const canUndo=computed(()=>undoStack.value.length>0)
 const canRedo=computed(()=>redoStack.value.length>0)
@@ -263,10 +264,10 @@ function pastUnfinished(){const arr=days.value.filter(d=>d.date<tNow&&(d.items||
 function ensureToday(){let today=findDay(tNow);if(!today){today=norm({date:tNow,weekday:wk(tNow),items:[]});days.value.push(today)}
   days.value.sort((x,y)=>x.date<y.date?-1:1);renderBody(today);return today}
 function saveDays(arr){return Promise.all(arr.map(d=>projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items}).then(()=>{d._dirty=false;d._last=snapDay(d)}).catch(()=>{})))}
-async function maybeRemind(){if(localStorage.getItem('dl_rem_'+pid.value)===tNow)return
+async function maybeRemind(){if(localStorage.getItem('dl_rem_off')==='1')return
   const u=pastUnfinished();if(!u.total)return
   pastPendingTotal.value=u.total;pastPendingCount.value=u.count;showRemind.value=true}
-function closeRemind(){showRemind.value=false;localStorage.setItem('dl_rem_'+pid.value,tNow)}
+function closeRemind(){showRemind.value=false}
 function scrollToBottomEntry(){const el=scrollEl.value;if(!el||!days.value.length)return
   const max=el.scrollHeight-el.clientHeight;if(max<=0)return
   el.scrollTop=Math.max(0,max-1000)
@@ -517,7 +518,8 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .col-btns button{width:100%;padding:11px;border-radius:10px;font-size:14px;cursor:pointer;border:none}
 .ghost-wide{background:transparent;border:1px solid var(--border);color:var(--text)}
 .linkbtn{background:transparent;color:var(--text-2);font-size:13px}
-
+.remind-chk{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);cursor:pointer;user-select:none}
+.remind-chk input{width:14px;height:14px;accent-color:var(--accent)}
 .day-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)}
 .dhead{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;user-select:none}
 .dt{font-size:15px;font-weight:600}

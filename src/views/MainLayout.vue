@@ -52,7 +52,7 @@
           <div v-if="setPage === 'menu'" class="s-list">
             <button class="s-row" @click="setPage = 'profile'"><span class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span>个人信息</span><i>›</i></button>
             <button class="s-row" @click="setPage = 'about'"><span class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span><span>版本信息</span><i>›</i></button>
-            <button class="s-row" @click="setPage = 'feedback'"><span class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span>建议反馈</span><i>›</i></button>
+            <button class="s-row" @click="setPage = 'feedback'"><span class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span>建议反馈</span><span class="s-badge" v-if="unreadReplies">{{ unreadReplies }}</span><i>›</i></button>
           </div>
 
           <!-- 个人信息 -->
@@ -99,18 +99,16 @@
               </div>
             </template>
             <template v-else>
-              <p class="fb-hint">你的反馈：管理员会在此回复你</p>
-              <template v-if="!fbList.length">
-                <textarea v-model="feedback" class="fb-text" rows="5" placeholder="说说你的想法或遇到的问题…"></textarea>
-                <button class="primary" :disabled="saving" @click="sendFeedback">提交反馈</button>
-              </template>
-              <p v-else class="fb-tip">已提交，等待管理员回复（每位用户仅可提交一次反馈）。</p>
+              <p class="fb-hint">你的反馈：管理员会在此回复你（可多次提交）</p>
+              <textarea v-model="feedback" class="fb-text" rows="5" placeholder="说说你的想法或遇到的问题…"></textarea>
+              <button class="primary" :disabled="saving" @click="sendFeedback">提交反馈</button>
               <div class="fb-list">
                 <div v-for="f in fbList" :key="f.id" class="fb-item">
                   <div class="fb-meta"><i>{{ fmtTime(f.createdAt) }}</i></div>
                   <p class="fb-body">{{ f.text }}</p>
                   <div v-for="(r, ri) in f.replies" :key="ri" class="fb-reply"><b>管理员：</b>{{ r.text }}<i>{{ fmtTime(r.at) }}</i></div>
                 </div>
+                <div v-if="!fbList.length" class="fb-empty">还没有反馈记录</div>
               </div>
             </template>
           </div>
@@ -159,6 +157,9 @@ const fbList = ref([])
 const replyMap = reactive({})
 const isAdmin = computed(() => user.user?.account === 'admin')
 const fbLoading = ref(false)
+const fbReadKey = 'dl_fb_read_' + (user.user?.account || '')
+const fbReadAt = ref(Number(localStorage.getItem(fbReadKey) || 0))
+const unreadReplies = computed(() => fbList.value.reduce((n, f) => n + (f.replies || []).filter(r => r.at > fbReadAt.value).length, 0))
 const toastMsg = ref('')
 let toastTimer = null
 
@@ -191,7 +192,7 @@ const replyTo = async f => {
   try { await feedbackApi.reply(f.id, { text: t }); delete replyMap[f.id]; showToast('已回复给 ' + f.account); await loadFeedback() }
   catch (e) { showToast(e?.error || '回复失败') } finally { saving.value = false }
 }
-watch(() => setPage.value, v => { if (v === 'feedback') loadFeedback() })
+watch(() => setPage.value, v => { if (v === 'feedback') { loadFeedback(); fbReadAt.value = Date.now(); localStorage.setItem(fbReadKey, String(fbReadAt.value)) } })
 
 const showSidebar = computed(() => !mobile.value || drawerOpen.value)
 const isActive = id => String(route.params.projectId) === String(id)
@@ -254,6 +255,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 .s-ic { display: inline-flex; width: 20px; height: 20px; color: var(--text-2); flex-shrink: 0; }
 .s-ic svg { width: 100%; height: 100%; display: block; }
 .s-row i { margin-left: auto; color: var(--text-2); font-style: normal; }
+.s-badge { min-width: 16px; height: 16px; padding: 0 5px; border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; line-height: 16px; text-align: center; flex-shrink: 0; }
 .s-page { display: flex; flex-direction: column; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .f-label { font-size: 13px; color: var(--text-2); }
