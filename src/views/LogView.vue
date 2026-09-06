@@ -504,7 +504,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .docmap{position:absolute;right:12px;top:8px;bottom:8px;width:58px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06)}
 .map-mirror{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;opacity:.92;color:inherit}
 .map-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:block}
-.map-thumb{position:absolute;left:2px;right:2px;border-radius:6px;background:var(--accent);opacity:.32;cursor:ns-resize;pointer-events:auto;border:1px solid rgba(0,0,0,.1);box-sizing:border-box}
+.map-thumb{position:absolute;left:0;right:0;border-radius:6px;background:rgba(255,255,255,.22);backdrop-filter:blur(5px) saturate(1.4);-webkit-backdrop-filter:blur(5px) saturate(1.4);cursor:ns-resize;pointer-events:auto;border:1px solid rgba(255,255,255,.55);box-shadow:0 1px 6px rgba(0,0,0,.16);box-sizing:border-box}
 .dstat.todo{color:var(--glow-border)}.dstat.ok{color:var(--green)}
 .cstat{width:9px;height:9px;border-radius:50%;background:var(--glow-border);display:inline-block}
 .cstat.ok{background:var(--green)}
