@@ -39,7 +39,7 @@
       <div v-if="loadError" class="err">{{ loadError }}</div>
       
       <div class="swrap">
-        <div class="scroll" @scroll="onDocScroll">
+        <div class="scroll" ref="scrollEl" @scroll="onDocScroll">
         <div class="doc" :style="{ fontFamily: prefs.font, fontSize: prefs.size + 'px', lineHeight: prefs.lh }">
           <section v-for="day in days" :key="day.date" class="day-card">
             <div class="dhead">
