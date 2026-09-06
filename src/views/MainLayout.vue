@@ -4,7 +4,7 @@
     <transition name="drawer">
       <aside class="sidebar" v-show="showSidebar">
         <div class="brand" @click="goProjects">
-          <div class="brand-mark"><img src="/papertodo_logo.png" alt="纸上" /></div>
+          <div class="brand-mark"><img src="/papertodo_logo.png?v=2" alt="纸上" /></div>
           <div class="brand-name">纸上 - Paper Todo</div>
         </div>
         <div class="me">
@@ -72,7 +72,7 @@
 
           <!-- 版本信息 -->
           <div v-else-if="setPage === 'about'" class="s-page about">
-            <div class="about-logo">纸</div>
+            <div class="about-logo"><img src="/papertodo_logo.png?v=2" alt="纸上" /></div>
             <p class="about-name">纸上 · Paper Todo</p>
             <p class="about-ver">版本 v0.9.0</p>
             <p class="about-line">像写日记一样，记录每天的 todo</p>
@@ -334,7 +334,8 @@ onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document
 .fb-empty { text-align: center; color: var(--text-2); font-size: 13px; padding: 14px; }
 
 .about { text-align: center; align-items: center; }
-.about-logo { width: 58px; height: 58px; border-radius: 14px; background: var(--accent); color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; margin-top: 6px; }
+.about-logo { width: 58px; height: 58px; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-top: 6px; }
+.about-logo img { width: 100%; height: 100%; object-fit: cover; }
 .about-name { font-size: 17px; font-weight: 700; margin: 10px 0 2px; }
 .about-ver { font-size: 13px; color: var(--text-2); margin: 0; }
 .about-line { font-size: 13px; color: var(--text-2); margin: 4px 0 16px; }
