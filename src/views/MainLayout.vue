@@ -82,8 +82,37 @@
 
           <!-- 建议反馈 -->
           <div v-else-if="setPage === 'feedback'" class="s-page">
-            <textarea v-model="feedback" class="fb-text" rows="6" placeholder="说说你的想法或遇到的问题…"></textarea>
-            <button class="primary" :disabled="saving" @click="sendFeedback">提交反馈</button>
+            <template v-if="isAdmin">
+              <p class="fb-hint">管理员 · 全部用户反馈（{{ fbList.length }}）</p>
+              <div v-if="fbLoading" class="fb-empty">加载中…</div>
+              <div v-else class="fb-list">
+                <div v-for="f in fbList" :key="f.id" class="fb-item">
+                  <div class="fb-meta">{{ f.account }}<em>{{ f.nickname }}</em><i>{{ fmtTime(f.createdAt) }}</i></div>
+                  <p class="fb-body">{{ f.text }}</p>
+                  <div v-for="(r, ri) in f.replies" :key="ri" class="fb-reply"><b>你的回复：</b>{{ r.text }}<i>{{ fmtTime(r.at) }}</i></div>
+                  <div class="fb-reply-row">
+                    <input v-model.trim="replyMap[f.id]" class="fb-input" placeholder="回复该反馈…" @keydown.enter="replyTo(f)" />
+                    <button class="primary sm" :disabled="!replyMap[f.id] || saving" @click="replyTo(f)">回复</button>
+                  </div>
+                </div>
+                <div v-if="!fbList.length" class="fb-empty">暂无用户反馈</div>
+              </div>
+            </template>
+            <template v-else>
+              <p class="fb-hint">你的反馈：管理员会在此回复你</p>
+              <template v-if="!fbList.length">
+                <textarea v-model="feedback" class="fb-text" rows="5" placeholder="说说你的想法或遇到的问题…"></textarea>
+                <button class="primary" :disabled="saving" @click="sendFeedback">提交反馈</button>
+              </template>
+              <p v-else class="fb-tip">已提交，等待管理员回复（每位用户仅可提交一次反馈）。</p>
+              <div class="fb-list">
+                <div v-for="f in fbList" :key="f.id" class="fb-item">
+                  <div class="fb-meta"><i>{{ fmtTime(f.createdAt) }}</i></div>
+                  <p class="fb-body">{{ f.text }}</p>
+                  <div v-for="(r, ri) in f.replies" :key="ri" class="fb-reply"><b>管理员：</b>{{ r.text }}<i>{{ fmtTime(r.at) }}</i></div>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -107,11 +136,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
 import { projectApi } from '../api/projects'
+import { feedbackApi } from '../api/feedback'
 
 const router = useRouter()
 const route = useRoute()
@@ -125,6 +155,10 @@ const setPage = ref('menu')
 const saving = ref(false)
 const profile = ref({ nickname: user.user?.nickname || '', role: user.user?.role || 'student' })
 const feedback = ref('')
+const fbList = ref([])
+const replyMap = reactive({})
+const isAdmin = computed(() => user.user?.account === 'admin')
+const fbLoading = ref(false)
 const toastMsg = ref('')
 let toastTimer = null
 
@@ -139,17 +173,25 @@ const saveProfile = async () => {
     showToast('已保存')
   } catch (e) { showToast(e?.error || '保存失败') } finally { saving.value = false }
 }
+const fmtTime = ts => { if (!ts) return ''; const d = new Date(ts); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}` }
+const loadFeedback = async () => {
+  fbLoading.value = true
+  try { const res = await feedbackApi.list(); fbList.value = Array.isArray(res) ? res : (res.list || []) }
+  catch { fbList.value = [] } finally { fbLoading.value = false }
+}
 const sendFeedback = async () => {
   if (!feedback.value.trim()) { showToast('先写点什么吧'); return }
   saving.value = true
-  try {
-    const list = JSON.parse(localStorage.getItem('dl_feedback') || '[]')
-    list.unshift({ t: new Date().toISOString(), text: feedback.value.trim(), account: user.user?.account || '' })
-    localStorage.setItem('dl_feedback', JSON.stringify(list))
-    feedback.value = ''
-    showToast('感谢反馈，已收到')
-  } finally { saving.value = false }
+  try { await feedbackApi.create({ text: feedback.value.trim() }); feedback.value = ''; showToast('感谢反馈，已收到'); await loadFeedback() }
+  catch (e) { showToast(e?.error || '提交失败') } finally { saving.value = false }
 }
+const replyTo = async f => {
+  const t = (replyMap[f.id] || '').trim(); if (!t) return
+  saving.value = true
+  try { await feedbackApi.reply(f.id, { text: t }); delete replyMap[f.id]; showToast('已回复给 ' + f.account); await loadFeedback() }
+  catch (e) { showToast(e?.error || '回复失败') } finally { saving.value = false }
+}
+watch(() => setPage.value, v => { if (v === 'feedback') loadFeedback() })
 
 const showSidebar = computed(() => !mobile.value || drawerOpen.value)
 const isActive = id => String(route.params.projectId) === String(id)
@@ -223,6 +265,22 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 .primary { padding: 12px; border: none; border-radius: 10px; background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
 .primary:disabled { opacity: .55; }
 .fb-text { resize: vertical; min-height: 130px; padding: 11px 13px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; outline: none; font-family: inherit; }
+.fb-hint { font-size: 13px; color: var(--text-2); }
+.fb-tip { font-size: 12px; color: var(--text-2); }
+.fb-list { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.fb-item { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--bg); }
+.fb-item .fb-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
+.fb-item .fb-meta em { font-style: normal; color: var(--text); font-weight: 600; margin-left: 4px; }
+.fb-item .fb-meta i { margin-left: auto; font-style: normal; }
+.fb-body { margin: 0; font-size: 13px; color: var(--text); line-height: 1.6; word-break: break-word; }
+.fb-reply { margin-top: 6px; font-size: 12px; color: var(--text); background: var(--surface-2); border-radius: 8px; padding: 6px 9px; line-height: 1.5; }
+.fb-reply b { color: var(--accent); }
+.fb-reply i { display: block; font-style: normal; color: var(--text-2); margin-top: 2px; }
+.fb-reply-row { display: flex; gap: 8px; margin-top: 8px; }
+.fb-reply-row .fb-input { flex: 1; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; outline: none; }
+.fb-reply-row .primary.sm { padding: 7px 14px; font-size: 13px; }
+.fb-empty { text-align: center; color: var(--text-2); font-size: 13px; padding: 14px; }
+
 .about { text-align: center; align-items: center; }
 .about-logo { width: 58px; height: 58px; border-radius: 14px; background: var(--accent); color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; margin-top: 6px; }
 .about-name { font-size: 17px; font-weight: 700; margin: 10px 0 2px; }

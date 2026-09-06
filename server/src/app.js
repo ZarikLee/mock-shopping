@@ -5,6 +5,7 @@ import { dirname, join } from 'path';
 import authRoutes from './routes/auth.js';
 import projectRoutes from './routes/projects.js';
 import aiRoutes from './routes/ai.js';
+import feedbackRoutes from './routes/feedback.js';
 
 const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -15,6 +16,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 const distPath = join(__dirname, '..', '..', 'dist');
 app.use(express.static(distPath));
