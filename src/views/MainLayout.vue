@@ -18,16 +18,15 @@
           <div class="me-name">{{ user.user?.nickname }}</div>
           <div class="me-role">{{ user.roleText || '未设置身份' }}</div>
         </div>
-        <div class="sec-title">项目</div>
-        <div class="proj-nav">
-          <button v-for="p in projects" :key="p.id" class="proj-item"
-            :class="{ active: isActive(p.id) }" @click="openProject(p.id)">
-            <span class="pi-icon">{{ p.type === 'school' ? '学' : '企' }}</span>
-            <span class="pi-name">{{ p.name }}</span>
-          </button>
-          <div v-if="!projects.length" class="proj-empty">还没有项目</div>
+        <div class="proj-drop">
+          <span class="pd-label">当前项目</span>
+          <select class="pd-select" :value="currentProjId" @change="onProjChange">
+            <option value="" disabled>选择或新建项目…</option>
+            <option v-for="p in projects" :key="p.id" :value="String(p.id)">{{ p.type === 'school' ? '学' : '企' }} · {{ p.name }}</option>
+            <option value="new">＋ 新建{{ user.roleText === '学生' ? '学校' : user.roleText === '职场人' ? '企业' : '项目' }}</option>
+          </select>
+          <p v-if="!projects.length" class="pd-hint">还没有项目，点上面“＋新建”创建</p>
         </div>
-        <button class="add-proj" @click="goProjects">＋ 新建项目</button>
         <div class="sb-foot">
           <button class="sb-btn" @click="settingsOpen = true">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -112,6 +111,18 @@
               </div>
             </template>
           </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 新建项目 -->
+    <transition name="fade">
+      <div v-if="showNewProj" class="center-mask" @click.self="showNewProj = false">
+        <div class="center-card">
+          <div class="c-head"><h3>新建{{ user.roleText === '学生' ? '学校' : user.roleText === '职场人' ? '企业' : '项目' }}</h3><button class="c-x" @click="showNewProj = false">×</button></div>
+          <label class="field"><span class="f-label">名称</span><input class="f-input" v-model.trim="np.name" :placeholder="user.roleText === '学生' ? '如：中山大学' : '如：某某科技'" /></label>
+          <label class="field"><span class="f-label">{{ user.roleText === '学生' ? '入学日期' : user.roleText === '职场人' ? '入职日期' : '开始日期' }}</span><input class="f-input" v-model="np.startDate" type="date" /></label>
+          <button class="primary" :disabled="saving || !np.name.trim() || !np.startDate" @click="createProject">创建并进入</button>
         </div>
       </div>
     </transition>
@@ -202,6 +213,26 @@ const load = async () => {
   try { const res = await projectApi.list(); projects.value = Array.isArray(res) ? res : (res.projects || []) }
   catch { projects.value = [] }
 }
+const currentProjId = computed(() => route.name === 'log' ? String(route.params.projectId) : '')
+const showNewProj = ref(false)
+const np = ref({ name: '', startDate: '' })
+const onProjChange = e => {
+  const v = e.target.value
+  if (v === 'new') { showNewProj.value = true; return }
+  if (v) { router.push('/log/' + v); if (mobile.value) drawerOpen.value = false }
+}
+const createProject = async () => {
+  if (!np.value.name.trim() || !np.value.startDate) return
+  saving.value = true
+  try {
+    const res = await projectApi.create({ name: np.value.name.trim(), startDate: np.value.startDate })
+    const id = res?.id || res?.project?.id
+    showNewProj.value = false
+    np.value = { name: '', startDate: '' }
+    await load()
+    if (id) router.push('/log/' + id)
+  } catch (e) { showToast(e?.error || '创建失败') } finally { saving.value = false }
+}
 const openProject = id => { router.push('/log/' + id); if (mobile.value) drawerOpen.value = false }
 const goProjects = () => { router.push('/projects'); if (mobile.value) drawerOpen.value = false }
 const logout = () => { user.logout(); router.push('/login') }
@@ -228,6 +259,10 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 .me { padding: 0 6px 14px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
 .me-name { font-weight: 600; font-size: 15px; }
 .me-role { font-size: 12px; color: var(--text-2); }
+.proj-drop { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.pd-label { font-size: 11px; color: var(--text-2); padding: 0 6px; }
+.pd-select { padding: 9px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; width: 100%; cursor: pointer; appearance: auto; }
+.pd-hint { font-size: 12px; color: var(--text-2); padding: 0 6px; }
 .sec-title { font-size: 11px; color: var(--text-2); text-transform: uppercase; padding: 0 6px 8px; }
 .proj-nav { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; min-height: 0; }
 .proj-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: none; background: transparent; color: var(--text); border-radius: 8px; cursor: pointer; font-size: 14px; text-align: left; }

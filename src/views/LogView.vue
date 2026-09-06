@@ -14,6 +14,7 @@
         </div>
         <div class="t-actions">
           <button class="tb blue" @click="importOpen = true">导入历史</button>
+          <button class="cal-btn" @click="calToggle" title="按日历查看"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></button>
           <button class="theme-round" @click="theme.toggle" :title="theme.theme === 'dark' ? '切换到日间' : '切换到暗色'">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
         </div>
       </div>
@@ -31,6 +32,7 @@
         <span class="sep"></span>
         <div class="swatch"><template v-for="c in colors" :key="c"><i class="dotc" :style="{background:c}" @mousedown.prevent="cmd('foreColor',c)"></i></template></div>
         <div class="swatch hl"><template v-for="c in hl" :key="c"><i class="dotc" :style="{background:c}" @mousedown.prevent="cmd('hiliteColor',c)"></i></template></div>
+        <input class="fmt-search" v-model="searchQ" placeholder="搜索记录 / 日期…" @input="searchOpen = true" @focus="searchOpen = true" @blur="closeSearch" @keydown.enter="goFirstResult" />
         <button class="fmt-ai" :class="{ open: aiOpen }" @click="aiToggle" title="和小纸聊两句">
           <template v-if="!aiOpen"><i class="fa-tag">AI</i><span class="fa-name">小纸</span></template><span v-else class="fa-x">×</span>
         </button>
@@ -70,6 +72,28 @@
 
     <transition name="fade">
       <div v-show="aiOpen" class="ai-dialog" :style="{ top: aiPos.top + 'px', right: aiPos.right + 'px' }"><AiPanel :project-id="pid" @close="aiOpen = false" /></div>
+    </transition>
+
+    <!-- 搜索下拉 -->
+    <transition name="fade">
+      <div v-if="searchOpen && searchResults.length" class="search-pane" :style="searchStyle">
+        <div v-for="r in searchResults" :key="r.date + '-' + r.idx" class="search-item" @mousedown.prevent="openSearchItem(r)">
+          <span class="ss-day">{{ dayLabel(r.date) }} <em>{{ r.weekday }}</em></span>
+          <span class="ss-text" :class="{ ok: r.done }">{{ r.text || '（当天记录）' }}</span>
+        </div>
+        <div v-if="!searchResults.length" class="search-empty">没有匹配的记录</div>
+      </div>
+    </transition>
+
+    <!-- 日历下拉 -->
+    <transition name="fade">
+      <div v-if="calOpen" class="cal-pane" :style="calStyle">
+        <div class="cal-head"><button class="cm" @click="calShift(-1)">‹</button><span class="cal-title">{{ calTitle }}</span><button class="cm" @click="calShift(1)">›</button></div>
+        <div class="cal-week"><span v-for="w in ['日','一','二','三','四','五','六']" :key="w">{{ w }}</span></div>
+        <div class="cal-grid">
+          <button v-for="d in calDays" :key="d.key" class="cal-d" :class="{ dim: !d.cur, today: d.today }" :style="d.style" :title="d.title" @click="calPick(d)">{{ d.num }}</button>
+        </div>
+      </div>
     </transition>
 
     <!-- 导入历史 -->
@@ -158,6 +182,46 @@ function placeAi(){const b=document.querySelector('.fmt-ai');if(!b)return
   aiPos.right=Math.max(8,Math.round(window.innerWidth-r.right))}
 function aiToggle(){aiOpen.value=!aiOpen.value
   if(aiOpen.value)nextTick(placeAi)}
+const searchQ=ref('')
+const searchOpen=ref(false)
+const searchStyle=reactive({top:0,right:20})
+function normalizeDateQ(q){let s=q.replace(/\s/g,'')
+  let m=s.match(/^(\d{4})[年.\-\/]?(\d{1,2})[月.\-\/](\d{1,2})日?$/);if(m)return `${m[1]}-${pad2(+m[2])}-${pad2(+m[3])}`
+  m=s.match(/^(\d{1,2})[月.\-\/](\d{1,2})日?$/);if(m){const y=new Date().getFullYear();return `${y}-${pad2(+m[1])}-${pad2(+m[2])}`}
+  return null}
+const searchResults=computed(()=>{const q=searchQ.value.trim().toLowerCase();if(!q)return []
+  const dq=normalizeDateQ(searchQ.value.trim())
+  const res=[]
+  for(const day of days.value){const lbl=(dayLabel(day.date)+day.weekday).toLowerCase()
+    const dateHit=(dq&&day.date===dq)||lbl.includes(q)
+    day.items.forEach((it,idx)=>{const th=(it.text||'').toLowerCase().includes(q)
+      if(th||(dateHit&&idx===0))res.push({date:day.date,weekday:day.weekday,idx,text:it.text||'',done:!!it.done})})
+    if(dateHit&&!day.items.length)res.push({date:day.date,weekday:day.weekday,idx:0,text:'',done:false})}
+  return res.slice(0,40)})
+function placeSearch(){const b=document.querySelector('.fmt-search');if(!b)return
+  const r=b.getBoundingClientRect();searchStyle.top=Math.max(52,Math.round(r.bottom+6));searchStyle.right=Math.max(8,Math.round(window.innerWidth-r.right))}
+function closeSearch(){setTimeout(()=>{searchOpen.value=false},120)}
+function goFirstResult(){if(searchResults.value.length)openSearchItem(searchResults.value[0])}
+function openSearchItem(r){searchOpen.value=false;scrollToDay(r.date,r.idx)}
+const calOpen=ref(false)
+const calStyle=reactive({top:0,right:20})
+const calMonth=reactive({y:(()=>{const d=new Date();return d.getFullYear()})(),m:(()=>{const d=new Date();return d.getMonth()+1})()})
+function placeCal(){const b=document.querySelector('.cal-btn');if(!b)return
+  const r=b.getBoundingClientRect();calStyle.top=Math.max(52,Math.round(r.bottom+6));calStyle.right=Math.max(8,Math.round(window.innerWidth-r.right))}
+function calToggle(){calOpen.value=!calOpen.value;if(calOpen.value)nextTick(placeCal)}
+function calShift(d){let y=calMonth.y,m=calMonth.m+d;if(m<1){m=12;y--}if(m>12){m=1;y++}calMonth.y=y;calMonth.m=m}
+const calTitle=computed(()=>calMonth.y+'年'+calMonth.m+'月')
+function dayRatio(date){const d=findDay(date);if(!d||!d.items.length)return 0;return d.items.filter(i=>i.done).length/d.items.length}
+const calDays=computed(()=>{const y=calMonth.y,m=calMonth.m;const first=new Date(y,m-1,1).getDay();const dim=new Date(y,m,0).getDate();const today=tNow;const arr=[]
+  for(let i=0;i<first;i++)arr.push({key:'e'+i,num:'',cur:false,today:false,style:{},title:''})
+  for(let n=1;n<=dim;n++){const date=`${y}-${pad2(m)}-${pad2(n)}`;const ratio=dayRatio(date);const alpha=ratio>0?(0.15+0.85*ratio):0
+    arr.push({key:date,num:n,cur:true,today:date===today,date,title:date+' · '+Math.round(ratio*100)+'%',style:{background:alpha?`rgba(10,132,255,${alpha.toFixed(2)})`:'transparent'}})}
+  return arr})
+function calPick(d){if(!d.cur)return;calOpen.value=false;if(dayRatio(d.date)>=0&&findDay(d.date)){scrollToDay(d.date,0);return}showToast('这一天没有记录')}
+function scrollToDay(date,idx){const el=document.querySelector(`.daybody[data-date="${date}"]`)?.closest('.day-card');const scr=scrollEl.value;if(!el||!scr)return
+  const sr=scr.getBoundingClientRect();const top=scr.scrollTop+(el.getBoundingClientRect().top-sr.top)-12
+  scr.scrollTo({top:Math.max(0,top),behavior:'smooth'})
+  if(idx!=null){const li=document.querySelector(`.daybody[data-date="${date}"] ol>li:nth-child(${idx+1})`);if(li){li.classList.add('fl');setTimeout(()=>li.classList.remove('fl'),1400)}}}
 const scrollEl=ref(null)
 const showRemind=ref(false)
 const remindOff=ref(localStorage.getItem('dl_rem_off')==='1')
@@ -450,7 +514,7 @@ function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
 function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearTimeout(timers[day.date]);autosave(day)}})}
 
 onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow)})
-function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)});if(aiOpen.value)placeAi()}
+function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)});if(aiOpen.value)placeAi();if(calOpen.value)placeCal();if(searchOpen.value )placeSearch()}
 watch(()=>route.params.projectId,()=>{if(!user.isLoggedIn)return;pid.value=Number(route.params.projectId);days.value=[];load()})
 onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer)})
 </script>
@@ -477,6 +541,32 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .vi-tip{visibility:hidden;opacity:0;position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%) translateY(-4px);width:230px;padding:8px 10px;border-radius:8px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;font-style:normal;text-align:left;z-index:40;transition:opacity .15s,transform .15s,visibility .15s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .vi-hint:hover .vi-tip,.vi-hint:focus .vi-tip{visibility:visible;opacity:1;transform:translateX(-50%) translateY(0)}
 .fmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.fmt-search{flex:1;min-width:160px;max-width:360px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;outline:none}
+.fmt-search:focus{border-color:var(--accent)}
+.cal-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s}
+.cal-btn:hover{border-color:var(--accent);color:var(--accent)}
+.search-pane,.cal-pane{position:fixed;z-index:97;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column}
+.search-pane{width:min(340px,calc(100vw - 16px));max-height:60vh;overflow-y:auto}
+.search-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border)}
+.search-item:hover{background:var(--surface-2)}
+.ss-day{font-size:12px;color:var(--text-2);flex-shrink:0;white-space:nowrap}
+.ss-day em{font-style:normal;margin-left:2px}
+.ss-text{font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ss-text.ok{color:var(--text-2);text-decoration:line-through}
+.search-empty{padding:20px;text-align:center;color:var(--text-2);font-size:13px}
+.cal-pane{width:min(300px,calc(100vw - 16px))}
+.cal-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border)}
+.cal-title{font-size:14px;font-weight:600}
+.cm{width:28px;height:28px;border:none;background:transparent;color:var(--text-2);font-size:16px;cursor:pointer;border-radius:6px}
+.cm:hover{background:var(--surface-2)}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);padding:6px 8px 0}
+.cal-week span{text-align:center;font-size:11px;color:var(--text-2)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:6px 8px 12px}
+.cal-d{aspect-ratio:1;border:none;border-radius:8px;font-size:12px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}
+.cal-d.dim{visibility:hidden}
+.cal-d.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.cal-d:hover{outline:2px solid var(--accent)}
+.fl{background:rgba(10,132,255,.22)!important}
 .fsel{border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:5px 8px;font-size:13px;outline:none}
 .fb{min-width:28px;height:26px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);cursor:pointer;line-height:1;font-weight:600;font-size:13px}
 .fb.it{font-style:italic}.fb.u{text-decoration:underline}
@@ -488,6 +578,8 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .hint-line a{cursor:pointer;text-decoration:underline;margin-right:10px}
 .swrap{position:relative;flex:1;min-height:0;display:flex;overflow:hidden}
 .scroll{flex:1;min-width:0;overflow-y:auto}
+.scroll{scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
 .docmap{position:absolute;right:12px;top:8px;bottom:8px;width:58px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06)}
 .map-mirror{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;opacity:.92;color:inherit}
 .map-thumb{position:absolute;left:0;right:0;border-radius:6px;background:rgba(255,255,255,.3);backdrop-filter:blur(6px) saturate(1.6);-webkit-backdrop-filter:blur(6px) saturate(1.6);cursor:ns-resize;pointer-events:auto;border:1px solid rgba(255,255,255,.95);box-shadow:0 0 0 1px rgba(255,255,255,.35),inset 0 0 10px rgba(255,255,255,.45),0 2px 8px rgba(0,0,0,.14);box-sizing:border-box}

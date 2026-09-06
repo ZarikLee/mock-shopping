@@ -75,6 +75,7 @@ onMounted(async () => {
   try { const res = await projectApi.list(); projects.value = Array.isArray(res) ? res : (res.projects || []) }
   catch { projects.value = [] }
   loading.value = false
+  if (projects.value.length) { router.replace('/log/' + projects.value[0].id); return }
 })
 </script>
 
