@@ -74,6 +74,7 @@
       </div>
 
       <div v-if="loadError" class="err">{{ loadError }}</div>
+      <div v-if="loading" class="spin-wrap"><span class="spin"></span><p class="spin-t">载入记录中…</p></div>
       
       <div class="swrap">
         <div class="scroll" ref="scrollEl" @scroll="onDocScroll">
@@ -109,7 +110,7 @@
           <div v-if="!loading && !days.length" class="ph"><p>还没有记录。</p></div>
 
           <div class="card-add-row">
-            <button class="add-card-btn" @click="addNextDay">＋ 新增记录 · 从今天开始</button>
+            <button class="add-card-btn" @click="addNextDay">＋ 新增记录</button>
           </div>
         </div>
       </div>
@@ -503,7 +504,7 @@ function doDelete(){const day=delDay.value;if(!day)return
 function focusLi(day,idx){nextTick(()=>{const el=document.querySelector(`.daybody[data-date="${day.date}"]`);const lis=el?.querySelectorAll('ol>li');const d=lis&&lis[idx!=null?idx:0];if(!d)return
   d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)})}
 function addNextDay(){let date,day
-  if(!findDay(tNow)){date=tNow}
+  if(!days.value.length){date=tNow}
   else{const last=days.value.reduce((m,d)=>d.date>m?d.date:m,'');const nd=new Date((last?last:tNow)+'T00:00:00');nd.setDate(nd.getDate()+1);date=dstr(nd)}
   pushSnap('新增 '+dayLabel(date))
   day=findDay(date)
@@ -542,7 +543,7 @@ async function load(){loading.value=true;loadError.value=''
     if(days.value.length){const last=days.value[days.value.length-1]
       try{const info=await projectApi.log(pid.value,last.date);if(info.dayLog&&info.lastVersion&&!same(snapDay(last),info.lastVersion.items.map(i=>[i.text||'',!!i.done])))unsavedPrompt.value=true}catch{}}
     days.value.forEach(renderBody)
-    requestAnimationFrame(()=>{days.value.forEach(renderBody);maybeRemind();scrollToBottomEntry()})
+    requestAnimationFrame(()=>{days.value.forEach(renderBody);scrollToBottomEntry()})
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})).filter(i=>i.text!==''||(i.img&&i.img.length))}
@@ -586,7 +587,7 @@ function parseLineDate(line){let s=fw(line).trim()
   if(m)return resolveMd(+m[1],+m[2])
   return null}
 function stripMark(t){let s=fw(t).trim();let q
-  do{q=s.replace(/^(\s*[-*•·]+\s+|\s*\d{1,3}\s*[.、)]\s+|\s*[#>]\s+)/,'');if(q===s)break;s=q}while(true)
+  do{q=s.replace(/^(\s*[-*•·]+\s+|\s*\d{1,3}\s*[.、)](?!\d)\s*|\s*[#>]\s+)/,'');if(q===s)break;s=q}while(true)
   return s}
 function isWeekdayHeading(t){return /^(星期[一二三四五六日天]|周[一二三四五六日天])$/.test(t)}
 function isDoneLine(t){return /^[✓✔×x]|[\[（(]\s*(x|√|✓|完成)\s*[\]）)]|完成\s*$/.test(t)}
@@ -748,16 +749,20 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .del-day{border:none;background:var(--surface-2);color:var(--text-2);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
 .del-day:hover{background:var(--red);color:#fff}
 .daybody{outline:none;min-height:46px;padding:8px 56px 18px 20px;position:relative}
+.spin-wrap{position:fixed;inset:0;z-index:150;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:color-mix(in srgb,var(--bg) 55%, transparent);backdrop-filter:blur(2px)}
+.spin{width:40px;height:40px;border-radius:50%;border:3px solid var(--surface-2);border-top-color:var(--accent);animation:sp .8s linear infinite}
+.spin-t{color:var(--text-2);font-size:13px}
+@keyframes sp{to{transform:rotate(360deg)}}
 .day-media{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 20px 10px calc(20px + 1.5em);border-top:1px dashed var(--border);margin-top:2px}
 .day-images{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 20px 4px calc(20px + 1.5em)}
 .day-images .thumb{position:relative;width:76px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex:none;background:var(--surface-2)}
 .day-images .thumb img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
 .day-images .thumb .rm{position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-style:normal;font-size:12px;line-height:15px;text-align:center;cursor:pointer;opacity:0;transition:opacity .15s}
 .day-images .thumb:hover .rm{opacity:1}
-.img-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
+ .img-add{display:inline-flex;align-items:center;gap:4px;border:1.5px dashed var(--text-2);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
 .img-add:hover{border-color:var(--accent);color:var(--accent)}
 .img-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
-.mf-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
+ .mf-add{display:inline-flex;align-items:center;gap:4px;border:1.5px dashed var(--text-2);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
 .mf-add:hover{border-color:var(--accent);color:var(--accent)}
 .mf-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .mf-list{display:flex;flex-wrap:wrap;gap:6px}

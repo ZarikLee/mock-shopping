@@ -29,6 +29,10 @@
           </div>
           <p v-if="!projects.length" class="pd-hint">还没有项目，点“＋新建”创建</p>
         </div>
+        <div class="ftabs">
+          <button class="ftab" :class="{ on: route.path.startsWith('/log/') }" @click="openProject(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M8 13h4"/></svg>每日待办</button>
+          <button class="ftab" :class="{ on: route.path.startsWith('/files/') }" @click="goFiles(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>云文件管理</button>
+        </div>
         <div class="sb-foot">
           <button class="sb-btn" @click="settingsOpen = true">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -233,6 +237,8 @@ const currentProjId = computed(() => (route.path.startsWith('/log/') ? String(ro
 const pdOpen = ref(false)
 const pdRef = ref(null)
 const currentName = computed(() => { const p = projects.value.find(x => String(x.id) === currentProjId.value); return p ? p.name : '' })
+const firstId = computed(() => projects.value.length ? String(projects.value[0].id) : '')
+const goFiles = id => { if (!id) return; pdOpen.value = false; router.push('/files/' + id); if (mobile.value) drawerOpen.value = false }
 const pickProj = id => { pdOpen.value = false; if (id) { router.push('/log/' + id); if (mobile.value) drawerOpen.value = false } }
 const newProj = () => { pdOpen.value = false; showNewProj.value = true }
 const onPdDown = e => { if (pdRef.value && pdOpen.value && !pdRef.value.contains(e.target)) pdOpen.value = false }
@@ -292,6 +298,11 @@ onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document
 .pd-ok { color: var(--accent); }
 .pd-empty { text-align: center; color: var(--text-2); font-size: 12px; padding: 10px; }
 .pd-hint { font-size: 12px; color: var(--text-2); padding: 0 6px; }
+.ftabs { display: flex; flex-direction: column; gap: 4px; margin: 2px 0 10px; }
+.ftab { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: none; background: transparent; color: var(--text-2); font-size: 13px; border-radius: 8px; cursor: pointer; text-align: left; }
+.ftab svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.ftab:hover { background: var(--surface-2); color: var(--text); }
+.ftab.on { background: var(--accent); color: #fff; }
 .sec-title { font-size: 11px; color: var(--text-2); text-transform: uppercase; padding: 0 6px 8px; }
 .proj-nav { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; min-height: 0; }
 .proj-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: none; background: transparent; color: var(--text); border-radius: 8px; cursor: pointer; font-size: 14px; text-align: left; }

@@ -16,6 +16,12 @@ const routes = [
     component: () => import('../views/MainLayout.vue'),
     children: [{ path: '', name: 'logPage', component: () => import('../views/LogView.vue') }],
   },
+  {
+    path: '/files/:projectId',
+    name: 'files',
+    component: () => import('../views/MainLayout.vue'),
+    children: [{ path: '', name: 'filesPage', component: () => import('../views/FilesView.vue') }],
+  },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 
