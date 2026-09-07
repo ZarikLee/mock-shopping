@@ -97,6 +97,26 @@ router.get('/sms-debug/spug', async (req, res) => {
   }
 });
 
+router.get('/sms-debug/send', async (req, res) => {
+  const t0 = Date.now();
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(SMS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: '13800138000', code: '123456' }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    const txt = await r.text();
+    res.json({ ok: true, http: r.status, ms: Date.now() - t0, body: txt.slice(0, 300) });
+  } catch (e) {
+    clearTimeout(t);
+    res.json({ ok: false, ms: Date.now() - t0, name: (e && e.name) || '', message: (e && e.message) || String(e), cause: e && e.cause ? String(e.cause) : null });
+  }
+});
+
 router.post('/sms', async (req, res, next) => {
   try {
     const { phone } = req.body || {};
