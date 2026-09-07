@@ -17,21 +17,22 @@
 
       <form @submit.prevent="submit" class="form">
         <label class="field">
-          <span class="f-label">{{ mode === 'login' ? '账号' : '手机号' }}</span>
-          <input v-model.trim="form.account" class="f-input" :placeholder="mode === 'login' ? '输入账号' : '请输入 11 位手机号'" autocomplete="username" />
+          <span class="f-label">{{ mode === 'login' ? '手机号' : '手机号' }}</span>
+          <input v-model.trim="form.account" class="f-input" placeholder="请输入 11 位手机号" autocomplete="username" />
         </label>
         <div v-if="mode === 'register'" class="field code-row">
           <input v-model.trim="form.code" class="f-input" placeholder="6 位短信验证码" maxlength="6" />
           <button class="code-btn" :disabled="sending || countdown > 0 || !validPhone" @click="sendCode">{{ countdown > 0 ? countdown + 's 后重发' : '获取验证码' }}</button>
         </div>
-        <label v-if="mode === 'register'" class="field">
-          <span class="f-label">昵称（可选）</span>
-          <input v-model.trim="form.nickname" class="f-input" placeholder="怎么称呼你" />
-        </label>
         <label class="field">
           <span class="f-label">密码</span>
-          <input v-model="form.password" type="password" class="f-input" placeholder="设置密码（至少 6 位）" autocomplete="new-password" />
+          <input v-model="form.password" type="password" class="f-input" :placeholder="mode === 'login' ? '输入密码' : '设置密码（至少 6 位）'" :autocomplete="mode === 'login' ? 'current-password' : 'new-password'" />
         </label>
+        <div v-if="mode === 'register'" class="meter">
+          <i :class="['seg',{ on: pwScore >= 1 }]"></i>
+          <i :class="['seg',{ on: pwScore >= 2 }]"></i>
+          <i :class="['seg',{ on: pwScore >= 3 }]"></i>
+        </div>
         <label class="agree">
           <input type="checkbox" v-model="consent" />
           <span class="ag-text">我已阅读并同意<a class="ag-link" @click.prevent="ppOpen = true">《纸上用户隐私协议》</a></span>
@@ -97,6 +98,12 @@ const ppOpen = ref(false)
 const countdown = ref(0)
 const form = reactive({ account: '', nickname: '', password: '', code: '' })
 const validPhone = computed(() => /^1\d{10}$/.test(form.account.trim()))
+const pwScore = computed(() => { const v = form.password || ''; if (!v) return 0
+  let sc = 1
+  if (v.length >= 8) sc++
+  if (/[a-zA-Z]/.test(v) && /\d/.test(v) && v.length >= 6) sc++
+  if (/[^a-zA-Z0-9]/.test(v)) sc++
+  return Math.max(1, Math.min(3, sc)) })
 let cdTimer = null
 const sendCode = async () => {
   error.value = ''
@@ -112,7 +119,7 @@ const switchMode = m => { mode.value = m; error.value = '' }
 const submit = async () => {
   error.value = ''
   if (mode.value === 'login') {
-    if (!form.account || !form.password) { error.value = '请输入账号和密码'; return }
+    if (!form.account || !form.password) { error.value = '请输入手机号和密码'; return }
   } else {
     if (!validPhone.value) { error.value = '请输入正确的 11 位手机号'; return }
     if (!/^\d{6}$/.test(form.code || '')) { error.value = '请填写收到的 6 位验证码'; return }
@@ -162,6 +169,11 @@ const submit = async () => {
 .code-row .f-input { flex: 1; }
 .code-btn { flex-shrink: 0; padding: 0 14px; border-radius: 10px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 13px; cursor: pointer; height: 46px; }
 .code-btn:disabled { opacity: .5; cursor: not-allowed; }
+.meter { display: flex; gap: 6px; margin-top: -8px; }
+.meter .seg { flex: 1; height: 4px; border-radius: 3px; background: var(--surface-2); transition: background .2s; }
+.meter .seg:nth-child(1).on { background: var(--red); }
+.meter .seg:nth-child(2).on { background: #ff9500; }
+.meter .seg:nth-child(3).on { background: var(--green); }
 .pp-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .pp-card { width: 100%; max-width: 600px; max-height: 82vh; background: var(--surface); border-radius: 16px; padding: 22px 24px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
 .pp-card h3 { margin: 0; font-size: 17px; }

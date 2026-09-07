@@ -29,7 +29,10 @@
       <!-- 第 2 步：建首个项目 -->
       <div v-else class="card">
         <div class="pill">{{ roleText }}</div>
-        <h2 class="h2">创建你的第一个{{ roleText === '学生' ? '学校' : '企业' }}</h2>
+        <h2 class="h2">给自己起个名字，再创建第一个{{ roleText === '学生' ? '学校' : '企业' }}</h2>
+        <label class="field"><span class="fl">用户名 / 昵称</span>
+          <input v-model.trim="nickname" class="fi" placeholder="怎么称呼你" maxlength="20" />
+        </label>
         <label class="field"><span class="fl">名称</span>
           <input v-model.trim="form.name" class="fi" :placeholder="roleText === '学生' ? '如：中山大学' : '如：某某科技'" />
         </label>
@@ -38,7 +41,7 @@
         </label>
         <p class="err" v-if="error">{{ error }}</p>
         <div class="row">
-          <button class="btn primary" :disabled="!form.name.trim() || !form.startDate" @click="finish">
+          <button class="btn primary" :disabled="!form.name.trim() || !form.startDate || !nickname.trim()" @click="finish">
             创建并开始记录
           </button>
         </div>
@@ -63,6 +66,7 @@ const theme = useThemeStore()
 
 const step = ref('role')
 const role = ref(user.user?.role || '')
+const nickname = ref(user.user?.nickname && user.user.nickname !== '用户' ? user.user.nickname : '')
 const form = ref({ name: '', startDate: '' })
 const error = ref('')
 const hasProjects = ref(0)
@@ -75,8 +79,10 @@ function pick(r) {
 }
 async function finish() {
   error.value = ''
+  if (!nickname.value.trim()) { error.value = '请填写用户名 / 昵称'; return }
+  if (!form.value.name.trim() || !form.value.startDate) { error.value = '请填写名称和开始日期'; return }
   try {
-    await user.updateProfile({ role: role.value, nickname: user.user?.nickname || '用户' })
+    await user.updateProfile({ role: role.value, nickname: nickname.value.trim() })
     const res = await projectApi.create({ name: form.value.name.trim(), startDate: form.value.startDate })
     router.push('/log/' + (res?.id || res?.project?.id))
   } catch (e) { error.value = e?.error || '创建失败' }
