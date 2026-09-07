@@ -378,7 +378,8 @@ function drawMap(){
   mw.style.width=Math.round(contentW)+'px'
   mw.style.transform='scale('+r+')'
   updateMirror()
-  mw.innerHTML=list.map(el=>el.outerHTML).join('')
+  mw.innerHTML=''
+  for (const el of list) { const c = el.cloneNode(true); c.querySelectorAll('.day-images,.day-media,.thumb,.rm').forEach(n => n.remove()); mw.appendChild(c) }
   ;[...mw.querySelectorAll('.day-card')].forEach(card=>{
     const lis=[...card.querySelectorAll('ol>li')]
     const undone=lis.some(li=>!li.classList.contains('done'))

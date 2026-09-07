@@ -88,12 +88,7 @@ async function getVersions(logId) {
 
 router.get('/', async (req, res, next) => {
   try {
-    const projects = await queryAll('projects', { userId: req.user.id });
-    const out = [];
-    for (const p of projects) {
-      const logs = await queryAll('day_logs', { projectId: p.id });
-      out.push({ ...p, logCount: logs.length, lastLogDate: logs.reduce((m, l) => (l.date > m ? l.date : m), '') || null });
-    }
+    const out = await queryAll('projects', { userId: req.user.id });
     out.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)) || b.id - a.id);
     res.json(out);
   } catch (e) { next(e); }
