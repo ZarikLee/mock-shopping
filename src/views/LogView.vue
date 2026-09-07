@@ -182,8 +182,8 @@ const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
 const aiOpen=ref(false)
 const aiPos=reactive({top:70,right:20})
-const pickImgEl=ref(null)
-const pickFileEl=ref(null)
+const pickImg=ref(null)
+const pickFile=ref(null)
 let imgPick=null
 let filePick=null
 function placeAi(){const b=document.querySelector('.fmt-ai');if(!b)return
@@ -353,24 +353,26 @@ function appendMedia(li,it,day,idx){if(!day)return
     const im=document.createElement('img');im.src=u;im.loading='lazy'
     im.addEventListener('click',()=>{window.open(u,'_blank')})
     const x=document.createElement('i');x.className='rm';x.textContent='×'
-    x.addEventListener('click',ev=>{ev.stopPropagation();(day.items[idx].img||[]).splice(ii,1);renderBody(day);afterAttach(day)})
+    x.addEventListener('mousedown',ev=>{ev.preventDefault();ev.stopPropagation()})
+    x.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();(day.items[idx].img||[]).splice(ii,1);renderBody(day);afterAttach(day)})
     w.appendChild(im);w.appendChild(x);box.appendChild(w)})
-  const add=document.createElement('button');add.type='button';add.className='add-im'
+  const add=document.createElement('button');add.type='button';add.className='add-im';add.setAttribute('contenteditable','false');add.tabIndex=-1
   add.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>图片'
+  add.addEventListener('mousedown',ev=>{ev.preventDefault();ev.stopPropagation()})
   add.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();openImgPick(day,idx)})
   box.appendChild(add)
   li.appendChild(box)}
 function afterAttach(day){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),400)}
-function openImgPick(day,i){imgPick={day,i};pickImgEl.value&&pickImgEl.value.click()}
-function onPickImg(){const inp=pickImgEl.value;if(!inp)return;const fs=inp.files;inp.value='';if(!fs||!fs.length)return
+function openImgPick(day,i){imgPick={day,i};pickImg.value&&pickImg.value.click()}
+function onPickImg(){const inp=pickImg.value;if(!inp)return;const fs=inp.files;inp.value='';if(!fs||!fs.length)return
   const job=imgPick;imgPick=null;if(!job)return
   const day=job.day,i=job.i
   if(!day.items[i])day.items[i]={text:'',done:false,img:[]}
   if(!day.items[i].img)day.items[i].img=[]
   const reads=[...fs].map(f=>new Promise(res=>{if(f.size>3*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res(String(r.result));r.readAsDataURL(f)}))
   Promise.all(reads).then(list=>{list.filter(Boolean).forEach(u=>day.items[i].img.push(u));renderBody(day);afterAttach(day)})}
-function openFilePick(day){filePick=day;pickFileEl.value&&pickFileEl.value.click()}
-function onPickFile(){const inp=pickFileEl.value;if(!inp)return;const fs=inp.files;inp.value='';if(!fs||!fs.length)return
+function openFilePick(day){filePick=day;pickFile.value&&pickFile.value.click()}
+function onPickFile(){const inp=pickFile.value;if(!inp)return;const fs=inp.files;inp.value='';if(!fs||!fs.length)return
   const day=filePick;filePick=null;if(!day)return
   if(!Array.isArray(day.files))day.files=[]
   const reads=[...fs].map(f=>new Promise(res=>{if(f.size>8*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res({name:f.name,type:f.type||'',url:String(r.result)});r.readAsDataURL(f)}))
@@ -396,7 +398,7 @@ function readBody(day){const el=document.querySelector(`.daybody[data-date="${da
   const lis=[...el.querySelectorAll(':scope ol > li')];const old=day.items||[]
   day.items=lis.map((li,idx)=>{const c=li.cloneNode(true);c.querySelectorAll('.li-imgs').forEach(n=>n.remove())
     return {text:(c.textContent||'').replace(/\u00a0/g,'').trim(),done:li.classList.contains('done'),img:Array.isArray(old[idx]&&old[idx].img)?old[idx].img.slice():[]} })}
-function onInput(day){readBody(day);requestAnimationFrame(()=>{layout(day);scheduleMap()});const key=snapDay(day)
+function onInput(day){readBody(day);if(!day.items.length){day.items=[{text:'',done:false}];renderBody(day)}requestAnimationFrame(()=>{layout(day);scheduleMap()});const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),900);day._last=key}}
 function onKey(e,day){
   if((e.key==='Backspace'||e.key==='Delete') && day.items.length===1 && !day.items[0].text.trim()){ e.preventDefault(); return }
