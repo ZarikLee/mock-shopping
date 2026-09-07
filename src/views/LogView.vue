@@ -73,10 +73,10 @@
             <div class="daybody" contenteditable="true" spellcheck="false" :data-date="day.date"
               @input="e => onInput(day)" @keydown="e => onKey(e, day)" @blur="e => blurDay(day, e)"></div>
             <div class="day-media">
-              <button class="mf-add" @click="openFilePick(day)"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>附件</button>
               <div v-if="(day.files || []).length" class="mf-list">
-                <a v-for="(f, fi) in day.files" :key="fi" class="mf-chip" :href="f.url" :download="f.name" @click.stop><svg viewBox="0 0 24 24" width="13" height="13"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>{{ f.name }}</a>
+                <button v-for="(f, fi) in day.files" :key="fi" class="mf-chip" @click="previewFile(f)"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>{{ f.name }}</button>
               </div>
+              <button class="mf-add" @click="openFilePick(day)"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>附件</button>
             </div>
           </section>
 
@@ -372,6 +372,7 @@ function onPickImg(){const inp=pickImg.value;if(!inp)return;const fs=inp.files;i
   const reads=[...fs].map(f=>new Promise(res=>{if(f.size>3*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res(String(r.result));r.readAsDataURL(f)}))
   Promise.all(reads).then(list=>{list.filter(Boolean).forEach(u=>day.items[i].img.push(u));renderBody(day);afterAttach(day)})}
 function openFilePick(day){filePick=day;pickFile.value&&pickFile.value.click()}
+function previewFile(f){if(f&&f.url){if(f.url.indexOf('data:image')===0||/^data:/.test(f.url)){const w=window.open('','_blank');if(w){w.document.write('<title>'+(f.name||'预览')+'</title><body style="margin:0"><img src="'+f.url+'" style="width:auto;max-width:100%;max-height:100vh"/></body>');w.document.close()}else{window.open(f.url,'_blank')}}else{window.open(f.url,'_blank')}}}
 function onPickFile(){const inp=pickFile.value;if(!inp)return;const fs=inp.files;inp.value='';if(!fs||!fs.length)return
   const day=filePick;filePick=null;if(!day)return
   if(!Array.isArray(day.files))day.files=[]
@@ -656,7 +657,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .del-day:hover{background:var(--red);color:#fff}
 .daybody{outline:none;min-height:46px;padding:8px 56px 18px 20px;position:relative}
 .day-media{display:flex;align-items:center;gap:8px;padding:8px 20px 10px;border-top:1px solid var(--border)}
-.mf-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer}
+.mf-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
 .mf-add:hover{border-color:var(--accent);color:var(--accent)}
 .mf-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .mf-list{display:flex;flex-wrap:wrap;gap:6px}
@@ -728,13 +729,12 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .daybody .rail button::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:1px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
 .daybody .rail button.on{background:#007aff}
 .daybody .rail button.on::after{left:22px}
-.daybody ol>li .li-media{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:0;opacity:0;transition:opacity .15s;margin-top:0}
-.daybody ol>li:hover .li-media,.daybody ol>li:focus-within .li-media{opacity:1}
+.daybody ol>li .li-media{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:0;opacity:1;margin:2px 0 0}
 .li-media .thumb{position:relative;display:inline-block}
 .li-media .thumb img{height:56px;max-width:220px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:zoom-in;display:block}
 .li-media .thumb .rm{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-style:normal;font-size:12px;line-height:15px;text-align:center;cursor:pointer;display:none}
 .li-media .thumb:hover .rm{display:block}
-.li-media .add-im{display:inline-flex;align-items:center;gap:3px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;height:22px}
+.li-media .add-im{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
 .li-media .add-im svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .li-media .add-im:hover{border-color:var(--accent);color:var(--accent)}
 </style>
