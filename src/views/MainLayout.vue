@@ -74,11 +74,25 @@
           <div v-else-if="setPage === 'about'" class="s-page about">
             <div class="about-logo"><img src="/papertodo_logo.png?v=2" alt="纸上" /></div>
             <p class="about-name">纸上 · Paper Todo</p>
-            <p class="about-ver">版本 v0.9.0</p>
+            <p class="about-ver">v1.0.0 · 全民公测</p>
             <p class="about-line">像写日记一样，记录每天的 todo</p>
             <div class="kv"><span>类型</span><span>Web / 移动端自适应</span></div>
             <div class="kv"><span>数据</span><span>云端存储</span></div>
             <div class="kv"><span>AI 助手</span><span>小纸 · DeepSeek</span></div>
+            <div class="chg">
+              <p class="chg-t">版本日志</p>
+              <ul>
+                <li><b>v1.0.0-beta</b> · 手机号验证码注册登录</li>
+                <li>· 任务图片 + 卡片附件上传：统一缩略图、在线预览、删除、下载</li>
+                <li>· 消息通知中心：管理员回复提醒、红点角标、一键已读（15s 热更新）</li>
+                <li>· 反馈直达管理员并逐条回复</li>
+                <li>· 导入任务：兼容多种日期格式，支持上一版本 / 下一版本</li>
+                <li>· 代码级缩略图：恒定宽度、内容定位、点击直达；日历热力视图</li>
+                <li>· AI 小纸：写周报 / 总结 / 统计 / 明日计划等技能，整段成稿输出</li>
+                <li>· 每日一记：连续编辑、自动保存、iOS 式完成开关、删除二次确认</li>
+                <li>· 公测提示：更新频繁期欢迎随时在「建议反馈」提交建议</li>
+              </ul>
+            </div>
           </div>
 
           <!-- 建议反馈 -->
@@ -334,6 +348,11 @@ onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document
 .fb-empty { text-align: center; color: var(--text-2); font-size: 13px; padding: 14px; }
 
 .about { text-align: center; align-items: center; }
+.chg { width: 100%; text-align: left; margin-top: 6px; }
+.chg-t { font-size: 12px; color: var(--text-2); margin: 0 0 6px; }
+.chg ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.chg li { font-size: 12px; color: var(--text); line-height: 1.5; border-left: 2px solid var(--accent); padding-left: 8px; }
+.chg li b { color: var(--accent); }
 .about-logo { width: 58px; height: 58px; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-top: 6px; }
 .about-logo img { width: 100%; height: 100%; object-fit: cover; }
 .about-name { font-size: 17px; font-weight: 700; margin: 10px 0 2px; }

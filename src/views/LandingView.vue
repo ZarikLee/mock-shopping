@@ -11,7 +11,7 @@
           <a href="#features">功能</a>
           <a href="#how">怎么用</a>
           <a href="#ai">AI 小纸</a>
-          <a href="#cta">立即开始</a>
+          
         </nav>
         <div class="nav-actions">
           <button class="round" @click="theme.toggle" :title="theme.theme === 'dark' ? '切换到日间' : '切换到暗色'">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
@@ -129,12 +129,6 @@
     </section>
 
     <!-- 最终 CTA -->
-    <section class="cta rv" id="cta">
-      <h2>现在就开始，把「今天」留住</h2>
-      <p>免费使用，无需安装，浏览器打开即写。</p>
-      <button class="primary big glow" @click="go('/login')">开始使用 <span class="arr">→</span></button>
-    </section>
-
     <footer class="foot">
       <img src="/papertodo_logo.png?v=2" alt="纸上" />
       <span>纸上 · Paper Todo</span>
@@ -169,12 +163,12 @@ const stats = [
   { from: 0, to: 0, suffix: ' 学习成本', label: '打开就会写' },
 ]
 const feats = [
-  { t: '日期即“页面”', d: '一天一张卡片，像写日记一样连续输入，回车自动生成下一项，字体字号随你调。', ico: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M4 9h16"/><path d="M9 13h3M9 16h6"/></svg>' },
-  { t: '滑动即完成', d: '每条任务右侧的 iOS 式开关，轻轻一滑标注完成，还能一键批量收尾历史遗留。', ico: '<svg viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="4"/><circle cx="6" cy="12" r="2"/><circle cx="6" cy="12" r="2"/></svg>' },
-  { t: '自动保存', d: '随写随存，断网、关页都不丢。右上角实时显示“已自动保存”时间戳。', ico: '<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>' },
-  { t: '代码级缩略图', d: '右侧缩略图像编辑器 minimap，文字排版、未完成橙色一目了然，拖一下就到对应日期。', ico: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h6"/><rect x="16" y="14" width="5" height="4" rx="1"/></svg>' },
-  { t: '日历热力', d: '月历上每天按完成度点亮蓝色深浅方块，5/5 最深，0/5 留白，缺勤一目了然。', ico: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M4 9h16"/><rect x="8" y="13" width="3" height="3" rx="1" fill="#34c759"/><rect x="12" y="13" width="3" height="3" rx="1" fill="#0a84ff"/><rect x="16" y="13" width="3" height="3" rx="1" fill="#5e5ce6"/></svg>' },
-  { t: '私有反馈直达管理员', d: '遇到 bug 直接提交，管理员逐条回复；周报/统计等技能型 AI 输出完整成稿。', ico: '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 20l1-5.2A8.5 8.5 0 1 1 21 11.5z"/></svg>' },
+  { t: '像写日记一样记任务', d: '一天一张卡片，回车即写下一项；字体字号随你调，随手滑动标完成，写错可上/下一版本回退。', ico: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>' },
+  { t: '图片与附件', d: '每条任务下可传图、缩略图统一大小可预览；每张卡片可挂文件，在线预览 + 下载 + 悬停删除。', ico: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>' },
+  { t: 'AI 小纸 · 会写东西', d: '「帮我写周报」即基于你的真实记录给出整段成稿；还能总结、统计完成率、规划明天。', ico: '<svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>' },
+  { t: '日历热力', d: '月历每天按完成度点亮深浅不一的蓝色方块，5/5 最深、0/5 留白，一眼看出缺勤与节奏。', ico: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M4 9h16"/><rect x="8" y="13" width="3" height="3" fill="#34c759"/><rect x="12" y="13" width="3" height="3" fill="#0a84ff"/><rect x="16" y="13" width="3" height="3" fill="#5e5ce6"/></svg>' },
+  { t: '代码级缩略图', d: '右侧 minimap 像编辑器地图：内容恒定缩放、完成橙色一目了然，点击任意位置直达对应记录。', ico: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h6"/><rect x="16" y="14" width="5" height="4" rx="1"/></svg>' },
+  { t: '反馈 → 管理员回复', d: '建议直达管理员并收到站内消息回复；新消息红点角标实时提醒，可一键已读。', ico: '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 20l1-5.2A8.5 8.5 0 1 1 21 11.5z"/><circle cx="12" cy="11.5" r="1.6"/></svg>' },
 ]
 const steps = [
   { t: '创建你的学校 / 企业', d: '选学生或职场人，建一个项目，设定开始日期。' },
