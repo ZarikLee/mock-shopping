@@ -14,6 +14,7 @@
         </div>
         <div class="t-actions">
           <button class="tb blue" @click="importOpen = true">导入任务</button>
+<button class="tb" @click="openExport">导出记录</button>
           <span class="bell-wrap">
             <button class="cal-btn bell-btn" @click="bellToggle" title="消息通知">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
@@ -178,6 +179,26 @@
     </transition>
     <transition name="fade"><div v-if="toast" class="toast">{{ toast }}</div></transition>
 
+    <!-- 导出记录 -->
+    <transition name="fade">
+      <div v-if="exportOpen" class="center-mask" @click.self="exportOpen = false">
+        <div class="center-card">
+          <h3>导出记录</h3>
+          <p class="tip">选择日期范围（可不填，留空则导出全部），导出为 txt 文本。</p>
+          <div class="row range">
+            <label class="rlabel">从<input type="date" class="f-input rinput" v-model="exStart" /></label>
+            <span class="rsep">至</span>
+            <label class="rlabel">到<input type="date" class="f-input rinput" v-model="exEnd" /></label>
+          </div>
+          <p class="tip">将导出编号后的任务文字；图片仅提示张数，附件列出文件名。</p>
+          <div class="row">
+            <button class="ghost" @click="exportOpen = false">取消</button>
+            <button class="primary" @click="doExport">导出 txt</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- 删除确认 -->
     <transition name="fade">
       <div v-if="delDay" class="center-mask" @click.self="delDay = null">
@@ -235,6 +256,9 @@ const nowStamp=()=>{const d=new Date();return `${pad2(d.getHours())}:${pad2(d.ge
 const savedTip=computed(()=>hasDirty.value?'正在编辑…':(lastSaved.value?('已自动保存 '+lastSaved.value):'已自动保存'))
 const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);const confirmRollback=ref(false)
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
+const exportOpen=ref(false)
+const exStart=ref('')
+const exEnd=ref('')
 const aiOpen=ref(false)
 const aiPos=reactive({top:70,right:20})
 const pickImg=ref(null)
@@ -644,6 +668,35 @@ async function doImport(){if(!parsed.value.length)return
   days.value.forEach(renderBody)
   importOpen.value=false;importText.value='';parsed.value=[];importPreview.value=''
   showToast('已导入 '+added+' 条任务，可点“上一版本”撤回')}
+function openExport(){ exStart.value=''; exEnd.value=''; exportOpen.value=true }
+function doExport(){
+  const start = exStart.value || '0000-00-00'
+  const end = exEnd.value || '9999-99-99'
+  const list = days.value.filter(d => d.date >= start && d.date <= end).slice().sort((a, b) => a.date.localeCompare(b.date))
+  if (!list.length) { showToast('该时间段没有记录'); return }
+  const lines = []
+  lines.push('纸上 · Paper Todo 导出记录')
+  const rangeTxt = (exStart.value || exEnd.value) ? (`${exStart.value || '最早'} ~ ${exEnd.value || '今天'}`) : '全部'
+  lines.push('范围：' + rangeTxt + '　共 ' + list.length + ' 天')
+  lines.push('导出时间：' + nowStamp() + '　由小纸生成')
+  lines.push('')
+  list.forEach(d => {
+    lines.push(d.date + (d.weekday ? ' ' + d.weekday : ''))
+    ;(d.items || []).forEach((it, i) => { lines.push((i + 1) + '. ' + (it.text || '') + (it.done ? ' ✓' : '')) })
+    if (d.images && d.images.length) lines.push('（含图片 ' + d.images.length + ' 张，图片内容未包含在文本中）')
+    if (d.files && d.files.length) lines.push('附件：' + d.files.map(f => f.name).join('、'))
+    lines.push('')
+  })
+  const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/plain;charset=utf-8' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  const f = n => String(n).padStart(2, '0')
+  a.download = '纸上记录_' + (exStart.value || 'all') + '-' + (exEnd.value || 'all') + '.txt'
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000)
+  exportOpen.value = false
+  showToast('已导出 ' + list.length + ' 天记录')
+}
 function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
 function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearTimeout(timers[day.date]);autosave(day)}})}
 
@@ -817,6 +870,10 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 
 .center-mask{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);z-index:120;padding:20px}
 .center-card{width:340px;background:var(--surface);border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px}
+.range{display:flex;align-items:center;gap:8px;margin:2px 0}
+.rlabel{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2)}
+.rinput{flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px}
+.rsep{color:var(--text-2)}
 .center-card.wide{width:480px;max-width:94vw}
 .center-card h3{margin:0}
 .center-card .tip{color:var(--text-2);font-size:12px;margin:0}
