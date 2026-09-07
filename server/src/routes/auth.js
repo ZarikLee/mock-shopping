@@ -44,11 +44,12 @@ async function sendSmsCode(to, code) {
   }
 }
 
-function cleanCodes() {
+async function cleanCodes() {
   const now = Date.now();
-  queryAll('sms_codes').forEach(c => {
-    if (c.expiresAt <= now) remove('sms_codes', c.id);
-  });
+  const all = await queryAll('sms_codes');
+  for (const c of all) {
+    if (c.expiresAt <= now) await remove('sms_codes', c.id);
+  }
 }
 
 function publicUser(user) {
@@ -61,7 +62,7 @@ function signToken(user) {
   return jwt.sign({ id: user.id, account: user.account }, SECRET, { expiresIn: '7d' });
 }
 
-export function authMiddleware(req, res, next) {
+export async function authMiddleware(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) {
@@ -69,7 +70,7 @@ export function authMiddleware(req, res, next) {
   }
   try {
     const payload = jwt.verify(token, SECRET);
-    const user = queryOne('users', { id: payload.id });
+    const user = await queryOne('users', { id: payload.id });
     if (!user) {
       return res.status(401).json({ error: '用户不存在' });
     }
@@ -124,8 +125,9 @@ router.post('/sms', async (req, res, next) => {
     if (!/^1\d{10}$/.test(p)) {
       return res.status(400).json({ error: '请输入正确的 11 位手机号' });
     }
-    cleanCodes();
-    const recent = queryAll('sms_codes').find(c => c.phone === p);
+    await cleanCodes();
+    const smsAll = await queryAll('sms_codes');
+    const recent = smsAll.find(c => c.phone === p);
     if (recent && recent.expiresAt - Date.now() > 50 * 1000) {
       return res.status(429).json({ error: '发送太频繁，请稍后再试' });
     }
@@ -135,7 +137,7 @@ router.post('/sms', async (req, res, next) => {
     } catch (e) {
       return res.status(502).json({ error: '短信发送失败：' + e.message });
     }
-    insert('sms_codes', { phone: p, code, createdAt: Date.now(), expiresAt: Date.now() + 5 * 60 * 1000 });
+    await insert('sms_codes', { phone: p, code, createdAt: Date.now(), expiresAt: Date.now() + 5 * 60 * 1000 });
     return res.json({ ok: true });
   } catch (err) {
     next(err);
@@ -156,18 +158,19 @@ router.post('/register', async (req, res, next) => {
     if (!password) {
       return res.status(400).json({ error: '请填写密码' });
     }
-    cleanCodes();
-    const rec = queryAll('sms_codes').find(c => c.phone === phoneStr && c.code === codeStr);
+    await cleanCodes();
+    const smsAll = await queryAll('sms_codes');
+    const rec = smsAll.find(c => c.phone === phoneStr && c.code === codeStr);
     if (!rec || rec.expiresAt <= Date.now()) {
       return res.status(400).json({ error: '验证码错误或已过期' });
     }
-    remove('sms_codes', rec.id);
-    const exists = queryOne('users', { account: phoneStr });
+    await remove('sms_codes', rec.id);
+    const exists = await queryOne('users', { account: phoneStr });
     if (exists) {
       return res.status(400).json({ error: '该手机号已注册' });
     }
     const hash = await bcrypt.hash(String(password), 10);
-    const user = insert('users', {
+    const user = await insert('users', {
       account: phoneStr,
       password: hash,
       nickname: nickname && String(nickname).trim() ? String(nickname).trim() : '用户' + phoneStr.slice(-4),
@@ -186,9 +189,9 @@ router.post('/login', async (req, res, next) => {
     if (!account || !password) {
       return res.status(400).json({ error: '请填写账号和密码' });
     }
-    const user = queryOne('users', { account: String(account).trim() });
+    const user = await queryOne('users', { account: String(account).trim() });
     if (!user) {
-      return res.status(401).json({ error: '账号或密码错误' });
+      return res.status(401).json({ error: '手机号或密码错误' });
     }
     const ok = await bcrypt.compare(String(password), user.password);
     if (!ok) {
@@ -204,7 +207,7 @@ router.get('/me', authMiddleware, (req, res) => {
   return res.json({ user: req.user });
 });
 
-router.put('/profile', authMiddleware, (req, res, next) => {
+router.put('/profile', authMiddleware, async (req, res, next) => {
   try {
     const { role, nickname } = req.body || {};
     const updates = {};
@@ -223,11 +226,11 @@ router.put('/profile', authMiddleware, (req, res, next) => {
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: '没有需要更新的内容' });
     }
-    const user = queryOne('users', { id: req.user.id });
+    const user = await queryOne('users', { id: req.user.id });
     if (!user) {
       return res.status(404).json({ error: '用户不存在' });
     }
-    const updated = update('users', req.user.id, updates);
+    const updated = await update('users', req.user.id, updates);
     return res.json({ user: publicUser(updated) });
   } catch (err) {
     next(err);

@@ -11,8 +11,9 @@ const pad2 = n => String(n).padStart(2, '0');
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 
-function loadLogs(projectId) {
-  return queryAll('day_logs', { projectId })
+async function loadLogs(projectId) {
+  const rows = await queryAll('day_logs', { projectId });
+  return rows
     .map(l => ({
       date: String(l.date),
       weekday: wk(String(l.date)),
@@ -160,10 +161,9 @@ async function callDeepSeek(messages) {
   return data?.choices?.[0]?.message?.content || '';
 }
 
-function gatherContext(user, project) {
-  const logs = queryAll('day_logs', { projectId: project.id })
-    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
-    .slice(0, 7);
+async function gatherContext(user, project) {
+  const all = await queryAll('day_logs', { projectId: project.id });
+  const logs = all.sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 7);
   const days = logs.map(l => {
     const texts = (l.items || []).map(i => (i.done ? '[完成]' : '[未完成]') + (i.text || '')).filter(Boolean).join('；');
     return `${l.date}（${l.weekday}）：${texts || '（空）'}`;
@@ -181,13 +181,13 @@ router.post('/', authMiddleware, async (req, res) => {
   const { message, messages } = req.body || {};
   const text = String(message || '').trim();
   if (!text) return res.status(400).json({ error: '空消息' });
-  const project = queryOne('projects', { id: Number(req.body.projectId), userId: req.user.id });
+  const project = await queryOne('projects', { id: Number(req.body.projectId), userId: req.user.id });
   if (!project) return res.status(404).json({ error: '项目不存在' });
-  const user = queryOne('users', { id: req.user.id });
-  const context = gatherContext(user, project);
+  const user = await queryOne('users', { id: req.user.id });
+  const context = await gatherContext(user, project);
 
   // —— Skill：命中具体功能时直接给出完整、真实的结果 ——
-  const logs = loadLogs(project.id);
+  const logs = await loadLogs(project.id);
   const skilled = detectSkill(text, logs, project);
   if (skilled) return res.json({ reply: skilled, skill: true });
 
