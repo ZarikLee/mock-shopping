@@ -215,7 +215,7 @@ const load = async () => {
   try { const res = await projectApi.list(); projects.value = Array.isArray(res) ? res : (res.projects || []) }
   catch { projects.value = [] }
 }
-const currentProjId = computed(() => route.name === 'log' ? String(route.params.projectId) : '')
+const currentProjId = computed(() => (route.path.startsWith('/log/') ? String(route.params.projectId || '') : ''))
 const pdOpen = ref(false)
 const pdRef = ref(null)
 const currentName = computed(() => { const p = projects.value.find(x => String(x.id) === currentProjId.value); return p ? p.name : '' })

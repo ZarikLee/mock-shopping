@@ -425,9 +425,10 @@ function doDelete(){const day=delDay.value;if(!day)return
 function focusLi(day,idx){nextTick(()=>{const el=document.querySelector(`.daybody[data-date="${day.date}"]`);const lis=el?.querySelectorAll('ol>li');const d=lis&&lis[idx!=null?idx:0];if(!d)return
   d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)})}
 function addNextDay(){let date,day
-  if(!findDay(tNow)){date=tNow;day=findDay(tNow)||norm({date:tNow,weekday:wk(tNow),items:[]})}
-  else{const last=days.value.reduce((m,d)=>d.date>m?d.date:m,'');const nd=new Date((last?last:tNow)+'T00:00:00');nd.setDate(nd.getDate()+1);date=dstr(nd);day=findDay(date)}
+  if(!findDay(tNow)){date=tNow}
+  else{const last=days.value.reduce((m,d)=>d.date>m?d.date:m,'');const nd=new Date((last?last:tNow)+'T00:00:00');nd.setDate(nd.getDate()+1);date=dstr(nd)}
   pushSnap('新增 '+dayLabel(date))
+  day=findDay(date)
   if(!day){day=norm({date,weekday:wk(date),items:[]});days.value.push(day)}
   days.value.sort((a,b)=>a.date<b.date?-1:1)
   renderBody(day);onInput(day);focusLi(day,0);document.querySelector('.daybody[data-date="'+date+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})}
