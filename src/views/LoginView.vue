@@ -29,9 +29,12 @@
           <input v-model="form.password" type="password" class="f-input" :placeholder="mode === 'login' ? '输入密码' : '设置密码（至少 6 位）'" :autocomplete="mode === 'login' ? 'current-password' : 'new-password'" />
         </label>
         <div v-if="mode === 'register'" class="meter">
-          <i :class="['seg',{ on: pwScore >= 1 }]"></i>
-          <i :class="['seg',{ on: pwScore >= 2 }]"></i>
-          <i :class="['seg',{ on: pwScore >= 3 }]"></i>
+          <div class="meter-bars">
+            <i :class="['seg',{ on: pwScore >= 1 }]"></i>
+            <i :class="['seg',{ on: pwScore >= 2 }]"></i>
+            <i :class="['seg',{ on: pwScore >= 3 }]"></i>
+          </div>
+          <span class="meter-hint">{{ pwHint }}</span>
         </div>
         <label class="agree">
           <input type="checkbox" v-model="consent" />
@@ -98,6 +101,7 @@ const ppOpen = ref(false)
 const countdown = ref(0)
 const form = reactive({ account: '', nickname: '', password: '', code: '' })
 const validPhone = computed(() => /^1\d{10}$/.test(form.account.trim()))
+const pwHint = computed(() => ['', '弱', '中', '强'][pwScore.value] || '')
 const pwScore = computed(() => { const v = form.password || ''; if (!v) return 0
   let sc = 1
   if (v.length >= 8) sc++
@@ -165,15 +169,17 @@ const submit = async () => {
 .submit-btn:hover { opacity: .9; }
 .submit-btn.loading { opacity: .6; }
 .err { color: var(--red); font-size: 13px; margin-top: 12px; text-align: center; }
-.code-row { display: flex; gap: 8px; align-items: center; }
+.code-row { display: flex !important; flex-direction: row !important; gap: 8px; align-items: center; }
 .code-row .f-input { flex: 1; }
 .code-btn { flex-shrink: 0; padding: 0 14px; border-radius: 10px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 13px; cursor: pointer; height: 46px; }
 .code-btn:disabled { opacity: .5; cursor: not-allowed; }
-.meter { display: flex; gap: 6px; margin-top: -8px; }
+.meter { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: -8px; }
+.meter-bars { display: flex; gap: 5px; width: 58%; }
 .meter .seg { flex: 1; height: 4px; border-radius: 3px; background: var(--surface-2); transition: background .2s; }
 .meter .seg:nth-child(1).on { background: var(--red); }
 .meter .seg:nth-child(2).on { background: #ff9500; }
 .meter .seg:nth-child(3).on { background: var(--green); }
+.meter-hint { font-size: 11px; color: var(--text-2); flex-shrink: 0; }
 .pp-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .pp-card { width: 100%; max-width: 600px; max-height: 82vh; background: var(--surface); border-radius: 16px; padding: 22px 24px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
 .pp-card h3 { margin: 0; font-size: 17px; }
