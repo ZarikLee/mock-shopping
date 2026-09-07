@@ -35,6 +35,7 @@ import { aiApi } from '../api/ai'
 
 const props = defineProps({ projectId: { type: Number, required: true } })
 const emit = defineEmits(['close'])
+const cache = new Map()
 const suggests = ['帮我总结今天', '帮我写这周周报', '我这周状态怎么样', '给我点建议']
 const draft = ref('')
 const typing = ref(false)
@@ -49,6 +50,8 @@ let shown = ref([])     // 渲染用（分段）
 let seq = 0
 let timers = []
 const sentAny = ref(false)
+const saved = cache.get(String(props.projectId))
+if (saved) { shown.value = saved.shown.slice(); history.push(...saved.history.map(h => ({ ...h }))); seq = saved.seq || 0; sentAny.value = saved.sentAny }
 
 function stripEnd(text){return text.replace(/[。！？!?；;，,、：:．.…~～\s]+$/,'').trim()}
 
@@ -136,9 +139,12 @@ function reset() {
   typing.value = false
 }
 
-watch(() => props.projectId, reset)
+watch(() => props.projectId, (np, op) => {
+  if (op != null && String(op) !== String(np)) cache.set(String(op), { shown: shown.value.slice(), history: history.map(h => ({ ...h })), seq, sentAny: sentAny.value });
+  reset();
+})
 onMounted(startSug)
-onBeforeUnmount(() => { timers.forEach(t => clearTimeout(t)); stopSug() })
+onBeforeUnmount(() => { timers.forEach(t => clearTimeout(t)); stopSug(); cache.set(String(props.projectId), { shown: shown.value.slice(), history: history.map(h => ({ ...h })), seq, sentAny: sentAny.value }) })
 </script>
 
 <style scoped>

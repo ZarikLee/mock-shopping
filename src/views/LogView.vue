@@ -283,6 +283,9 @@ function goFirstResult(){if(searchResults.value.length)openSearchItem(searchResu
 function openSearchItem(r){searchOpen.value=false;scrollToDay(r.date,r.idx)}
 const calOpen=ref(false)
 const calMonth=reactive({y:(()=>{const d=new Date();return d.getFullYear()})(),m:(()=>{const d=new Date();return d.getMonth()+1})()})
+function onDocDown(e){ const t = e.target; if (!t || t.nodeType !== 1) return
+  const wrap = t.closest('.bell-wrap, .cal-wrap, .sr-wrap, .fmt-ai, .ai-dialog')
+  if (!wrap) { bellOpen.value = false; calOpen.value = false; searchOpen.value = false; if (aiOpen.value) aiOpen.value = false } }
 function calToggle(){calOpen.value=!calOpen.value}
 const fmtMsgTime=ts=>{if(!ts)return'';const d=new Date(ts);return `${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`}
 async function loadBell(){try{const res=await notificationApi.list();const l=Array.isArray(res)?res:(res.list||[]);msgs.value=l;unreadCount.value=(res&&res.unread)!=null?res.unread:l.filter(x=>!x.read).length}catch{}}
@@ -644,10 +647,10 @@ async function doImport(){if(!parsed.value.length)return
 function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
 function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearTimeout(timers[day.date]);autosave(day)}})}
 
-onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow);bellTimer=setInterval(loadBell,15000);loadBell();spinTimer=setInterval(()=>{spinTxt.value=spinMsgs[Math.floor(Math.random()*spinMsgs.length)]},1000)})
+onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow);bellTimer=setInterval(loadBell,15000);loadBell();spinTimer=setInterval(()=>{spinTxt.value=spinMsgs[Math.floor(Math.random()*spinMsgs.length)]},1000);document.addEventListener('mousedown', onDocDown)})
 function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)});if(aiOpen.value)placeAi()}
 watch(()=>route.params.projectId,()=>{if(!user.isLoggedIn)return;pid.value=Number(route.params.projectId);days.value=[];load()})
-onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer);if(bellTimer)clearInterval(bellTimer);if(spinTimer)clearInterval(spinTimer)})
+onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer);if(bellTimer)clearInterval(bellTimer);if(spinTimer)clearInterval(spinTimer);document.removeEventListener('mousedown', onDocDown)})
 </script>
 
 <style scoped>
@@ -768,10 +771,10 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .day-images .thumb img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
 .day-images .thumb .rm{position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-style:normal;font-size:12px;line-height:15px;text-align:center;cursor:pointer;opacity:0;transition:opacity .15s}
 .day-images .thumb:hover .rm{opacity:1}
- .img-add{display:inline-flex;align-items:center;gap:4px;border:1.5px dashed var(--text-2);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
+  .img-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
 .img-add:hover{border-color:var(--accent);color:var(--accent)}
 .img-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
- .mf-add{display:inline-flex;align-items:center;gap:4px;border:1.5px dashed var(--text-2);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
+  .mf-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
 .mf-add:hover{border-color:var(--accent);color:var(--accent)}
 .mf-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .mf-list{display:flex;flex-wrap:wrap;gap:6px}
