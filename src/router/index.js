@@ -17,6 +17,12 @@ const routes = [
     children: [{ path: '', name: 'logPage', component: () => import('../views/LogView.vue') }],
   },
   {
+    path: '/review/:projectId',
+    name: 'review',
+    component: () => import('../views/MainLayout.vue'),
+    children: [{ path: '', name: 'reviewPage', component: () => import('../views/ReviewsView.vue') }],
+  },
+  {
     path: '/files/:projectId',
     name: 'files',
     component: () => import('../views/MainLayout.vue'),

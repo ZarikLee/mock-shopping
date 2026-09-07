@@ -31,6 +31,7 @@
         </div>
         <div class="ftabs">
           <button class="ftab" :class="{ on: route.path.startsWith('/log/') }" @click="openProject(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M8 13h4"/></svg>每日待办</button>
+          <button class="ftab" :class="{ on: route.path.startsWith('/review/') }" @click="goReview(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>回顾与成就</button>
           <button class="ftab" :class="{ on: route.path.startsWith('/files/') }" @click="goFiles(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>云文件管理</button>
         </div>
         <div class="sb-foot">
@@ -239,6 +240,7 @@ const pdRef = ref(null)
 const currentName = computed(() => { const p = projects.value.find(x => String(x.id) === currentProjId.value); return p ? p.name : '' })
 const firstId = computed(() => projects.value.length ? String(projects.value[0].id) : '')
 const goFiles = id => { if (!id) return; pdOpen.value = false; router.push('/files/' + id); if (mobile.value) drawerOpen.value = false }
+const goReview = id => { if (!id) return; pdOpen.value = false; router.push('/review/' + id); if (mobile.value) drawerOpen.value = false }
 const pickProj = id => { pdOpen.value = false; if (id) { router.push('/log/' + id); if (mobile.value) drawerOpen.value = false } }
 const newProj = () => { pdOpen.value = false; showNewProj.value = true }
 const onPdDown = e => { if (pdRef.value && pdOpen.value && !pdRef.value.contains(e.target)) pdOpen.value = false }

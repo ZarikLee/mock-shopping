@@ -14,7 +14,7 @@
         </div>
         <div class="t-actions">
           <button class="tb blue" @click="importOpen = true">导入任务</button>
-<button class="tb" @click="openExport">导出记录</button>
+<button class="tb blue" @click="openExport">导出记录</button>
           <span class="bell-wrap">
             <button class="cal-btn bell-btn" @click="bellToggle" title="消息通知">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
