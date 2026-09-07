@@ -5,7 +5,10 @@
         <h1>回顾与成就</h1>
         <p class="rv-sub">看看这段日子，夸夸坚持的自己</p>
       </div>
-      <button class="rv-refresh" @click="load" title="刷新数据">↻</button>
+      <div class="rv-acts">
+        <button class="rv-share" @click="genShare">做一张分享图</button>
+        <button class="rv-refresh" @click="load" title="刷新数据">↻</button>
+      </div>
     </div>
 
     <div v-if="loading" class="rv-load"><span class="spin"></span><p>正在整理你的日子…</p></div>
@@ -49,6 +52,19 @@
         </div>
       </div>
     </template>
+
+    <!-- 分享预览 -->
+    <transition name="fade">
+      <div v-if="shareOpen" class="share-mask" @click.self="shareOpen = false">
+        <div class="share-box">
+          <img :src="shareUrl" alt="分享图" />
+          <div class="share-ops">
+            <button class="share-save" @click="downloadShare">保存图片</button>
+            <button class="share-cancel" @click="shareOpen = false">关闭</button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -108,11 +124,89 @@ function rangeSummary() {
 }
 
 const reviewText = ref('')
+const shareUrl = ref('')
+const shareOpen = ref(false)
 function makeReview() {
   reviewText.value = rangeSummary()
   const d = doneInRange.value, t = totalTasks.value
   const p = t ? d / t : 0
   if (p >= 1 && t) unlockIf('perfect_range')
+}
+const QUOTES = ['日子因记录而有了重量，也因回望而有了光。', '把今天认真写完，明天自会认真作答。', '时间不语，却在纸上留下了它走过的样子。', '慢慢来，比较快——你已经在路上。', '所谓坚持，不过是把寻常的一天又过好了一次。']
+function wrapLines(ctx, text, maxW) {
+  const out = []
+  let cur = ''
+  for (const ch of text) {
+    if (ctx.measureText(cur + ch).width > maxW && cur) { out.push(cur); cur = ch } else cur += ch
+  }
+  if (cur) out.push(cur)
+  return out
+}
+function drawRoundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); ctx.fill() }
+function genShare() {
+  const W = 1080, H = 1440
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H
+  const ctx = cv.getContext('2d')
+  const serif = '"Songti SC","STSong","Noto Serif SC",Georgia,serif'
+  const sans = '-apple-system,"PingFang SC",sans-serif'
+  // 底色：宣纸暖白渐变
+  const g = ctx.createLinearGradient(0, 0, 0, H)
+  g.addColorStop(0, '#faf6ef'); g.addColorStop(.55, '#f3ecdf'); g.addColorStop(1, '#eadfd0')
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H)
+  const ink = 'rgba(31,41,55,1)'; const dim = 'rgba(80,90,105,.62)'; const accent = 'rgba(180,120,80,.85)'
+  // 装饰
+  ctx.save(); ctx.globalAlpha = .16; ctx.fillStyle = '#d9c6a8'
+  ctx.beginPath(); ctx.arc(W - 90, 190, 300, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(70, H - 150, 260, 0, Math.PI * 2); ctx.fill(); ctx.restore()
+  ctx.strokeStyle = 'rgba(180,120,80,.5)'; ctx.lineWidth = 2
+  ctx.strokeRect(52, 52, W - 104, H - 104)
+  ctx.strokeStyle = 'rgba(180,120,80,.3)'; ctx.strokeRect(64, 64, W - 128, H - 128)
+  // 顶部
+  ctx.fillStyle = ink; ctx.font = '600 44px ' + sans; ctx.textAlign = 'left'
+  ctx.fillText('纸上 · Paper Todo', 96, 148)
+  ctx.font = '20px ' + sans; ctx.fillStyle = dim
+  ctx.fillText('像写日记一样，把每天写下来', 96, 192)
+  // 标题
+  const d = new Date(); const now = { y: d.getFullYear(), m: d.getMonth() + 1 }
+  const lab = scope.value === 'year' ? `${now.y} 年度回顾` : scope.value === 'last' ? `${now.y}年${now.m === 1 ? 12 : now.m - 1}月` : `${now.y}年${now.m}月`
+  ctx.fillStyle = ink; ctx.font = '700 84px ' + serif
+  ctx.fillText(lab, 96, 350)
+  ctx.fillStyle = accent; ctx.font = '24px ' + sans
+  ctx.fillText(scopeLabel.value + ' · 与日子温柔交手', 96, 410)
+  // 引言
+  const q = QUOTES[Math.floor(Math.random() * QUOTES.length)]
+  ctx.fillStyle = ink; ctx.font = '42px ' + serif
+  let yy = 540
+  wrapLines(ctx, '「' + q + '」', W - 200).forEach(line => { ctx.fillText(line, 96, yy); yy += 68 })
+  // 数据卡
+  const stats = [
+    { t: '记录天数', v: String(totalDays.value) },
+    { t: '完成任务', v: String(doneInRange.value) },
+    { t: '完成率', v: totalTasks.value ? Math.round(doneInRange.value / totalTasks.value * 100) + '%' : '—' },
+  ]
+  const cw = (W - 192 - 40) / 3
+  stats.forEach((s2, i) => {
+    const x = 96 + i * (cw + 20)
+    ctx.fillStyle = 'rgba(255,255,255,.6)'; drawRoundRect(ctx, x, 760, cw, 210, 24)
+    ctx.fillStyle = accent; ctx.font = '700 84px ' + serif; ctx.textAlign = 'center'
+    ctx.fillText(s2.v, x + cw / 2, 880)
+    ctx.fillStyle = dim; ctx.font = '22px ' + sans
+    ctx.fillText(s2.t, x + cw / 2, 930)
+    ctx.textAlign = 'left'
+  })
+  // 结尾寄语
+  ctx.fillStyle = dim; ctx.font = '400 30px ' + serif
+  let cy = 1180
+  wrapLines(ctx, reviewText.value || '愿你在记录里，遇见更从容的自己。', W - 200).slice(0, 4).forEach(line => { ctx.fillText(line, 96, cy); cy += 52 })
+  // 底注
+  ctx.strokeStyle = 'rgba(180,120,80,.6)'; ctx.beginPath(); ctx.moveTo(96, H - 170); ctx.lineTo(W - 96, H - 170); ctx.stroke()
+  ctx.fillStyle = dim; ctx.font = '24px ' + sans
+  ctx.fillText('纸上 · Paper Todo　papertodo.com', 96, H - 112)
+  shareUrl.value = cv.toDataURL('image/png')
+  shareOpen.value = true
+}
+function downloadShare() {
+  const a = document.createElement('a'); a.href = shareUrl.value; a.download = '纸上回顾.png'; a.click()
 }
 function longestStreak() {
   const dates = [...new Set(logs.value.map(l => l.date))].sort()
@@ -177,6 +271,14 @@ onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load()
 .rv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .rv-head h1 { font-size: 22px; margin: 0 0 4px; }
 .rv-sub { color: var(--text-2); font-size: 13px; margin: 0; }
+.rv-acts { display: flex; align-items: center; gap: 10px; }
+.rv-share { border: none; border-radius: 9px; background: linear-gradient(120deg,#d9a45b,#c07b52); color: #fff; padding: 8px 14px; font-size: 13px; cursor: pointer; }
+.share-mask { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 260; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.share-box { width: min(460px, 94vw); display: flex; flex-direction: column; gap: 12px; }
+.share-box img { width: 100%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.share-ops { display: flex; justify-content: center; gap: 12px; }
+.share-save { border: none; border-radius: 9px; background: var(--accent); color: #fff; padding: 10px 20px; font-size: 14px; cursor: pointer; }
+.share-cancel { border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text); padding: 10px 20px; font-size: 14px; cursor: pointer; }
 .rv-refresh { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-size: 18px; cursor: pointer; }
 .rv-load { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 90px 0; color: var(--text-2); font-size: 13px; }
 .spin { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--surface-2); border-top-color: var(--accent); animation: sp .8s linear infinite; }
