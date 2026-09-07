@@ -89,6 +89,15 @@
             </div>
             <div class="daybody" contenteditable="true" spellcheck="false" :data-date="day.date"
               @input="e => onInput(day)" @keydown="e => onKey(e, day)" @blur="e => blurDay(day, e)"></div>
+            <div class="day-images">
+              <template v-if="(day.images || []).length">
+                <span v-for="(u, i) in day.images" :key="i" class="thumb">
+                  <img :src="u" alt="" @click="openPreview({ url: u, name: '图片' + (i + 1), type: 'image' })" />
+                  <i class="rm" @click="removeImage(day, i)">×</i>
+                </span>
+              </template>
+              <button class="img-add" @click="openImgPickFor(day)"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>图片</button>
+            </div>
             <div class="day-media">
               <div v-if="(day.files || []).length" class="mf-list">
                 <button v-for="(f, fi) in day.files" :key="fi" class="mf-chip" @click="previewFile(f)"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg><span class="fc-name">{{ f.name }}</span><i class="rm" title="删除" @click.stop="removeFile(day, fi)">×</i></button>
@@ -377,7 +386,7 @@ function pastUnfinished(){const arr=days.value.filter(d=>d.date<tNow&&(d.items||
   return {list:arr,total:arr.reduce((n,d)=>n+d.items.filter(i=>!i.done).length,0),count:arr.length}}
 function ensureToday(){let today=findDay(tNow);if(!today){today=norm({date:tNow,weekday:wk(tNow),items:[]});days.value.push(today)}
   days.value.sort((x,y)=>x.date<y.date?-1:1);renderBody(today);return today}
-function saveDays(arr){return Promise.all(arr.map(d=>projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items}).then(()=>{d._dirty=false;d._last=snapDay(d)}).catch(()=>{})))}
+function saveDays(arr){return Promise.all(arr.map(d=>projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items,files:d.files||[],images:d.images||[]}).then(()=>{d._dirty=false;d._last=snapDay(d)}).catch(()=>{})))}
 async function maybeRemind(){if(localStorage.getItem('dl_rem_off')==='1')return
   const u=pastUnfinished();if(!u.total)return
   pastPendingTotal.value=u.total;pastPendingCount.value=u.count;showRemind.value=true}
@@ -399,9 +408,9 @@ const dayLabel=d=>{const p=d.split('-');return `${p[0]}年${+p[1]}月${+p[2]}日
 const wk=d=>WEEKS[new Date(d+'T00:00:00').getDay()]
 const fmtTime=t=>{if(!t)return'';const d=new Date(t);return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
 const hasDirty=computed(()=>days.value.some(d=>d._dirty))
-const norm=l=>({date:l.date,weekday:l.weekday||wk(l.date),items:(l.items||[]).map(i=>({text:(i.text||'').replace(/^[。.]$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})),files:(Array.isArray(l.files)?l.files.map(f=>({name:f.name||'文件',type:f.type||'',url:f.url})):[]),_dirty:false,_last:null})
+const norm=l=>({date:l.date,weekday:l.weekday||wk(l.date),items:(l.items||[]).map(i=>({text:(i.text||'').replace(/^[。.]$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})),files:(Array.isArray(l.files)?l.files.map(f=>({name:f.name||'文件',type:f.type||'',url:f.url})):[]),images:Array.isArray(l.images)?l.images.slice():[],_dirty:false,_last:null})
 const findDay=date=>days.value.find(d=>d.date===date)
-const snapDay=day=>{const a=day.items.map(i=>[i.text,i.done,JSON.stringify(i.img||[])]);a.push('F'+JSON.stringify(day.files||[]));return a}
+const snapDay=day=>{const a=day.items.map(i=>[i.text,i.done,JSON.stringify(i.img||[])]);a.push('F'+JSON.stringify(day.files||[]));a.push('I'+JSON.stringify(day.images||[]));return a}
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b)
 
 function appendMedia(li,it,day,idx){if(!day)return
@@ -421,16 +430,16 @@ function appendMedia(li,it,day,idx){if(!day)return
   box.appendChild(add)
   li.appendChild(box)}
 function afterAttach(day){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),400)}
-function openImgPick(day,i){imgPick={day,i};pickImg.value&&pickImg.value.click()}
+function openImgPickFor(day){imgPick=day;pickImg.value&&pickImg.value.click()}
+function openImgPick(day,i){imgPick=day;pickImg.value&&pickImg.value.click()}
 function onPickImg(){showToast('读取图片中…')
   const inp=pickImg.value;if(!inp){showToast('未找到图片选择器');return}const arr=Array.from(inp.files);inp.value='';if(!arr.length){showToast('未取到文件');return}
-  const job=imgPick;imgPick=null;if(!job){showToast('未记录目标任务');return}
-  const day=job.day,i=job.i
-  if(!day.items[i])day.items[i]={text:'',done:false,img:[]}
-  if(!day.items[i].img)day.items[i].img=[]
+  const day=imgPick;imgPick=null;if(!day){showToast('未记录目标卡片');return}
+  if(!Array.isArray(day.images))day.images=[]
   const reads=arr.map(f=>new Promise(res=>{if(f.size>3*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res(String(r.result));r.onerror=()=>res(null);r.readAsDataURL(f)}))
-  Promise.all(reads).then(list=>{const ok=list.filter(Boolean);ok.forEach(u=>day.items[i].img.push(u));showToast('已读取 '+ok.length+' 张图片');renderBody(day);afterAttach(day);requestAnimationFrame(()=>{const els=document.querySelectorAll(`.daybody[data-date="${day.date}"] .thumb`);console.log('thumb count',els.length)})})}
+  Promise.all(reads).then(list=>{const ok=list.filter(Boolean);ok.forEach(u=>day.images.push(u));showToast('已读取 '+ok.length+' 张图片');afterAttach(day)})}
 function openFilePick(day){filePick=day;pickFile.value&&pickFile.value.click()}
+function removeImage(day, i){if(Array.isArray(day.images)){day.images.splice(i,1);afterAttach(day)}}
 function removeFile(day, i){if(Array.isArray(day.files)){day.files.splice(i,1);afterAttach(day)}}
 function b64ToText(b64){try{const bin=atob(b64);const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return new TextDecoder().decode(bytes)}catch(e){return ''}}
 function pvTextOf(u){const i=u.indexOf(',');if(i<0)return '';const head=u.slice(0,i),body=u.slice(i+1)
@@ -447,7 +456,7 @@ function onPickFile(){showToast('读取附件中…')
 function renderBody(day){nextTick(()=>{
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const ol=document.createElement('ol')
-  day.items.forEach((it,idx)=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text?it.text:'\u200b'));appendMedia(li,it,day,idx);ol.appendChild(li)})
+  day.items.forEach((it,idx)=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text?it.text:'\u200b'));ol.appendChild(li)})
   if(!ol.children.length){const li=document.createElement('li');ol.appendChild(li)}
   el.innerHTML='';el.appendChild(ol)
   layout(day)
@@ -506,7 +515,7 @@ function clearAllTimers(){Object.values(timers).forEach(t=>clearTimeout(t))}
 function curSnap(){days.value.forEach(readBody);return snapAll()}
 function snapAll(){return days.value.map(d=>({date:d.date,items:cleanItems(d.items).map(i=>({text:i.text,done:!!i.done}))}))}
 function pushSnap(tag){undoStack.value.push({tag,data:curSnap()});if(undoStack.value.length>40)undoStack.value.shift();redoStack.value=[]}
-async function persistDoc(list){for(const d of list){d._dirty=false;d._last=snapDay(d);await projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items,files:d.files||[]}).catch(()=>{})}}
+async function persistDoc(list){for(const d of list){d._dirty=false;d._last=snapDay(d);await projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items,files:d.files||[],images:d.images||[]}).catch(()=>{})}}
 async function applyVersion(dir){const src=dir==='prev'?undoStack:redoStack;const dst=dir==='prev'?redoStack:undoStack
   if(!src.value.length)return
   clearAllTimers()
@@ -537,11 +546,11 @@ async function load(){loading.value=true;loadError.value=''
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})).filter(i=>i.text!==''||(i.img&&i.img.length))}
-async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[]});day._dirty=false;day._last=snapDay(day);lastSaved.value=nowStamp()}catch{}}
-async function saveDraft(day){try{await projectApi.draft(pid.value,day.date,{weekday:day.weekday,items:day.items})}catch{}}
+async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[],images:day.images||[]});day._dirty=false;day._last=snapDay(day);lastSaved.value=nowStamp()}catch{}}
+async function saveDraft(day){try{await projectApi.draft(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[],images:day.images||[]})}catch{}}
 async function saveAll(){saving.value=true
   for(const day of days.value){if(!day._dirty)continue;readBody(day)
-    try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[]});day._last=snapDay(day);day._dirty=false;lastSaved.value=nowStamp()}catch(e){loadError.value=e?.error||'保存失败'}}
+    try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[],images:day.images||[]});day._last=snapDay(day);day._dirty=false;lastSaved.value=nowStamp()}catch(e){loadError.value=e?.error||'保存失败'}}
   unsavedPrompt.value=false;saving.value=false;showToast('已保存')}
 async function discardAll(){unsavedPrompt.value=false
   for(const day of days.value){if(!day._dirty)continue;let arr=[]
@@ -740,6 +749,14 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .del-day:hover{background:var(--red);color:#fff}
 .daybody{outline:none;min-height:46px;padding:8px 56px 18px 20px;position:relative}
 .day-media{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 20px 10px calc(20px + 1.5em);border-top:1px dashed var(--border);margin-top:2px}
+.day-images{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 20px 4px calc(20px + 1.5em)}
+.day-images .thumb{position:relative;width:76px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex:none;background:var(--surface-2)}
+.day-images .thumb img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.day-images .thumb .rm{position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-style:normal;font-size:12px;line-height:15px;text-align:center;cursor:pointer;opacity:0;transition:opacity .15s}
+.day-images .thumb:hover .rm{opacity:1}
+.img-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
+.img-add:hover{border-color:var(--accent);color:var(--accent)}
+.img-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .mf-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
 .mf-add:hover{border-color:var(--accent);color:var(--accent)}
 .mf-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}

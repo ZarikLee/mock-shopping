@@ -22,6 +22,11 @@ function normalizeItems(items) {
   }));
 }
 
+function normalizeImages(images) {
+  if (!Array.isArray(images)) return [];
+  return images.map(String).filter(u => u && u.length < 900000).slice(0, 30);
+}
+
 function normalizeFiles(files) {
   if (!Array.isArray(files)) return [];
   return files.map(f => ({
@@ -135,7 +140,7 @@ router.get('/:id/logs', (req, res) => {  const project = findOwnedProject(req, r
   const full = req.query.full === '1';
   const logs = queryAll('day_logs', { projectId: project.id })
     .map(l => full
-      ? { date: l.date, weekday: l.weekday || '', items: l.items || [], files: l.files || [], updatedAt: l.updatedAt || l.createdAt || null }
+      ? { date: l.date, weekday: l.weekday || '', items: l.items || [], files: l.files || [], images: l.images || [], updatedAt: l.updatedAt || l.createdAt || null }
       : {
           date: l.date,
           weekday: l.weekday || '',
@@ -171,7 +176,7 @@ router.post('/:id/logs/:date/draft', (req, res) => {
   if (!isValidDate(date)) {
     return res.status(400).json({ error: '日期格式应为 YYYY-MM-DD' });
   }
-  const { weekday, items, files } = req.body || {};
+  const { weekday, items, files, images } = req.body || {};
   if (!Array.isArray(items)) {
     return res.status(400).json({ error: 'items 必须为数组' });
   }
@@ -180,6 +185,7 @@ router.post('/:id/logs/:date/draft', (req, res) => {
   if (existing) {
     const updates = { items: cleanItems, updatedAt: now() };
     if (files !== undefined) updates.files = normalizeFiles(files);
+    if (images !== undefined) updates.images = normalizeImages(images);
     if (weekday !== undefined && weekday !== null) {
       updates.weekday = String(weekday);
     }
@@ -192,6 +198,7 @@ router.post('/:id/logs/:date/draft', (req, res) => {
     weekday: weekday !== undefined && weekday !== null ? String(weekday) : '',
     items: cleanItems,
     files: normalizeFiles(files),
+    images: normalizeImages(images),
     createdAt: now(),
     updatedAt: now(),
   });
@@ -205,7 +212,7 @@ router.post('/:id/logs/:date/commit', (req, res) => {
   if (!isValidDate(date)) {
     return res.status(400).json({ error: '日期格式应为 YYYY-MM-DD' });
   }
-  const { items, weekday, files } = req.body || {};
+  const { items, weekday, files, images } = req.body || {};
   if (!Array.isArray(items)) {
     return res.status(400).json({ error: 'items 必须为数组' });
   }
@@ -218,6 +225,7 @@ router.post('/:id/logs/:date/commit', (req, res) => {
       weekday: weekday !== undefined && weekday !== null ? String(weekday) : '',
       items: cleanItems,
       files: normalizeFiles(files),
+      images: normalizeImages(images),
       createdAt: now(),
       updatedAt: now(),
     });
@@ -235,6 +243,7 @@ router.post('/:id/logs/:date/commit', (req, res) => {
     updates.weekday = String(weekday);
   }
   if (files !== undefined) updates.files = normalizeFiles(files);
+  if (images !== undefined) updates.images = normalizeImages(images);
   update('day_logs', dayLog.id, updates);
   return res.json({ version, items: cleanItems });
 });
