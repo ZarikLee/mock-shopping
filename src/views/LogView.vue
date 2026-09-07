@@ -14,6 +14,23 @@
         </div>
         <div class="t-actions">
           <button class="tb blue" @click="importOpen = true">导入任务</button>
+          <span class="bell-wrap">
+            <button class="cal-btn bell-btn" @click="bellToggle" title="消息通知">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+              <i v-if="unreadCount > 0" class="bell-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</i>
+            </button>
+            <transition name="fade"><div v-if="bellOpen" class="bell-pane">
+              <div class="bell-head"><b>消息通知</b><button class="bell-read" :disabled="!unreadCount" @click="markAllRead">全部已读</button></div>
+              <div class="bell-body">
+                <div v-for="m in msgs" :key="m.id" class="bell-item" :class="{ unread: !m.read }" @click="readOne(m)">
+                  <p class="bm-title">{{ m.title }}</p>
+                  <p class="bm-text">{{ m.text }}</p>
+                  <span class="bm-time">{{ fmtMsgTime(m.at) }}</span>
+                </div>
+                <div v-if="!msgs.length" class="bell-empty">暂无消息</div>
+              </div>
+            </div></transition>
+          </span>
           <span class="cal-wrap">
             <button class="cal-btn" @click="calToggle" title="按日历查看"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></button>
             <transition name="fade"><div v-if="calOpen" class="cal-pane">
@@ -180,6 +197,7 @@ import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
 import { projectApi } from '../api/projects'
 import AiPanel from '../components/AiPanel.vue'
+import { notificationApi } from '../api/notifications'
 
 const route=useRoute();const router=useRouter();const user=useUserStore();const theme=useThemeStore()
 const pid=ref(Number(route.params.projectId))
@@ -198,6 +216,10 @@ const aiOpen=ref(false)
 const aiPos=reactive({top:70,right:20})
 const pickImg=ref(null)
 const pickFile=ref(null)
+const bellOpen=ref(false)
+const msgs=ref([])
+const unreadCount=ref(0)
+let bellTimer=null
 const pvOpen=ref(false)
 const pvUrl=ref('')
 const pvName=ref('')
@@ -232,6 +254,11 @@ function openSearchItem(r){searchOpen.value=false;scrollToDay(r.date,r.idx)}
 const calOpen=ref(false)
 const calMonth=reactive({y:(()=>{const d=new Date();return d.getFullYear()})(),m:(()=>{const d=new Date();return d.getMonth()+1})()})
 function calToggle(){calOpen.value=!calOpen.value}
+const fmtMsgTime=ts=>{if(!ts)return'';const d=new Date(ts);return `${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`}
+async function loadBell(){try{const res=await notificationApi.list();const l=Array.isArray(res)?res:(res.list||[]);msgs.value=l;unreadCount.value=(res&&res.unread)!=null?res.unread:l.filter(x=>!x.read).length}catch{}}
+function bellToggle(){bellOpen.value=!bellOpen.value;if(bellOpen.value)loadBell()}
+async function markAllRead(){try{await notificationApi.readAll();msgs.value.forEach(m=>m.read=true);unreadCount.value=0}catch{}}
+async function readOne(m){if(m.read)return;m.read=true;unreadCount.value=Math.max(0,unreadCount.value-1);try{await notificationApi.readAll()}catch{}}
 function calShift(d){let y=calMonth.y,m=calMonth.m+d;if(m<1){m=12;y--}if(m>12){m=1;y++}calMonth.y=y;calMonth.m=m}
 const calTitle=computed(()=>calMonth.y+'年'+calMonth.m+'月')
 function dayRatio(date){const d=findDay(date);if(!d||!d.items.length)return 0;return d.items.filter(i=>i.done).length/d.items.length}
@@ -581,10 +608,10 @@ async function doImport(){if(!parsed.value.length)return
 function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
 function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearTimeout(timers[day.date]);autosave(day)}})}
 
-onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow)})
+onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow);bellTimer=setInterval(loadBell,15000);loadBell()})
 function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)});if(aiOpen.value)placeAi()}
 watch(()=>route.params.projectId,()=>{if(!user.isLoggedIn)return;pid.value=Number(route.params.projectId);days.value=[];load()})
-onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer)})
+onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer);if(bellTimer)clearInterval(bellTimer)})
 </script>
 
 <style scoped>
@@ -620,6 +647,23 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .search-pane,.cal-pane{position:absolute;z-index:97;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column}
 .search-pane{top:calc(100% + 8px);right:0;width:min(300px,60vw)}
 .cal-wrap{position:relative;display:inline-flex}
+.bell-wrap{position:relative;display:inline-flex}
+.bell-btn{position:relative}
+.bell-badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:10px;font-style:normal;font-weight:700;line-height:16px;text-align:center}
+.bell-pane{position:absolute;top:calc(100% + 8px);right:0;z-index:97;width:min(300px,84vw);background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column}
+.bell-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border)}
+.bell-head b{font-size:14px}
+.bell-read{border:none;background:transparent;color:var(--accent);font-size:12px;cursor:pointer}
+.bell-read:disabled{opacity:.5}
+.bell-body{max-height:52vh;overflow-y:auto}
+.bell-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;position:relative}
+.bell-item:hover{background:var(--surface-2)}
+.bell-item.unread{background:color-mix(in srgb, var(--accent) 6%, transparent)}
+.bell-item.unread::before{content:'';position:absolute;left:4px;top:14px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.bm-title{font-size:13px;font-weight:600;margin:0 0 2px}
+.bm-text{font-size:12px;color:var(--text-2);line-height:1.5;margin:0;word-break:break-word}
+.bm-time{display:block;margin-top:4px;font-size:10px;color:var(--text-2)}
+.bell-empty{padding:24px;text-align:center;color:var(--text-2);font-size:13px}
 .cal-pane{top:calc(100% + 8px);right:0}
 .search-pane{width:min(340px,calc(100vw - 16px));max-height:60vh;overflow-y:auto}
 .search-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border)}

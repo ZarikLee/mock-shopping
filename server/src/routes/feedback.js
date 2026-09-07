@@ -3,7 +3,7 @@ import { insert, queryAll, queryOne, update } from '../db.js';
 import { authMiddleware } from './auth.js';
 
 const router = Router();
-const isAdmin = req => req.user && String(req.user.account) === 'admin';
+const isAdmin = req => req.user && ['admin','13535747642'].includes(String(req.user.account));
 
 router.get('/', authMiddleware, (req, res, next) => {
   try {
@@ -45,6 +45,14 @@ router.post('/:id/reply', authMiddleware, (req, res, next) => {
       at: Date.now(),
     });
     const updated = update('feedback', id, { replies });
+    insert('notifications', {
+      userId: f.userId,
+      kind: 'feedback_reply',
+      title: '管理员回复了你的反馈',
+      text,
+      at: Date.now(),
+      read: false,
+    });
     res.json({ feedback: updated });
   } catch (e) { next(e); }
 });

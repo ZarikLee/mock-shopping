@@ -168,7 +168,7 @@ const profile = ref({ nickname: user.user?.nickname || '', role: user.user?.role
 const feedback = ref('')
 const fbList = ref([])
 const replyMap = reactive({})
-const isAdmin = computed(() => user.user?.account === 'admin')
+const isAdmin = computed(() => ['admin', '13535747642'].includes(user.user?.account))
 const fbLoading = ref(false)
 const fbReadKey = 'dl_fb_read_' + (user.user?.account || '')
 const fbReadAt = ref(Number(localStorage.getItem(fbReadKey) || 0))
