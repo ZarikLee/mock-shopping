@@ -13,16 +13,32 @@ function randCode() {
 }
 
 async function sendSmsCode(to, code) {
-  const res = await fetch(SMS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ to, code }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (data && data.code !== undefined && Number(data.code) !== 200) {
-    throw new Error(data.msg || '短信发送失败');
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const res = await fetch(SMS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, code }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    const txt = await res.text();
+    let data = {};
+    try { data = JSON.parse(txt); } catch {}
+    console.error('[sms] status=' + res.status + ' body=' + txt.slice(0, 300));
+    if (res.status >= 400) {
+      throw new Error('短信网关 HTTP ' + res.status + (data.msg ? '：' + data.msg : ''));
+    }
+    if (data && data.code !== undefined && Number(data.code) !== 200) {
+      throw new Error((data.msg || '短信发送失败') + (data.request_id ? '（' + data.request_id + '）' : ''));
+    }
+    return data;
+  } catch (e) {
+    clearTimeout(timer);
+    if (e && e.name === 'AbortError') throw new Error('短信服务响应超时');
+    throw e;
   }
-  return data;
 }
 
 function cleanCodes() {
