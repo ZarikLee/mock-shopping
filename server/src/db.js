@@ -50,11 +50,48 @@ function ident(table) {
   if (!TABLES.includes(table)) throw new Error('未知表 ' + table);
   return table;
 }
-function pgWhere(filter) {
+/* ---------- PostgreSQL 规范列映射（payload key -> 列） ---------- */
+const SCHEMA = {
+  users: { account: { c: 'account', k: 'text' }, password: { c: 'password', k: 'text' }, nickname: { c: 'nickname', k: 'text' }, role: { c: 'role', k: 'text' }, createdAt: { c: 'created_at', k: 'text' } },
+  projects: { userId: { c: 'user_id', k: 'bigint' }, name: { c: 'name', k: 'text' }, type: { c: 'type', k: 'text' }, startDate: { c: 'start_date', k: 'text' }, createdAt: { c: 'created_at', k: 'text' } },
+  day_logs: { projectId: { c: 'project_id', k: 'bigint' }, date: { c: 'date', k: 'text' }, weekday: { c: 'weekday', k: 'text' }, items: { c: 'items', k: 'json' }, files: { c: 'files', k: 'json' }, images: { c: 'images', k: 'json' }, createdAt: { c: 'created_at', k: 'text' }, updatedAt: { c: 'updated_at', k: 'text' } },
+  log_versions: { logId: { c: 'log_id', k: 'bigint' }, version: { c: 'version', k: 'bigint' }, items: { c: 'items', k: 'json' }, createdAt: { c: 'created_at', k: 'text' } },
+  feedback: { userId: { c: 'user_id', k: 'bigint' }, account: { c: 'account', k: 'text' }, nickname: { c: 'nickname', k: 'text' }, text: { c: 'text', k: 'text' }, replies: { c: 'replies', k: 'json' }, status: { c: 'status', k: 'text' }, createdAt: { c: 'created_at', k: 'bigint' } },
+  sms_codes: { phone: { c: 'phone', k: 'text' }, code: { c: 'code', k: 'text' }, createdAt: { c: 'created_at', k: 'bigint' }, expiresAt: { c: 'expires_at', k: 'bigint' } },
+  notifications: { userId: { c: 'user_id', k: 'bigint' }, kind: { c: 'kind', k: 'text' }, title: { c: 'title', k: 'text' }, text: { c: 'text', k: 'text' }, at: { c: 'at', k: 'bigint' }, read: { c: 'read', k: 'bool' } },
+};
+function cast(k, v) {
+  if (k === 'json') return JSON.stringify(v);
+  if (k === 'bigint') return Number(v);
+  if (k === 'bool') return !!v;
+  return v == null ? null : String(v);
+}
+function uncast(k, v) {
+  if (k === 'json') { try { return v == null ? null : JSON.parse(v); } catch { return v == null ? null : v; } }
+  if (k === 'bigint') return v == null ? null : Number(v);
+  if (k === 'bool') return v == null ? false : !!v;
+  return v;
+}
+function rowToPayload(table, row) {
+  const out = {};
+  for (const key of Object.keys(SCHEMA[table])) {
+    const col = SCHEMA[table][key];
+    out[key] = uncast(col.k, row[col.c]);
+  }
+  out.id = Number(row.id);
+  return out;
+}
+function filterToSql(table, filter) {
   const keys = Object.keys(filter || {});
   if (!keys.length) return { clause: '', params: [] };
-  const params = keys.map(k => String(filter[k]));
-  const segs = keys.map((k, i) => `payload->>'${k}' = $${i + 1}`);
+  const segs = [];
+  const params = [];
+  keys.forEach((key, i) => {
+    const col = SCHEMA[table] && SCHEMA[table][key];
+    const colName = col ? col.c : key;
+    params.push(String(filter[key]));
+    segs.push(`${colName}::text = $${i + 1}`);
+  });
   return { clause: ' WHERE ' + segs.join(' AND '), params };
 }
 async function pgQuery(sql, vals) {
@@ -62,25 +99,36 @@ async function pgQuery(sql, vals) {
   return p.query(sql, vals);
 }
 async function pgAll(table, filter) {
-  const { clause, params } = pgWhere(filter);
-  const r = await pgQuery(`SELECT id, payload FROM ${ident(table)}${clause}`, params);
-  return r.rows.map(x => x.payload && x.payload.id == null ? { ...x.payload, id: x.id } : x.payload);
+  const { clause, params } = filterToSql(table, filter);
+  const r = await pgQuery(`SELECT * FROM ${ident(table)}${clause}`, params);
+  return r.rows.map(row => rowToPayload(table, row));
 }
 async function pgInsert(table, row) {
-  const payload = { ...row };
-  delete payload.id;
-  const r = await pgQuery(`INSERT INTO ${ident(table)} (payload) VALUES ($1::jsonb) RETURNING id`, [JSON.stringify(payload)]);
-  const id = r.rows[0].id;
-  payload.id = id;
-  await pgQuery(`UPDATE ${ident(table)} SET payload = $2::jsonb WHERE id = $1`, [id, JSON.stringify(payload)]);
-  return payload;
+  const map = SCHEMA[table];
+  const keys = Object.keys(row).filter(key => key !== 'id' && map[key]);
+  const cols = keys.map(key => map[key].c);
+  const vals = keys.map(key => map[key].k === 'json' ? JSON.stringify(row[key]) : cast(map[key].k, row[key]));
+  const ph = vals.map((_, i) => map[keys[i]].k === 'json' ? `$${i + 1}::jsonb` : map[keys[i]].k === 'bigint' ? `$${i + 1}::bigint` : map[keys[i]].k === 'bool' ? `$${i + 1}::boolean` : `$${i + 1}`);
+  const r = await pgQuery(`INSERT INTO ${ident(table)} (${cols.join(',')}) VALUES (${ph.join(',')}) RETURNING *`, vals);
+  return rowToPayload(table, r.rows[0]);
 }
 async function pgUpdate(table, id, updates) {
-  const r = await pgQuery(`SELECT id, payload FROM ${ident(table)} WHERE id = $1`, [id]);
-  if (!r.rows.length) return null;
-  const merged = { ...(r.rows[0].payload || {}), ...updates, id: r.rows[0].id };
-  await pgQuery(`UPDATE ${ident(table)} SET payload = $2::jsonb WHERE id = $1`, [id, JSON.stringify(merged)]);
-  return merged;
+  const map = SCHEMA[table];
+  const keys = Object.keys(updates).filter(key => map[key]);
+  if (!keys.length) {
+    const cur = await pgQuery(`SELECT * FROM ${ident(table)} WHERE id = $1`, [id]);
+    return cur.rows.length ? rowToPayload(table, cur.rows[0]) : null;
+  }
+  const set = [];
+  const vals = [];
+  keys.forEach((key, i) => {
+    const def = map[key];
+    vals.push(def.k === 'json' ? JSON.stringify(updates[key]) : cast(def.k, updates[key]));
+    set.push(`${def.c} = ${def.k === 'json' ? `$${i + 1}::jsonb` : def.k === 'bigint' ? `$${i + 1}::bigint` : def.k === 'bool' ? `$${i + 1}::boolean` : `$${i + 1}`}`);
+  });
+  vals.push(id);
+  const r = await pgQuery(`UPDATE ${ident(table)} SET ${set.join(',')} WHERE id = $${keys.length + 1} RETURNING *`, vals);
+  return r.rows.length ? rowToPayload(table, r.rows[0]) : null;
 }
 async function pgRemove(table, id) {
   const r = await pgQuery(`DELETE FROM ${ident(table)} WHERE id = $1`, [id]);
@@ -147,11 +195,22 @@ export async function migrateJsonToPgIfNeeded() {
     let rows = [];
     try { rows = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf-8')) : []; } catch { rows = []; }
     if (!Array.isArray(rows) || !rows.length) continue;
+    const map = SCHEMA[t];
     for (const row of rows) {
-      if (row && row.id != null) {
-        await pgQuery(`INSERT INTO ${t} (id, payload) VALUES ($1, $2::jsonb) ON CONFLICT (id) DO NOTHING`, [Number(row.id), JSON.stringify(row)]);
-        migrated++;
+      if (!row || row.id == null) continue;
+      const cols = ['id'];
+      const casts = ['$1::bigint'];
+      const vals = [Number(row.id)];
+      for (const key of Object.keys(map)) {
+        if (row[key] === undefined || row[key] === null) continue;
+        const def = map[key];
+        cols.push(def.c);
+        vals.push(def.k === 'json' ? JSON.stringify(row[key]) : cast(def.k, row[key]));
+        casts.push(def.k === 'json' ? `$${vals.length}::jsonb` : def.k === 'bigint' ? `$${vals.length}::bigint` : def.k === 'bool' ? `$${vals.length}::boolean` : `$${vals.length}`);
       }
+      if (cols.length === 1) continue;
+      await pgQuery(`INSERT INTO ${ident(t)} (${cols.join(',')}) VALUES (${casts.join(',')}) ON CONFLICT (id) DO NOTHING`, vals);
+      migrated++;
     }
   }
   return { migrated };
