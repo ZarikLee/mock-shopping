@@ -80,6 +80,23 @@ export function authMiddleware(req, res, next) {
   }
 }
 
+router.get('/sms-debug/self', (req, res) => {
+  res.json({ ok: true, ts: Date.now(), pid: process.pid });
+});
+
+router.get('/sms-debug/spug', async (req, res) => {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const r = await fetch('https://push.spug.cc/', { signal: ctrl.signal, redirect: 'manual' });
+    clearTimeout(t);
+    res.json({ ok: true, status: r.status, reached: true });
+  } catch (e) {
+    clearTimeout(t);
+    res.json({ ok: false, reached: false, name: (e && e.name) || '', message: (e && e.message) || String(e), cause: e && e.cause ? String(e.cause) : null });
+  }
+});
+
 router.post('/sms', async (req, res, next) => {
   try {
     const { phone } = req.body || {};
