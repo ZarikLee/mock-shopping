@@ -3,7 +3,8 @@
     <header class="ai-head">
       <span class="ai-dot"></span>
       <span class="ai-title">小纸 <i class="ai-tag">AI</i></span>
-      <span class="ai-quota" :title="'AI 每天免费 ' + aiFree + ' 次；用完后每问一次消耗 1 积分。攒积分：每日登录 +10、当天有完成任务 +5（每天各一次）。'">剩 {{ Math.max(0, aiFree - aiUsed) }}/{{ aiFree }} · ✦{{ points }}</span>
+      <span class="ai-quota" @mouseenter="showQ = true" @mouseleave="showQ = false" @click="showQ = !showQ">剩 {{ Math.max(0, aiFree - aiUsed) }}/{{ aiFree }} · ✦{{ points }}</span>
+      <div v-if="showQ" class="q-pop" @mouseenter="showQ = true" @mouseleave="showQ = false">AI 每天免费 {{ aiFree }} 次；用完后每问一次消耗 1 积分。攒积分：每日登录 +10、当天有完成任务 +5（每天各一次）。</div>
       <button class="ai-x" @click="emit('close')">×</button>
     </header>
 
@@ -52,6 +53,7 @@ let shown = ref([])     // 渲染用（分段）
 let seq = 0
 let timers = []
 const sentAny = ref(false)
+const showQ = ref(false)
 const aiUsed = ref(0)
 const aiFree = ref(30)
 const points = ref(0)
@@ -155,7 +157,8 @@ onBeforeUnmount(() => { timers.forEach(t => clearTimeout(t)); stopSug(); cache.s
 
 <style scoped>
 .ai-panel{width:100%;height:100%;display:flex;flex-direction:column;background:var(--surface);border-left:1px solid var(--border)}
-.ai-head{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.ai-head{position:relative;display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.q-pop{position:absolute;top:calc(100% + 4px);right:10px;z-index:90;width:min(260px,70vw);padding:9px 11px;border-radius:10px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .ai-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
 .ai-title{font-weight:600;font-size:14px;flex:1;display:flex;align-items:center;gap:5px}
 .ai-tag{font-style:normal;font-size:9px;font-weight:700;background:var(--accent);color:#fff;border-radius:4px;padding:0 4px;line-height:1.4}

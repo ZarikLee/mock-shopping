@@ -136,9 +136,9 @@
       <div class="center-card wide">
         <h3>导入任务记录</h3>
         <p class="tip">每行开头是日期即可识别；任务前加 [x]/✔ 视为完成。</p>
-        <textarea v-model="importText" class="imp" placeholder="2024-09-01 周日
-- [x] 复习高数
-- 写作业"></textarea>
+        <textarea v-model="importText" class="imp" placeholder="2026-09-01
+1. 复习高数
+2. 写作业"></textarea>
         <p v-if="importPreview" class="tip">{{ importPreview }}</p>
         <div class="uprow"><button class="upfile" @click="$refs.impFile.click()">选择文件上传</button>
           <input ref="impFile" type="file" accept=".txt,.md,.json,.csv,text/plain" style="display:none" @change="onFile"></div>
@@ -181,9 +181,9 @@
           <h3>导出记录</h3>
           <p class="tip">选择日期范围（可不填，留空则导出全部），导出为 txt 文本。</p>
           <div class="row range">
-            <label class="rlabel">从<input type="date" class="f-input rinput" v-model="exStart" /></label>
-            <span class="rsep">至</span>
-            <label class="rlabel">到<input type="date" class="f-input rinput" v-model="exEnd" /></label>
+            <label class="rlabel"><span>从</span><input type="date" class="rinput" v-model="exStart" /></label>
+            <span class="rsep">到</span>
+            <label class="rlabel"><input type="date" class="rinput" v-model="exEnd" /></label>
           </div>
 
           <div class="row">
@@ -674,7 +674,7 @@ function doExport(){
   if (!list.length) { showToast('该时间段没有记录'); return }
   const lines = []
   lines.push('纸上 · Paper Todo 导出记录')
-  const rangeTxt = (exStart.value || exEnd.value) ? (`${exStart.value || '最早'} ~ ${exEnd.value || '今天'}`) : '全部'
+  const rangeTxt = (exStart.value || exEnd.value) ? (`${exStart.value || '最早'} 到 ${exEnd.value || '今天'}`) : '全部'
   lines.push('范围：' + rangeTxt + '　共 ' + list.length + ' 天')
   lines.push('导出时间：' + nowStamp() + '　由小纸生成')
   lines.push('')
@@ -868,10 +868,10 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 
 .center-mask{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;background:rgba(0,0,0,.3);z-index:120;padding:24px 20px}
 .center-card{width:min(340px,100%);max-width:420px;background:var(--surface);border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px;max-height:none}
-.range{display:flex;align-items:center;gap:8px;margin:2px 0}
-.rlabel{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2)}
-.rinput{flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px}
-.rsep{color:var(--text-2)}
+.range{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:2px 0}
+.rlabel{display:flex;align-items:center;flex:1;min-width:132px;gap:6px;font-size:13px;color:var(--text-2)}
+.rinput{flex:1;min-width:0;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;box-sizing:border-box}
+.rsep{color:var(--text-2);flex-shrink:0}
 
 .center-card h3{margin:0}
 .center-card .tip{color:var(--text-2);font-size:12px;margin:0}

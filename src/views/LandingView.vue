@@ -11,7 +11,8 @@
           <a href="#features">功能</a>
           <a href="#how">怎么用</a>
           <a href="#ai">AI 小纸</a>
-          
+          <a href="#faq">常见问题</a>
+          <a href="#manual">用户手册</a>
         </nav>
         <div class="nav-actions">
           <button class="round" @click="theme.toggle" :title="theme.theme === 'dark' ? '切换到日间' : '切换到暗色'">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
@@ -129,6 +130,27 @@
     </section>
 
     <!-- 最终 CTA -->
+    <!-- 常见问题 -->
+    <section class="sec faq" id="faq">
+      <h2 class="sec-t rv">常见问题</h2>
+      <p class="sec-s rv">关于收费、容量、积分与隐私，都在这里</p>
+      <div class="faq-list">
+        <details v-for="f in faqs" :key="f.q" class="faq-item rv"><summary>{{ f.q }}</summary><p>{{ f.a }}</p></details>
+      </div>
+    </section>
+
+    <!-- 用户手册 -->
+    <section class="sec manual" id="manual">
+      <h2 class="sec-t rv">用户手册</h2>
+      <p class="sec-s rv">从第一次打开到玩转全部功能</p>
+      <div class="manual-grid">
+        <div class="m-card rv" v-for="m in manuals" :key="m.t">
+          <h3><span class="m-no">{{ m.no }}</span>{{ m.t }}</h3>
+          <ol><li v-for="(x, i) in m.steps" :key="i">{{ x }}</li></ol>
+        </div>
+      </div>
+    </section>
+
     <footer class="foot">
       <img src="/papertodo_logo.png?v=2" alt="纸上" />
       <span>纸上 · Paper Todo</span>
@@ -163,14 +185,30 @@ const stats = [
   { from: 0, to: 0, suffix: ' 学习成本', label: '打开就会写' },
 ]
 const feats = [
-  { t: '云文件管理', d: '所有图片与附件按日期归档，可筛选、上传、删除；容量不够还能用积分永久扩容。', ico: '<svg viewBox="0 0 24 24"><path d="M4 5h16M4 9h10M4 13h6"/><rect x="14" y="12" width="7" height="9" rx="1.5"/></svg>' },
-  { t: '积分与激励', d: '每天登录、完成任务都能赚积分；AI 有免费额度、超出消耗积分，云盘用积分扩容，把坚持变成奖励。', ico: '<svg viewBox="0 0 24 24"><path d="M12 3l2 5h5l-4 3.5L17 17l-5-3-5 3 2-5.5L5 8h5z"/></svg>' },
-  { t: '像写日记一样记任务', d: '一天一张卡片，回车即写下一项；字体字号随你调，随手滑动标完成，写错可上/下一版本回退。', ico: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>' },
-  { t: '图片与附件', d: '每条任务下可传图、缩略图统一大小可预览；每张卡片可挂文件，在线预览 + 下载 + 悬停删除。', ico: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>' },
-  { t: 'AI 小纸 · 会写东西', d: '「帮我写周报」即基于你的真实记录给出整段成稿；还能总结、统计完成率、规划明天。', ico: '<svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>' },
-  { t: '日历热力', d: '月历每天按完成度点亮深浅不一的蓝色方块，5/5 最深、0/5 留白，一眼看出缺勤与节奏。', ico: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M4 9h16"/><rect x="8" y="13" width="3" height="3" fill="#34c759"/><rect x="12" y="13" width="3" height="3" fill="#0a84ff"/><rect x="16" y="13" width="3" height="3" fill="#5e5ce6"/></svg>' },
-  { t: '代码级缩略图', d: '右侧 minimap 像编辑器地图：内容恒定缩放、完成橙色一目了然，点击任意位置直达对应记录。', ico: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h6"/><rect x="16" y="14" width="5" height="4" rx="1"/></svg>' },
-  { t: '反馈 → 管理员回复', d: '建议直达管理员并收到站内消息回复；新消息红点角标实时提醒，可一键已读。', ico: '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 20l1-5.2A8.5 8.5 0 1 1 21 11.5z"/><circle cx="12" cy="11.5" r="1.6"/></svg>' },
+  { t: '每日待办 · 日志式', d: '日期即“页面”，连续编辑自动编号、字体自选，回车续写下一项，iOS 式滑动完成，写错可上/下一版本回退。', ico: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>' },
+  { t: '图片与附件', d: '任务下传图、统一缩略图可预览；卡片可挂文件并在线预览；任何尺寸一致不凌乱。', ico: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>' },
+  { t: '云文件管理', d: '所有图片与附件按日期归档，可筛选、上传、删除，容量不够可用积分永久扩容。', ico: '<svg viewBox="0 0 24 24"><path d="M4 5h16M4 9h10M4 13h6"/><rect x="14" y="12" width="7" height="9" rx="1.5"/></svg>' },
+  { t: 'AI 小纸', d: '「帮我写周报」即基于真实记录整段成稿；总结、统计、规划明天都能干。', ico: '<svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>' },
+  { t: '回顾与成就', d: '生成本月/上月/今年的回顾总结，用鼓励文案和成就徽章把坚持量化成动力。', ico: '<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' },
+  { t: '日历热力', d: '月历每天按完成度点亮深浅不一的蓝色方块，5/5 最深、0/5 留白，一眼看到节奏。', ico: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M4 9h16"/><rect x="8" y="13" width="3" height="3" fill="#34c759"/><rect x="12" y="13" width="3" height="3" fill="#0a84ff"/><rect x="16" y="13" width="3" height="3" fill="#5e5ce6"/></svg>' },
+  { t: '代码级缩略图', d: '右侧 minimap 恒定缩放、完成橙色一目了然，点击任意位置直达对应记录。', ico: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h6"/><rect x="16" y="14" width="5" height="4" rx="1"/></svg>' },
+  { t: '积分与奖励', d: '每日登录与完成任务攒积分；云盘用积分扩容、AI 超免费额度扣积分；还有消息通知直达管理员回复。', ico: '<svg viewBox="0 0 24 24"><path d="M12 3l2 5h5l-4 3.5L17 17l-5-3-5 3 2-5.5L5 8h5z"/></svg>' },
+]
+const faqs = [
+  { q: '纸上收费吗？', a: '当前为全民公测阶段，基础使用免费。云盘有默认容量、AI 有每日免费次数，通过积分可扩充；正式商业化前会提前公告。' },
+  { q: '云盘容量、AI 次数和积分怎么算？', a: '云盘默认 100MB，1 积分可永久扩容 1MB；AI 每天免费 30 次，超出后每次消耗 1 积分。每日登录 +10、当天有完成任务 +5（每天各一次），删除当天记录会扣回，防止刷分。' },
+  { q: '我的数据安全吗、放在哪？', a: '数据存储于云端 PostgreSQL，可随时在「导出记录」一键备份为 txt；建议定期导出留底。请勿在记录中上传含敏感个人信息的图片。' },
+  { q: '能导入微信/备忘录/别的 app 的记录吗？', a: '「导入任务」支持把 txt/md 等文本按日期导入：每行以日期开头即识别，任务行自动去重合并，还可用「上一版本」撤销。' },
+  { q: '手机上能用吗？', a: '可以。直接用浏览器访问即可，移动端已做适配；无需安装。建议把页面添加到主屏幕以更快进入。' },
+  { q: '遇到问题或想要新功能？', a: '进入「设置 → 建议反馈」提交，管理员会逐条回复，并会有站内消息提醒你。' },
+]
+const manuals = [
+  { no: '1', t: '快速开始', steps: ['手机号注册并登录（验证码），登录页可「忘记密码」重置', '选择身份（学生/职场人）并填写用户名', '创建一个学校/公司项目，设定开始日期', '在左侧用下拉框切换项目，顶部页签切换功能'] },
+  { no: '2', t: '每日待办', steps: ['进入某一天，直接打字即可写任务，回车续写下一项', '点击行右侧开关标记完成；第 1 行永远保留不可删空', '删除某天：点卡片右上角 × 并确认', '右侧缩略图与日历可快速跳到某天，或点上方日历热力'] },
+  { no: '3', t: '图片与附件', steps: ['每条任务下方可传图片，缩略图统一大小、点击放大', '卡片底部可传文件，可在线预览/下载', '到「云文件管理」按日期筛选、上传或删除'] },
+  { no: '4', t: 'AI 小纸', steps: ['点格式栏右侧的小纸对话', '直接说“帮我写周报/统计进度/规划明天”等会整段成稿', '聊天记录会保留，可切换项目各保留一份'] },
+  { no: '5', t: '回顾与成就', steps: ['左侧「回顾与成就」查看总览', '切本月/上月/今年生成回顾总结', '完成后解锁成就徽章，成就感满格'] },
+  { no: '6', t: '导出与导入', steps: ['「导出记录」可选日期范围导出 txt', '「导入任务」粘贴或选择文件即可批量导入', '每次操作都可通过「上一版本/下一版本」撤销重做'] },
 ]
 const steps = [
   { t: '创建你的学校 / 企业', d: '选学生或职场人，建一个项目，设定开始日期。' },
@@ -379,4 +417,18 @@ h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.12; letter-spacing: -1p
   .float-card { display: none; }
   .demo { max-width: 100%; }
 }
+
+.faq-list { display: flex; flex-direction: column; gap: 10px; max-width: 760px; margin: 0 auto; }
+.faq-item { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: hidden; }
+.faq-item summary { cursor: pointer; padding: 13px 16px; font-size: 14px; font-weight: 600; list-style: none; position: relative; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after { content: '+'; position: absolute; right: 16px; color: var(--accent); font-weight: 700; }
+.faq-item[open] summary::after { content: '–'; }
+.faq-item p { margin: 0; padding: 0 16px 14px; color: var(--text-2); font-size: 13px; line-height: 1.7; }
+.manual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.m-card { border: 1px solid var(--border); border-radius: 16px; padding: 20px; background: var(--surface); }
+.m-card h3 { display: flex; align-items: center; gap: 9px; font-size: 15px; margin: 0 0 12px; }
+.m-no { width: 24px; height: 24px; border-radius: 7px; background: var(--accent); color: #fff; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.m-card ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+.m-card li { font-size: 13px; color: var(--text-2); line-height: 1.6; }
 </style>
