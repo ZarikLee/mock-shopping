@@ -397,7 +397,7 @@ function layout(day){const el=document.querySelector(`.daybody[data-date="${day.
 }
 function readBody(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const lis=[...el.querySelectorAll(':scope ol > li')];const old=day.items||[]
-  day.items=lis.map((li,idx)=>{const c=li.cloneNode(true);c.querySelectorAll('.li-imgs').forEach(n=>n.remove())
+  day.items=lis.map((li,idx)=>{const c=li.cloneNode(true);c.querySelectorAll('.li-imgs,.li-media').forEach(n=>n.remove())
     return {text:(c.textContent||'').replace(/\u00a0/g,'').trim(),done:li.classList.contains('done'),img:Array.isArray(old[idx]&&old[idx].img)?old[idx].img.slice():[]} })}
 function onInput(day){readBody(day);if(!day.items.length){day.items=[{text:'',done:false}];renderBody(day)}requestAnimationFrame(()=>{layout(day);scheduleMap()});const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),900);day._last=key}}
