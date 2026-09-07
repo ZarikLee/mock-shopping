@@ -3,7 +3,8 @@
     <header class="ai-head">
       <span class="ai-dot"></span>
       <span class="ai-title">小纸 <i class="ai-tag">AI</i></span>
-      <span class="ai-quota" :title="'免费每天 ' + aiFree + ' 次，超出每次消耗 1 积分'">剩 {{ Math.max(0, aiFree - aiUsed) }}/{{ aiFree }} · ✦{{ points }}</span>
+      <span class="ai-quota">剩 {{ Math.max(0, aiFree - aiUsed) }}/{{ aiFree }} · ✦{{ points }}</span>
+      <span class="q-hint" tabindex="0"><i>i</i><span class="q-tip">AI 每天免费 {{ aiFree }} 次；用完后每问一次消耗 1 积分。攒积分：每日登录 +10、当天有完成任务 +5（每天各一次）。</span></span>
       <button class="ai-x" @click="emit('close')">×</button>
     </header>
 
@@ -161,6 +162,10 @@ onBeforeUnmount(() => { timers.forEach(t => clearTimeout(t)); stopSug(); cache.s
 .ai-tag{font-style:normal;font-size:9px;font-weight:700;background:var(--accent);color:#fff;border-radius:4px;padding:0 4px;line-height:1.4}
 .ai-x{border:none;background:none;color:var(--text-2);font-size:18px;cursor:pointer;width:26px;height:26px;border-radius:50%}
 .ai-quota{font-size:11px;color:var(--text-2);background:var(--surface-2);border-radius:999px;padding:2px 8px;white-space:nowrap;cursor:help}
+.q-hint{position:relative;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--border);color:var(--text-2);font-size:10px;cursor:help;flex-shrink:0}
+.q-hint i{font-style:normal}
+.q-tip{visibility:hidden;opacity:0;position:absolute;left:50%;top:calc(100% + 7px);transform:translateX(-50%);width:220px;padding:8px 10px;border-radius:8px;background:var(--text);color:var(--bg);font-size:12px;line-height:1.6;z-index:60;transition:opacity .15s,visibility .15s;box-shadow:0 6px 20px rgba(0,0,0,.2);font-style:normal;text-align:left}
+.q-hint:hover .q-tip,.q-hint:focus .q-tip{visibility:visible;opacity:1}
 .ai-x:hover{background:var(--surface-2)}
 .ai-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
 .ai-welcome{display:flex;gap:10px;color:var(--text-2);font-size:13px;align-items:flex-start;max-width:85%}

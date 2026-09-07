@@ -49,7 +49,7 @@ export async function todayCount(userId, type) {
 
 export const FREE_AI = 30;
 export const MB = 1024 * 1024;
-export const STORAGE_PER_POINT = 20 * 1024 * 1024; // 1 积分 = 20MB 永久
+export const STORAGE_PER_POINT = 1 * 1024 * 1024; // 1 积分 = 1MB 永久
 
 export async function convertToStorage(userId, points) {
   points = Math.floor(points);

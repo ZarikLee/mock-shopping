@@ -236,6 +236,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
 import { projectApi } from '../api/projects'
+let ptsNotifyAt = 0
+function maybeNotifyPts(){ const now = Date.now(); if (now - ptsNotifyAt > 4000) { ptsNotifyAt = now; window.dispatchEvent(new CustomEvent('pts-changed')) } }
 import AiPanel from '../components/AiPanel.vue'
 import { notificationApi } from '../api/notifications'
 
@@ -584,7 +586,7 @@ async function load(){loading.value=true;loadError.value=''
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})).filter(i=>i.text!==''||(i.img&&i.img.length))}
-async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[],images:day.images||[]});day._dirty=false;day._last=snapDay(day);lastSaved.value=nowStamp()}catch{}}
+async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[],images:day.images||[]});day._dirty=false;day._last=snapDay(day);lastSaved.value=nowStamp();if(day.date===tNow&&day.items.some(i=>i.done))maybeNotifyPts()}catch{}}
 async function saveDraft(day){try{await projectApi.draft(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[],images:day.images||[]})}catch{}}
 async function saveAll(){saving.value=true
   for(const day of days.value){if(!day._dirty)continue;readBody(day)

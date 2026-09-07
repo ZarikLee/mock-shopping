@@ -19,6 +19,7 @@ export const useUserStore = defineStore('user', () => {
     const res = await authApi.login({ account, password })
     const data = res.data || res
     setSession(data.token, data.user)
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('pts-changed'))
     return data.user
   }
 

@@ -35,8 +35,7 @@
           <p v-if="!projects.length" class="pd-hint">还没有项目，点“＋新建”创建</p>
         </div>
         <div class="ftabs">
-          <button class="ftab" :class="{ on: route.path.startsWith('/log/') }" @click="openProject(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M8 13h4"/></svg>每日待办</button>
-          <button class="ftab" :class="{ on: route.path.startsWith('/review/') }" @click="goReview(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>回顾与成就</button>
+          <button class="ftab" :class="{ on: route.path.startsWith('/log/') }" @click="openProject(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M8 13h4"/></svg>每日待办</button><button class="ftab" :class="{ on: route.path.startsWith('/files/') }" @click="goFiles(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>云文件管理</button><button class="ftab" :class="{ on: route.path.startsWith('/review/') }" @click="goReview(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>回顾与成就</button>
           <button class="ftab" :class="{ on: route.path.startsWith('/files/') }" @click="goFiles(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>云文件管理</button>
         </div>
         <div class="sb-foot">
@@ -172,7 +171,7 @@
         <div class="center-card">
           <div class="c-head"><h3>我的积分 <b class="pts-big">✦ {{ points }}</b></h3><button class="c-x" @click="ptsOpen = false">×</button></div>
           <p class="pts-tip">每日登录 +10、当天有完成的任务 +5（每天各一次）；删除当天记录会扣回，防止刷分。</p>
-          <p class="pts-tip">加成：每积分 +1MB 云盘、AI 每日次数 +0.5 次（基准 500MB / 30 次）。</p>
+          <p class="pts-tip">扩容：1 积分 = 云盘 +1MB（永久）；AI 每天免费 30 次，超出每次消耗 1 积分。</p>
           <div class="pts-list">
             <div v-for="l in ptsLogs" :key="l.id" class="pts-item">
               <span class="pt-note">{{ l.note }}</span>
@@ -228,7 +227,9 @@ const pageTitle = computed(() => ({ menu: '设置', profile: '个人信息', abo
 const showToast = m => { toastMsg.value = m; clearTimeout(toastTimer); toastTimer = setTimeout(() => toastMsg.value = '', 2000) }
 let ptsTimer = null
 const fmtPtsTime = ts => { if (!ts) return ''; const d = new Date(ts); const p = n => String(n).padStart(2, '0'); return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}` }
-const loadPoints = async (animate = false) => { try { const res = await authApi.points(); const p = (res && res.points) != null ? Number(res.points) : points.value; if (animate && p > points.value) { ptsPop.value = true; setTimeout(() => ptsPop.value = false, 900) } points.value = p; ptsLogs.value = (res && res.logs) || [] } catch {} }
+const lastPts = ref(0)
+const loadPoints = async (animate = false) => { try { const res = await authApi.points(); const p = (res && res.points) != null ? Number(res.points) : points.value; if ((animate && p > points.value) || p > lastPts.value) { ptsPop.value = true; setTimeout(() => ptsPop.value = false, 900) } lastPts.value = p; points.value = p; ptsLogs.value = (res && res.logs) || [] } catch {} }
+const onPtsChanged = () => loadPoints(true)
 const openPts = () => { ptsOpen.value = true; loadPoints(true) }
 const saveProfile = async () => {
   if (!profile.value.nickname.trim()) { showToast('昵称不能为空'); return }
@@ -306,8 +307,8 @@ onMounted(() => {
 let iv=null
 let ptsIv=null
 watch(() => route.fullPath, () => { load(); if (mobile.value) drawerOpen.value = false })
-onMounted(()=>{ iv=setInterval(load,8000); loadPoints(); ptsIv=setInterval(() => loadPoints(), 60000) })
-onBeforeUnmount(()=>{ clearInterval(iv); if (ptsIv) clearInterval(ptsIv) })
+onMounted(()=>{ iv=setInterval(load,8000); loadPoints(); ptsIv=setInterval(() => loadPoints(), 20000); window.addEventListener('pts-changed', onPtsChanged) })
+onBeforeUnmount(()=>{ clearInterval(iv); if (ptsIv) clearInterval(ptsIv); window.removeEventListener('pts-changed', onPtsChanged) })
 onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document.removeEventListener('mousedown', onPdDown) })
 </script>
 
