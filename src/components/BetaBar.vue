@@ -1,7 +1,7 @@
 <template>
   <div class="beta">
     <span class="tag">公测中</span>
-    <span class="txt">当前处于全民公测阶段，更新较频繁，体验可能偶有波动；有任何建议或需求，欢迎到「设置 → 建议反馈」告诉我们，感谢参与！</span>
+    <span class="txt">当前处于全民公测阶段，更新较频繁，体验可能偶有波动；有任何建议或需求，欢迎到「设置 → 建议反馈」告诉我们，感谢您的大力支持！</span>
   </div>
 </template>
 
