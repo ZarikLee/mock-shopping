@@ -37,6 +37,9 @@ async function sendSmsCode(to, code) {
   } catch (e) {
     clearTimeout(timer);
     if (e && e.name === 'AbortError') throw new Error('短信服务响应超时');
+    if (e && String(e.message).includes('fetch failed') && e.cause) {
+      throw new Error('无法连接短信网关：' + (e.cause.message || String(e.cause)) + (e.cause.code ? '（' + e.cause.code + '）' : ''));
+    }
     throw e;
   }
 }
