@@ -403,7 +403,7 @@ function onPickFile(){showToast('读取附件中…')
 function renderBody(day){nextTick(()=>{
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const ol=document.createElement('ol')
-  day.items.forEach((it,idx)=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''));appendMedia(li,it,day,idx);ol.appendChild(li)})
+  day.items.forEach((it,idx)=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text?it.text:'\u200b'));appendMedia(li,it,day,idx);ol.appendChild(li)})
   if(!ol.children.length){const li=document.createElement('li');ol.appendChild(li)}
   el.innerHTML='';el.appendChild(ol)
   layout(day)
@@ -420,7 +420,7 @@ function layout(day){const el=document.querySelector(`.daybody[data-date="${day.
 function readBody(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const lis=[...el.querySelectorAll(':scope ol > li')];const old=day.items||[]
   day.items=lis.map((li,idx)=>{const c=li.cloneNode(true);c.querySelectorAll('.li-imgs,.li-media').forEach(n=>n.remove())
-    return {text:(c.textContent||'').replace(/\u00a0/g,'').trim(),done:li.classList.contains('done'),img:Array.isArray(old[idx]&&old[idx].img)?old[idx].img.slice():[]} })}
+    return {text:(c.textContent||'').replace(/\u00a0/g,'').replace(/\u200b/g,'').trim(),done:li.classList.contains('done'),img:Array.isArray(old[idx]&&old[idx].img)?old[idx].img.slice():[]} })}
 function onInput(day){readBody(day);if(!day.items.length){day.items=[{text:'',done:false}];renderBody(day)}requestAnimationFrame(()=>{layout(day);scheduleMap()});const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),900);day._last=key}}
 function onKey(e,day){
@@ -678,7 +678,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .del-day{border:none;background:var(--surface-2);color:var(--text-2);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
 .del-day:hover{background:var(--red);color:#fff}
 .daybody{outline:none;min-height:46px;padding:8px 56px 18px 20px;position:relative}
-.day-media{display:flex;align-items:center;gap:8px;padding:8px 20px 10px;border-top:1px solid var(--border)}
+.day-media{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 20px 10px calc(20px + 1.5em);border-top:1px dashed var(--border);margin-top:2px}
 .mf-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
 .mf-add:hover{border-color:var(--accent);color:var(--accent)}
 .mf-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
@@ -763,10 +763,11 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .daybody .rail button.on{background:#007aff}
 .daybody .rail button.on::after{left:22px}
 .daybody ol>li .li-media{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:0;opacity:1;margin:2px 0 0}
-.li-media .thumb{position:relative;display:inline-block}
-.li-media .thumb img{height:56px;max-width:220px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:zoom-in;display:block}
-.li-media .thumb .rm{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-style:normal;font-size:12px;line-height:15px;text-align:center;cursor:pointer;display:none}
-.li-media .thumb:hover .rm{display:block}
+.li-media .thumb{position:relative;width:76px;height:76px;flex:none;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.li-media .thumb img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.li-media .thumb .rm{position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-style:normal;font-size:12px;line-height:15px;text-align:center;cursor:pointer;opacity:0;transition:opacity .15s}
+.li-media .thumb:hover .rm{opacity:1}
+
 .li-media .add-im{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer;height:26px}
 .li-media .add-im svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .li-media .add-im:hover{border-color:var(--accent);color:var(--accent)}
