@@ -7,6 +7,11 @@
       </div>
       <span class="fp-count">共 {{ totalImg }} 图 · {{ totalFile }} 文件</span>
     </div>
+    <div class="quota">
+      <span class="q-lbl">云盘用量</span>
+      <div class="q-bar"><i :style="{ width: quotaPct + '%' }"></i></div>
+      <span class="q-num">{{ fmtMB(used) }} / 500 MB</span>
+    </div>
 
     <div v-if="loading" class="empty">载入中…</div>
     <div v-else-if="!rows.length" class="empty">这个项目还没有图片或附件</div>
@@ -50,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { projectApi } from '../api/projects'
@@ -63,6 +68,9 @@ const rows = ref([])
 const loading = ref(true)
 const totalImg = ref(0)
 const totalFile = ref(0)
+const used = ref(0)
+const quotaPct = computed(() => Math.min(100, Math.round(used.value / (500 * 1024 * 1024) * 100)))
+const fmtMB = b => (b / (1024 * 1024)).toFixed(1)
 const WEEKS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 const wk = d => WEEKS[new Date(d + 'T00:00:00').getDay()]
 const pad = n => String(n).padStart(2, '0')
@@ -90,6 +98,7 @@ async function load() {
     totalImg.value = rows.value.reduce((n, r) => n + r.images.length, 0)
     totalFile.value = rows.value.reduce((n, r) => n + r.files.length, 0)
   } catch { rows.value = [] } finally { loading.value = false }
+  try { const r = await projectApi.storage(); used.value = (r && (r.used != null ? r.used : 0)) || 0 } catch {}
 }
 onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load() })
 </script>
@@ -100,6 +109,11 @@ onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load()
 .fp-head h1 { font-size: 22px; margin: 0 0 4px; }
 .fp-sub { color: var(--text-2); font-size: 13px; margin: 0; }
 .fp-count { font-size: 12px; color: var(--text-2); white-space: nowrap; }
+.quota { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; }
+.q-lbl { font-size: 12px; color: var(--text-2); }
+.q-bar { flex: 1; height: 8px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.q-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #7b6cff); border-radius: 5px; transition: width .4s; }
+.q-num { font-size: 12px; color: var(--text-2); white-space: nowrap; }
 .empty { text-align: center; color: var(--text-2); padding: 60px 0; }
 .fp-list { display: flex; flex-direction: column; gap: 14px; }
 .fp-day { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; }

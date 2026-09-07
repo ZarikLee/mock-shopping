@@ -74,7 +74,7 @@
       </div>
 
       <div v-if="loadError" class="err">{{ loadError }}</div>
-      <div v-if="loading" class="spin-wrap"><span class="spin"></span><p class="spin-t">载入记录中…</p></div>
+      <div v-if="loading" class="spin-wrap"><span class="spin"></span><p class="spin-t">{{ spinTxt }}</p></div>
       
       <div class="swrap">
         <div class="scroll" ref="scrollEl" @scroll="onDocScroll">
@@ -110,7 +110,10 @@
           <div v-if="!loading && !days.length" class="ph"><p>还没有记录。</p></div>
 
           <div class="card-add-row">
-            <button class="add-card-btn" @click="addNextDay">＋ 新增记录</button>
+            <button class="add-round" @click="addNextDay" title="新增记录">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 5v14M5 12h14"/></svg>
+              <span>新增记录</span>
+            </button>
           </div>
         </div>
       </div>
@@ -218,6 +221,9 @@ import { notificationApi } from '../api/notifications'
 const route=useRoute();const router=useRouter();const user=useUserStore();const theme=useThemeStore()
 const pid=ref(Number(route.params.projectId))
 const loading=ref(true);const loadError=ref('')
+const spinTxt=ref('小纸正在翻看你的记录…')
+const spinMsgs=['小纸正在翻看你的记录…','像泡茶一样，慢慢来…','正在把昨天今天摆整齐…','马上就好，别着急哦 ✨']
+let spinTimer=null
 const projectName=ref('…');const projectSub=ref('')
 const days=ref([]);const saving=ref(false)
 const unsavedPrompt=ref(false)
@@ -635,10 +641,10 @@ async function doImport(){if(!parsed.value.length)return
 function cmd(c,val){try{document.execCommand(c,false,val)}catch{}}
 function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearTimeout(timers[day.date]);autosave(day)}})}
 
-onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow);bellTimer=setInterval(loadBell,15000);loadBell()})
+onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow);bellTimer=setInterval(loadBell,15000);loadBell();spinTimer=setInterval(()=>{spinTxt.value=spinMsgs[Math.floor(Math.random()*spinMsgs.length)]},1000)})
 function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)});if(aiOpen.value)placeAi()}
 watch(()=>route.params.projectId,()=>{if(!user.isLoggedIn)return;pid.value=Number(route.params.projectId);days.value=[];load()})
-onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer);if(bellTimer)clearInterval(bellTimer)})
+onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer);if(bellTimer)clearInterval(bellTimer);if(spinTimer)clearInterval(spinTimer)})
 </script>
 
 <style scoped>
@@ -749,7 +755,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .del-day{border:none;background:var(--surface-2);color:var(--text-2);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
 .del-day:hover{background:var(--red);color:#fff}
 .daybody{outline:none;min-height:46px;padding:8px 56px 18px 20px;position:relative}
-.spin-wrap{position:fixed;inset:0;z-index:150;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:color-mix(in srgb,var(--bg) 55%, transparent);backdrop-filter:blur(2px)}
+.spin-wrap{position:fixed;inset:0;z-index:150;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:color-mix(in srgb,var(--bg) 72%, transparent);backdrop-filter:blur(1px)}
 .spin{width:40px;height:40px;border-radius:50%;border:3px solid var(--surface-2);border-top-color:var(--accent);animation:sp .8s linear infinite}
 .spin-t{color:var(--text-2);font-size:13px}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -786,7 +792,10 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .rail button::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:1px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
 .rail button.on{background:var(--accent)}
 .rail button.on::after{left:22px}
-.card-add-row{display:flex;justify-content:center;padding:8px 0 10px}
+.card-add-row{display:flex;justify-content:center;align-items:center;flex-direction:column;gap:6px;padding:10px 0 6px}
+.add-round{display:inline-flex;flex-direction:column;align-items:center;gap:4px;border:none;background:none;cursor:pointer;color:var(--text-2);font-size:12px}
+.add-round svg{fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;background:var(--accent);border-radius:50%;width:46px;height:46px;padding:10px;box-sizing:border-box;box-shadow:0 8px 20px rgba(10,132,255,.35);transition:transform .2s}
+.add-round:hover svg{transform:translateY(-2px) scale(1.03)}
 .add-card-btn{border:1px dashed var(--border);background:transparent;color:var(--text-2);border-radius:12px;padding:12px 30px;font-size:14px;cursor:pointer}
 .add-card-btn:hover{border-color:var(--accent);color:var(--accent)}
 .ph{padding:50px 0;color:var(--text-2);text-align:center}

@@ -12,6 +12,31 @@ function now() {
   return new Date().toISOString();
 }
 
+const STORAGE_LIMIT = 500 * 1024 * 1024;
+const bytesOf = s => (s ? Math.floor(String(s).length * 0.75) : 0);
+function bytesOfLog(l) {
+  if (!l) return 0;
+  return (l.files || []).reduce((n, f) => n + bytesOf(f.url), 0)
+    + (l.images || []).reduce((n, u) => n + bytesOf(u), 0)
+    + (l.items || []).reduce((n, it) => n + (it.img || []).reduce((m, u) => m + bytesOf(u), 0), 0);
+}
+function allUserLogs(userId) {
+  return queryAll('projects', { userId }).flatMap(p => queryAll('day_logs', { projectId: p.id }));
+}
+function usedBytes(userId) {
+  return allUserLogs(userId).reduce((n, l) => n + bytesOfLog(l), 0);
+}
+function ensureCapacity(userId, excludeLog, addBytes) {
+  const base = usedBytes(userId) - bytesOfLog(excludeLog);
+  return base + addBytes <= STORAGE_LIMIT;
+}
+function addedBytes(items, files, images) {
+  let n = (items || []).reduce((a, it) => a + (it.img || []).reduce((b, u) => b + bytesOf(u), 0), 0);
+  n += (files || []).reduce((a, f) => a + bytesOf(f && f.url), 0);
+  n += (images || []).reduce((a, u) => a + bytesOf(u), 0);
+  return n;
+}
+
 function normalizeItems(items) {
   if (!Array.isArray(items)) return [];
   return items.map((it, idx) => ({
@@ -75,6 +100,10 @@ router.get('/', (req, res) => {
     })
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)) || b.id - a.id);
   return res.json(projects);
+});
+
+router.get('/storage', (req, res) => {
+  res.json({ used: usedBytes(req.user.id), limit: STORAGE_LIMIT });
 });
 
 router.post('/', (req, res) => {
@@ -182,6 +211,9 @@ router.post('/:id/logs/:date/draft', (req, res) => {
   }
   const cleanItems = normalizeItems(items);
   const existing = getLog(project.id, date);
+  if (!ensureCapacity(project.userId, existing, addedBytes(cleanItems, files, images))) {
+    return res.status(413).json({ error: '云盘空间不足（每用户 500MB）' });
+  }
   if (existing) {
     const updates = { items: cleanItems, updatedAt: now() };
     if (files !== undefined) updates.files = normalizeFiles(files);
@@ -217,7 +249,11 @@ router.post('/:id/logs/:date/commit', (req, res) => {
     return res.status(400).json({ error: 'items 必须为数组' });
   }
   const cleanItems = normalizeItems(items);
-  let dayLog = getLog(project.id, date);
+  const cur = getLog(project.id, date);
+  if (!ensureCapacity(project.userId, cur, addedBytes(cleanItems, files, images))) {
+    return res.status(413).json({ error: '云盘空间不足（每用户 500MB）' });
+  }
+  let dayLog = cur;
   if (!dayLog) {
     dayLog = insert('day_logs', {
       projectId: project.id,
