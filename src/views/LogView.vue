@@ -260,8 +260,7 @@ function placeAi(){const b=document.querySelector('.fmt-ai');if(!b)return
   const r=b.getBoundingClientRect()
   aiPos.top=Math.max(52,Math.round(r.bottom+6))
   aiPos.right=Math.max(8,Math.round(window.innerWidth-r.right))}
-function aiToggle(){aiOpen.value=!aiOpen.value
-  if(aiOpen.value)nextTick(placeAi)}
+function aiToggle(){ if (aiOpen.value) { aiOpen.value = false; return } closeOverlays('ai'); aiOpen.value = true; nextTick(placeAi) }
 const searchQ=ref('')
 const searchOpen=ref(false)
 function normalizeDateQ(q){let s=q.replace(/\s/g,'')
@@ -277,19 +276,20 @@ const searchResults=computed(()=>{const q=searchQ.value.trim().toLowerCase();if(
       if(th||(dateHit&&idx===0))res.push({date:day.date,weekday:day.weekday,idx,text:it.text||'',done:!!it.done})})
     if(dateHit&&!day.items.length)res.push({date:day.date,weekday:day.weekday,idx:0,text:'',done:false})}
   return res.slice(0,40)})
-function openSearch(){searchOpen.value=true}
+function openSearch(){ closeOverlays('search'); searchOpen.value = true }
 function closeSearch(){setTimeout(()=>{searchOpen.value=false},120)}
 function goFirstResult(){if(searchResults.value.length)openSearchItem(searchResults.value[0])}
 function openSearchItem(r){searchOpen.value=false;scrollToDay(r.date,r.idx)}
 const calOpen=ref(false)
 const calMonth=reactive({y:(()=>{const d=new Date();return d.getFullYear()})(),m:(()=>{const d=new Date();return d.getMonth()+1})()})
+function closeOverlays(except){ if (except !== 'bell') bellOpen.value = false; if (except !== 'cal') calOpen.value = false; if (except !== 'search') searchOpen.value = false; if (except !== 'ai') aiOpen.value = false }
 function onDocDown(e){ const t = e.target; if (!t || t.nodeType !== 1) return
   const wrap = t.closest('.bell-wrap, .cal-wrap, .sr-wrap, .fmt-ai, .ai-dialog')
-  if (!wrap) { bellOpen.value = false; calOpen.value = false; searchOpen.value = false; if (aiOpen.value) aiOpen.value = false } }
-function calToggle(){calOpen.value=!calOpen.value}
+  if (!wrap) closeOverlays() }
+function calToggle(){ if (calOpen.value) { calOpen.value = false; return } closeOverlays('cal'); calOpen.value = true }
 const fmtMsgTime=ts=>{if(!ts)return'';const d=new Date(ts);return `${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`}
 async function loadBell(){try{const res=await notificationApi.list();const l=Array.isArray(res)?res:(res.list||[]);msgs.value=l;unreadCount.value=(res&&res.unread)!=null?res.unread:l.filter(x=>!x.read).length}catch{}}
-function bellToggle(){bellOpen.value=!bellOpen.value;if(bellOpen.value)loadBell()}
+function bellToggle(){ if (bellOpen.value) { bellOpen.value = false; return } closeOverlays('bell'); bellOpen.value = true; loadBell() }
 async function markAllRead(){try{await notificationApi.readAll();msgs.value.forEach(m=>m.read=true);unreadCount.value=0}catch{}}
 async function readOne(m){if(m.read)return;m.read=true;unreadCount.value=Math.max(0,unreadCount.value-1);try{await notificationApi.readAll()}catch{}}
 function calShift(d){let y=calMonth.y,m=calMonth.m+d;if(m<1){m=12;y--}if(m>12){m=1;y++}calMonth.y=y;calMonth.m=m}
