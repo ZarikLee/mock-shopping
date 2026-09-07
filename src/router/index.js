@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   { path: '/', name: 'landing', component: () => import('../views/LandingView.vue') },
+  { path: '/faq', name: 'faq', component: () => import('../views/FaqView.vue') },
+  { path: '/guide', name: 'guide', component: () => import('../views/GuideView.vue') },
   { path: '/login', name: 'login', component: () => import('../views/LoginView.vue') },
   { path: '/onboarding', name: 'onboarding', component: () => import('../views/OnboardingView.vue') },
   {
@@ -40,7 +42,7 @@ router.beforeEach((to) => {
   const role = user?.role
 
   // 落地页公开可访问
-  if (to.path === '/') return true
+  if (['/', '/faq', '/guide'].includes(to.path)) return true
 
   if (!authed) {
     if (to.path === '/login' || to.path === '/onboarding') return true

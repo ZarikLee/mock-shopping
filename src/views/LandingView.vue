@@ -11,8 +11,8 @@
           <a href="#features">功能</a>
           <a href="#how">怎么用</a>
           <a href="#ai">AI 小纸</a>
-          <a href="#faq">常见问题</a>
-          <a href="#manual">用户手册</a>
+          <a class="plain" @click="go('/faq')">常见问题</a>
+          <a class="plain" @click="go('/guide')">用户手册</a>
         </nav>
         <div class="nav-actions">
           <button class="round" @click="theme.toggle" :title="theme.theme === 'dark' ? '切换到日间' : '切换到暗色'">{{ theme.theme === 'dark' ? '☀' : '☾' }}</button>
@@ -130,27 +130,6 @@
     </section>
 
     <!-- 最终 CTA -->
-    <!-- 常见问题 -->
-    <section class="sec faq" id="faq">
-      <h2 class="sec-t rv">常见问题</h2>
-      <p class="sec-s rv">关于收费、容量、积分与隐私，都在这里</p>
-      <div class="faq-list">
-        <details v-for="f in faqs" :key="f.q" class="faq-item rv"><summary>{{ f.q }}</summary><p>{{ f.a }}</p></details>
-      </div>
-    </section>
-
-    <!-- 用户手册 -->
-    <section class="sec manual" id="manual">
-      <h2 class="sec-t rv">用户手册</h2>
-      <p class="sec-s rv">从第一次打开到玩转全部功能</p>
-      <div class="manual-grid">
-        <div class="m-card rv" v-for="m in manuals" :key="m.t">
-          <h3><span class="m-no">{{ m.no }}</span>{{ m.t }}</h3>
-          <ol><li v-for="(x, i) in m.steps" :key="i">{{ x }}</li></ol>
-        </div>
-      </div>
-    </section>
-
     <footer class="foot">
       <img src="/papertodo_logo.png?v=2" alt="纸上" />
       <span>纸上 · Paper Todo</span>
