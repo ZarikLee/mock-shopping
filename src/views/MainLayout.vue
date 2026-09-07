@@ -3,7 +3,7 @@
     <!-- 侧边栏（桌面常显，移动端抽屉） -->
     <transition name="drawer">
       <aside class="sidebar" v-show="showSidebar">
-        <div class="brand" @click="goProjects">
+        <div class="brand" @click="goHome">
           <div class="brand-mark"><img src="/papertodo_logo.png?v=2" alt="纸上" /></div>
           <div class="brand-name">纸上 - Paper Todo</div>
         </div>
@@ -257,6 +257,7 @@ const createProject = async () => {
   } catch (e) { showToast(e?.error || '创建失败') } finally { saving.value = false }
 }
 const openProject = id => { router.push('/log/' + id); if (mobile.value) drawerOpen.value = false }
+const goHome = () => { const id = projects.value.length ? String(projects.value[0].id) : ''; if (id) { router.push('/log/' + id); if (mobile.value) drawerOpen.value = false } else { showNewProj.value = true } }
 const goProjects = () => { router.push('/projects'); if (mobile.value) drawerOpen.value = false }
 const logout = () => { user.logout(); router.push('/login') }
 

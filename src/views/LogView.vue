@@ -225,6 +225,7 @@ const spinTxt=ref('小纸正在翻看你的记录…')
 const spinMsgs=['小纸正在翻看你的记录…','像泡茶一样，慢慢来…','正在把昨天今天摆整齐…','马上就好，别着急哦 ✨']
 let spinTimer=null
 const projectName=ref('…');const projectSub=ref('')
+let homeId=''
 const days=ref([]);const saving=ref(false)
 const unsavedPrompt=ref(false)
 const status=ref('已自动保存')
@@ -518,6 +519,7 @@ function addNextDay(){let date,day
   days.value.sort((a,b)=>a.date<b.date?-1:1)
   renderBody(day);onInput(day);focusLi(day,0);document.querySelector('.daybody[data-date="'+date+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})}
 function showToast(m){toast.value=m;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.value='',2000)}
+function backHome(){ const target = homeId && homeId !== String(pid.value) ? '/log/' + homeId : ''; router.push(target || '/projects') }
 function clearAllTimers(){Object.values(timers).forEach(t=>clearTimeout(t))}
 function curSnap(){days.value.forEach(readBody);return snapAll()}
 function snapAll(){return days.value.map(d=>({date:d.date,items:cleanItems(d.items).map(i=>({text:i.text,done:!!i.done}))}))}
@@ -543,6 +545,7 @@ function verNext(){applyVersion('next')}
 
 async function load(){loading.value=true;loadError.value=''
   try{const list=await projectApi.list();const arr=Array.isArray(list)?list:(list.projects||[])
+    homeId = arr.length ? String(arr[0].id) : ''
     const p=arr.find(x=>x.id===pid.value);projectName.value=p?.name||'项目';projectSub.value=p?(p.type==='school'?'入学':'入职')+' '+p.startDate:''
     const logs=await projectApi.logs(pid.value,{full:1});const logArr=Array.isArray(logs)?logs:(logs.logs||[])
     days.value=logArr.map(norm);days.value.forEach(d=>{d._last=snapDay(d)})
