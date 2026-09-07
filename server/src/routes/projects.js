@@ -18,7 +18,17 @@ function normalizeItems(items) {
     id: it && it.id ? String(it.id) : `${Date.now().toString(36)}-${idx}-${Math.random().toString(36).slice(2, 8)}`,
     text: it && it.text !== undefined && it.text !== null ? String(it.text) : '',
     done: !!(it && it.done),
+    img: Array.isArray(it && it.img) ? it.img.filter(u => u && typeof u === 'string').slice(0, 12) : [],
   }));
+}
+
+function normalizeFiles(files) {
+  if (!Array.isArray(files)) return [];
+  return files.map(f => ({
+    name: String((f && f.name) || '文件').slice(0, 120),
+    type: String((f && f.type) || ''),
+    url: String((f && f.url) || ''),
+  })).filter(f => f.url).slice(0, 20);
 }
 
 function isValidDate(str) {
@@ -125,7 +135,7 @@ router.get('/:id/logs', (req, res) => {  const project = findOwnedProject(req, r
   const full = req.query.full === '1';
   const logs = queryAll('day_logs', { projectId: project.id })
     .map(l => full
-      ? { date: l.date, weekday: l.weekday || '', items: l.items || [], updatedAt: l.updatedAt || l.createdAt || null }
+      ? { date: l.date, weekday: l.weekday || '', items: l.items || [], files: l.files || [], updatedAt: l.updatedAt || l.createdAt || null }
       : {
           date: l.date,
           weekday: l.weekday || '',
@@ -161,7 +171,7 @@ router.post('/:id/logs/:date/draft', (req, res) => {
   if (!isValidDate(date)) {
     return res.status(400).json({ error: '日期格式应为 YYYY-MM-DD' });
   }
-  const { weekday, items } = req.body || {};
+  const { weekday, items, files } = req.body || {};
   if (!Array.isArray(items)) {
     return res.status(400).json({ error: 'items 必须为数组' });
   }
@@ -169,6 +179,7 @@ router.post('/:id/logs/:date/draft', (req, res) => {
   const existing = getLog(project.id, date);
   if (existing) {
     const updates = { items: cleanItems, updatedAt: now() };
+    if (files !== undefined) updates.files = normalizeFiles(files);
     if (weekday !== undefined && weekday !== null) {
       updates.weekday = String(weekday);
     }
@@ -180,6 +191,7 @@ router.post('/:id/logs/:date/draft', (req, res) => {
     date,
     weekday: weekday !== undefined && weekday !== null ? String(weekday) : '',
     items: cleanItems,
+    files: normalizeFiles(files),
     createdAt: now(),
     updatedAt: now(),
   });
@@ -193,7 +205,7 @@ router.post('/:id/logs/:date/commit', (req, res) => {
   if (!isValidDate(date)) {
     return res.status(400).json({ error: '日期格式应为 YYYY-MM-DD' });
   }
-  const { items, weekday } = req.body || {};
+  const { items, weekday, files } = req.body || {};
   if (!Array.isArray(items)) {
     return res.status(400).json({ error: 'items 必须为数组' });
   }
@@ -205,6 +217,7 @@ router.post('/:id/logs/:date/commit', (req, res) => {
       date,
       weekday: weekday !== undefined && weekday !== null ? String(weekday) : '',
       items: cleanItems,
+      files: normalizeFiles(files),
       createdAt: now(),
       updatedAt: now(),
     });
@@ -221,6 +234,7 @@ router.post('/:id/logs/:date/commit', (req, res) => {
   if (weekday !== undefined && weekday !== null && dayLog.weekday !== String(weekday)) {
     updates.weekday = String(weekday);
   }
+  if (files !== undefined) updates.files = normalizeFiles(files);
   update('day_logs', dayLog.id, updates);
   return res.json({ version, items: cleanItems });
 });

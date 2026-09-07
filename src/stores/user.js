@@ -22,8 +22,8 @@ export const useUserStore = defineStore('user', () => {
     return data.user
   }
 
-  const register = async (account, password, nickname) => {
-    const res = await authApi.register({ account, password, nickname })
+  const register = async ({ phone, code, password, nickname }) => {
+    const res = await authApi.register({ phone, code, password, nickname })
     const data = res.data || res
     setSession(data.token, data.user)
     return data.user

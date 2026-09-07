@@ -72,12 +72,18 @@
             </div>
             <div class="daybody" contenteditable="true" spellcheck="false" :data-date="day.date"
               @input="e => onInput(day)" @keydown="e => onKey(e, day)" @blur="e => blurDay(day, e)"></div>
+            <div class="day-media">
+              <button class="mf-add" @click="openFilePick(day)"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>附件</button>
+              <div v-if="(day.files || []).length" class="mf-list">
+                <a v-for="(f, fi) in day.files" :key="fi" class="mf-chip" :href="f.url" :download="f.name" @click.stop><svg viewBox="0 0 24 24" width="13" height="13"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>{{ f.name }}</a>
+              </div>
+            </div>
           </section>
 
           <div v-if="!loading && !days.length" class="ph"><p>还没有记录。</p></div>
 
           <div class="card-add-row">
-            <button class="add-card-btn" @click="addNextDay">＋ 新增明天 · 提前安排</button>
+            <button class="add-card-btn" @click="addNextDay">＋ 新增记录 · 从今天开始</button>
           </div>
         </div>
       </div>
@@ -118,6 +124,8 @@
       </div>
     </div>
 
+    <input ref="pickImg" type="file" accept="image/*" multiple style="display:none" @change="onPickImg" />
+    <input ref="pickFile" type="file" multiple style="display:none" @change="onPickFile" />
     <transition name="fade"><div v-if="toast" class="toast">{{ toast }}</div></transition>
 
     <!-- 删除确认 -->
@@ -174,6 +182,10 @@ const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
 const aiOpen=ref(false)
 const aiPos=reactive({top:70,right:20})
+const pickImgEl=ref(null)
+const pickFileEl=ref(null)
+let imgPick=null
+let filePick=null
 function placeAi(){const b=document.querySelector('.fmt-ai');if(!b)return
   const r=b.getBoundingClientRect()
   aiPos.top=Math.max(52,Math.round(r.bottom+6))
@@ -329,15 +341,44 @@ const dayLabel=d=>{const p=d.split('-');return `${p[0]}年${+p[1]}月${+p[2]}日
 const wk=d=>WEEKS[new Date(d+'T00:00:00').getDay()]
 const fmtTime=t=>{if(!t)return'';const d=new Date(t);return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
 const hasDirty=computed(()=>days.value.some(d=>d._dirty))
-const norm=l=>({date:l.date,weekday:l.weekday||wk(l.date),items:(l.items||[]).map(i=>({text:(i.text||'').replace(/^[。.]$/,'').trim(),done:!!i.done})),_dirty:false,_last:null})
+const norm=l=>({date:l.date,weekday:l.weekday||wk(l.date),items:(l.items||[]).map(i=>({text:(i.text||'').replace(/^[。.]$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})),files:(Array.isArray(l.files)?l.files.map(f=>({name:f.name||'文件',type:f.type||'',url:f.url})):[]),_dirty:false,_last:null})
 const findDay=date=>days.value.find(d=>d.date===date)
-const snapDay=day=>day.items.map(i=>[i.text,i.done])
+const snapDay=day=>{const a=day.items.map(i=>[i.text,i.done,JSON.stringify(i.img||[])]);a.push('F'+JSON.stringify(day.files||[]));return a}
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b)
 
+function appendMedia(li,it,day,idx){if(!day)return
+  const box=document.createElement('div');box.className='li-media';box.setAttribute('contenteditable','false')
+  const arr=Array.isArray(it.img)?it.img:[]
+  arr.forEach((u,ii)=>{const w=document.createElement('span');w.className='thumb'
+    const im=document.createElement('img');im.src=u;im.loading='lazy'
+    im.addEventListener('click',()=>{window.open(u,'_blank')})
+    const x=document.createElement('i');x.className='rm';x.textContent='×'
+    x.addEventListener('click',ev=>{ev.stopPropagation();(day.items[idx].img||[]).splice(ii,1);renderBody(day);afterAttach(day)})
+    w.appendChild(im);w.appendChild(x);box.appendChild(w)})
+  const add=document.createElement('button');add.type='button';add.className='add-im'
+  add.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>图片'
+  add.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();openImgPick(day,idx)})
+  box.appendChild(add)
+  li.appendChild(box)}
+function afterAttach(day){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),400)}
+function openImgPick(day,i){imgPick={day,i};pickImgEl.value&&pickImgEl.value.click()}
+function onPickImg(){const inp=pickImgEl.value;if(!inp)return;const fs=inp.files;inp.value='';if(!fs||!fs.length)return
+  const job=imgPick;imgPick=null;if(!job)return
+  const day=job.day,i=job.i
+  if(!day.items[i])day.items[i]={text:'',done:false,img:[]}
+  if(!day.items[i].img)day.items[i].img=[]
+  const reads=[...fs].map(f=>new Promise(res=>{if(f.size>3*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res(String(r.result));r.readAsDataURL(f)}))
+  Promise.all(reads).then(list=>{list.filter(Boolean).forEach(u=>day.items[i].img.push(u));renderBody(day);afterAttach(day)})}
+function openFilePick(day){filePick=day;pickFileEl.value&&pickFileEl.value.click()}
+function onPickFile(){const inp=pickFileEl.value;if(!inp)return;const fs=inp.files;inp.value='';if(!fs||!fs.length)return
+  const day=filePick;filePick=null;if(!day)return
+  if(!Array.isArray(day.files))day.files=[]
+  const reads=[...fs].map(f=>new Promise(res=>{if(f.size>8*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res({name:f.name,type:f.type||'',url:String(r.result)});r.readAsDataURL(f)}))
+  Promise.all(reads).then(list=>{list.filter(Boolean).forEach(f=>day.files.push(f));afterAttach(day)})}
 function renderBody(day){nextTick(()=>{
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const ol=document.createElement('ol')
-  day.items.forEach(it=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''));ol.appendChild(li)})
+  day.items.forEach((it,idx)=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text||''));appendMedia(li,it,day,idx);ol.appendChild(li)})
   if(!ol.children.length){const li=document.createElement('li');ol.appendChild(li)}
   el.innerHTML='';el.appendChild(ol)
   layout(day)
@@ -352,7 +393,9 @@ function layout(day){const el=document.querySelector(`.daybody[data-date="${day.
     bt.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();day.items[i]=day.items[i]||{text:li.textContent||'',done:false};day.items[i].done=!day.items[i].done;li.classList.toggle('done',day.items[i].done);readBody(day);onInput(day)}})
 }
 function readBody(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
-  const lis=[...el.querySelectorAll(':scope ol > li')];day.items=lis.map(li=>({text:li.textContent.replace(/\u00a0/g,'').trim(),done:li.classList.contains('done')}))}
+  const lis=[...el.querySelectorAll(':scope ol > li')];const old=day.items||[]
+  day.items=lis.map((li,idx)=>{const c=li.cloneNode(true);c.querySelectorAll('.li-imgs').forEach(n=>n.remove())
+    return {text:(c.textContent||'').replace(/\u00a0/g,'').trim(),done:li.classList.contains('done'),img:Array.isArray(old[idx]&&old[idx].img)?old[idx].img.slice():[]} })}
 function onInput(day){readBody(day);requestAnimationFrame(()=>{layout(day);scheduleMap()});const key=snapDay(day)
   if(!day._last||!same(day._last,key)){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),900);day._last=key}}
 function onKey(e,day){
@@ -381,18 +424,19 @@ function doDelete(){const day=delDay.value;if(!day)return
   showToast('已删除，无法恢复')}
 function focusLi(day,idx){nextTick(()=>{const el=document.querySelector(`.daybody[data-date="${day.date}"]`);const lis=el?.querySelectorAll('ol>li');const d=lis&&lis[idx!=null?idx:0];if(!d)return
   d.focus();const s=window.getSelection();const r=document.createRange();r.selectNodeContents(d);r.collapse(false);s.removeAllRanges();s.addRange(r)})}
-function addNextDay(){const last=days.value.reduce((m,d)=>d.date>m?d.date:m,'');let base=last?last:tNow
-  if(base<tNow)base=tNow
-  const nd=new Date(base+'T00:00:00');nd.setDate(nd.getDate()+1);const date=dstr(nd)
+function addNextDay(){let date,day
+  if(!findDay(tNow)){date=tNow;day=findDay(tNow)||norm({date:tNow,weekday:wk(tNow),items:[]})}
+  else{const last=days.value.reduce((m,d)=>d.date>m?d.date:m,'');const nd=new Date((last?last:tNow)+'T00:00:00');nd.setDate(nd.getDate()+1);date=dstr(nd);day=findDay(date)}
   pushSnap('新增 '+dayLabel(date))
-  let day=findDay(date);if(!day){day=norm({date,weekday:wk(date),items:[]});days.value.push(day)}
+  if(!day){day=norm({date,weekday:wk(date),items:[]});days.value.push(day)}
+  days.value.sort((a,b)=>a.date<b.date?-1:1)
   renderBody(day);onInput(day);focusLi(day,0);document.querySelector('.daybody[data-date="'+date+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})}
 function showToast(m){toast.value=m;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.value='',2000)}
 function clearAllTimers(){Object.values(timers).forEach(t=>clearTimeout(t))}
 function curSnap(){days.value.forEach(readBody);return snapAll()}
 function snapAll(){return days.value.map(d=>({date:d.date,items:cleanItems(d.items).map(i=>({text:i.text,done:!!i.done}))}))}
 function pushSnap(tag){undoStack.value.push({tag,data:curSnap()});if(undoStack.value.length>40)undoStack.value.shift();redoStack.value=[]}
-async function persistDoc(list){for(const d of list){d._dirty=false;d._last=snapDay(d);await projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items}).catch(()=>{})}}
+async function persistDoc(list){for(const d of list){d._dirty=false;d._last=snapDay(d);await projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items,files:d.files||[]}).catch(()=>{})}}
 async function applyVersion(dir){const src=dir==='prev'?undoStack:redoStack;const dst=dir==='prev'?redoStack:undoStack
   if(!src.value.length)return
   clearAllTimers()
@@ -422,12 +466,12 @@ async function load(){loading.value=true;loadError.value=''
     requestAnimationFrame(()=>{days.value.forEach(renderBody);maybeRemind();scrollToBottomEntry()})
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
-function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done})).filter(i=>i.text!=='')}
-async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._dirty=false;day._last=snapDay(day);lastSaved.value=nowStamp()}catch{}}
+function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})).filter(i=>i.text!==''||(i.img&&i.img.length))}
+async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[]});day._dirty=false;day._last=snapDay(day);lastSaved.value=nowStamp()}catch{}}
 async function saveDraft(day){try{await projectApi.draft(pid.value,day.date,{weekday:day.weekday,items:day.items})}catch{}}
 async function saveAll(){saving.value=true
   for(const day of days.value){if(!day._dirty)continue;readBody(day)
-    try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items});day._last=snapDay(day);day._dirty=false;lastSaved.value=nowStamp()}catch(e){loadError.value=e?.error||'保存失败'}}
+    try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[]});day._last=snapDay(day);day._dirty=false;lastSaved.value=nowStamp()}catch(e){loadError.value=e?.error||'保存失败'}}
   unsavedPrompt.value=false;saving.value=false;showToast('已保存')}
 async function discardAll(){unsavedPrompt.value=false
   for(const day of days.value){if(!day._dirty)continue;let arr=[]
@@ -608,6 +652,14 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .del-day{border:none;background:var(--surface-2);color:var(--text-2);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
 .del-day:hover{background:var(--red);color:#fff}
 .daybody{outline:none;min-height:46px;padding:8px 56px 18px 20px;position:relative}
+.day-media{display:flex;align-items:center;gap:8px;padding:8px 20px 10px;border-top:1px solid var(--border)}
+.mf-add{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:12px;padding:4px 10px;border-radius:8px;cursor:pointer}
+.mf-add:hover{border-color:var(--accent);color:var(--accent)}
+.mf-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.mf-list{display:flex;flex-wrap:wrap;gap:6px}
+.mf-chip{display:inline-flex;align-items:center;gap:5px;max-width:220px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;padding:3px 8px;border-radius:8px;text-decoration:none}
+.mf-chip svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mf-chip:hover{border-color:var(--accent);color:var(--accent)}
 .daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
 .daybody ol>li{list-style:none}
 .daybody ol>li::marker{content:''}
@@ -673,4 +725,13 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .daybody .rail button::after{content:'';position:absolute;top:50%;transform:translateY(-50%);left:1px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
 .daybody .rail button.on{background:#007aff}
 .daybody .rail button.on::after{left:22px}
+.daybody ol>li .li-media{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:0;opacity:0;transition:opacity .15s;margin-top:0}
+.daybody ol>li:hover .li-media,.daybody ol>li:focus-within .li-media{opacity:1}
+.li-media .thumb{position:relative;display:inline-block}
+.li-media .thumb img{height:56px;max-width:220px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:zoom-in;display:block}
+.li-media .thumb .rm{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-style:normal;font-size:12px;line-height:15px;text-align:center;cursor:pointer;display:none}
+.li-media .thumb:hover .rm{display:block}
+.li-media .add-im{display:inline-flex;align-items:center;gap:3px;border:1px dashed var(--border);background:transparent;color:var(--text-2);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;height:22px}
+.li-media .add-im svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.li-media .add-im:hover{border-color:var(--accent);color:var(--accent)}
 </style>

@@ -17,16 +17,20 @@
 
       <form @submit.prevent="submit" class="form">
         <label class="field">
-          <span class="f-label">账号</span>
-          <input v-model.trim="form.account" class="f-input" placeholder="输入账号" autocomplete="username" />
+          <span class="f-label">{{ mode === 'login' ? '账号' : '手机号' }}</span>
+          <input v-model.trim="form.account" class="f-input" :placeholder="mode === 'login' ? '输入账号' : '请输入 11 位手机号'" autocomplete="username" />
         </label>
+        <div v-if="mode === 'register'" class="field code-row">
+          <input v-model.trim="form.code" class="f-input" placeholder="6 位短信验证码" maxlength="6" />
+          <button class="code-btn" :disabled="sending || countdown > 0 || !validPhone" @click="sendCode">{{ countdown > 0 ? countdown + 's 后重发' : '获取验证码' }}</button>
+        </div>
         <label v-if="mode === 'register'" class="field">
-          <span class="f-label">昵称</span>
+          <span class="f-label">昵称（可选）</span>
           <input v-model.trim="form.nickname" class="f-input" placeholder="怎么称呼你" />
         </label>
         <label class="field">
           <span class="f-label">密码</span>
-          <input v-model="form.password" type="password" class="f-input" placeholder="输入密码" autocomplete="current-password" />
+          <input v-model="form.password" type="password" class="f-input" placeholder="设置密码（至少 6 位）" autocomplete="new-password" />
         </label>
         <label class="agree">
           <input type="checkbox" v-model="consent" />
@@ -74,10 +78,11 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
+import { authApi } from '../api/auth'
 
 const router = useRouter()
 const user = useUserStore()
@@ -85,22 +90,40 @@ const theme = useThemeStore()
 
 const mode = ref('login')
 const loading = ref(false)
+const sending = ref(false)
 const error = ref('')
 const consent = ref(false)
 const ppOpen = ref(false)
-const form = reactive({ account: '', nickname: '', password: '' })
+const countdown = ref(0)
+const form = reactive({ account: '', nickname: '', password: '', code: '' })
+const validPhone = computed(() => /^1\d{10}$/.test(form.account.trim()))
+let cdTimer = null
+const sendCode = async () => {
+  error.value = ''
+  if (!validPhone.value) { error.value = '请输入正确的 11 位手机号'; return }
+  sending.value = true
+  try { await authApi.sms({ phone: form.account.trim() }); error.value = ''; countdown.value = 60
+    cdTimer = setInterval(() => { countdown.value--; if (countdown.value <= 0) clearInterval(cdTimer) }, 1000) }
+  catch (e) { error.value = e?.error || '验证码发送失败' } finally { sending.value = false }
+}
 
 const switchMode = m => { mode.value = m; error.value = '' }
 
 const submit = async () => {
   error.value = ''
-  if (!form.account || !form.password) { error.value = '请输入账号和密码'; return }
+  if (mode.value === 'login') {
+    if (!form.account || !form.password) { error.value = '请输入账号和密码'; return }
+  } else {
+    if (!validPhone.value) { error.value = '请输入正确的 11 位手机号'; return }
+    if (!/^\d{6}$/.test(form.code || '')) { error.value = '请填写收到的 6 位验证码'; return }
+    if (!form.password || form.password.length < 6) { error.value = '密码至少 6 位'; return }
+  }
   if (!consent.value) { error.value = '请先阅读并勾选同意《纸上用户隐私协议》'; return }
   loading.value = true
   try {
     const u = mode.value === 'login'
       ? await user.login(form.account, form.password)
-      : await user.register(form.account, form.password, form.nickname || form.account)
+      : await user.register({ phone: form.account, code: form.code, password: form.password, nickname: form.nickname })
     router.push(u.role ? '/projects' : '/onboarding')
   } catch (e) {
     error.value = e?.error || (mode.value === 'login' ? '登录失败' : '注册失败')
@@ -135,6 +158,10 @@ const submit = async () => {
 .submit-btn:hover { opacity: .9; }
 .submit-btn.loading { opacity: .6; }
 .err { color: var(--red); font-size: 13px; margin-top: 12px; text-align: center; }
+.code-row { display: flex; gap: 8px; align-items: center; }
+.code-row .f-input { flex: 1; }
+.code-btn { flex-shrink: 0; padding: 0 14px; border-radius: 10px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 13px; cursor: pointer; height: 46px; }
+.code-btn:disabled { opacity: .5; cursor: not-allowed; }
 .pp-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .pp-card { width: 100%; max-width: 600px; max-height: 82vh; background: var(--surface); border-radius: 16px; padding: 22px 24px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
 .pp-card h3 { margin: 0; font-size: 17px; }
