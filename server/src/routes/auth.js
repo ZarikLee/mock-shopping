@@ -6,7 +6,7 @@ import { queryAll, queryOne, insert, update, remove } from '../db.js';
 const router = express.Router();
 
 const SECRET = process.env.JWT_SECRET || 'daily-log-secret';
-const SMS_URL = process.env.SPUG_SMS_URL || 'https://push.spug.cc/send/zxJZVrvB46r9lMea';
+const SMS_URL = process.env.SPUG_SMS_URL || 'https://push.spug.cc/sms/imIsOEUIQ9Cg9gZaJwwp9w';
 
 function randCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -19,7 +19,7 @@ async function sendSmsCode(to, code) {
     const res = await fetch(SMS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, code }),
+      body: JSON.stringify({ to, code, number: 5 }),
       signal: ctrl.signal,
     });
     clearTimeout(timer);
