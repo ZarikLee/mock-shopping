@@ -36,7 +36,6 @@
         </div>
         <div class="ftabs">
           <button class="ftab" :class="{ on: route.path.startsWith('/log/') }" @click="openProject(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M8 13h4"/></svg>每日待办</button><button class="ftab" :class="{ on: route.path.startsWith('/files/') }" @click="goFiles(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>云文件管理</button><button class="ftab" :class="{ on: route.path.startsWith('/review/') }" @click="goReview(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>回顾与成就</button>
-          <button class="ftab" :class="{ on: route.path.startsWith('/files/') }" @click="goFiles(currentProjId || firstId)"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>云文件管理</button>
         </div>
         <div class="sb-foot">
           <button class="sb-btn" @click="settingsOpen = true">
@@ -83,7 +82,7 @@
           <div v-else-if="setPage === 'about'" class="s-page about">
             <div class="about-logo"><img src="/papertodo_logo.png?v=2" alt="纸上" /></div>
             <p class="about-name">纸上 · Paper Todo</p>
-            <p class="about-ver">v1.0.0 · 全民公测</p>
+            <p class="about-ver">v1.1.0 · 全民公测</p>
             <p class="about-line">像写日记一样，记录每天的 todo</p>
             <div class="kv"><span>类型</span><span>Web / 移动端自适应</span></div>
             <div class="kv"><span>数据</span><span>云端存储</span></div>
@@ -91,6 +90,10 @@
             <div class="chg">
               <p class="chg-t">版本日志</p>
               <ul>
+                <li><b>v1.1.0</b> · 找回密码（手机验证码）、一键导出记录（txt / 日期范围）</li>
+                <li>· 积分系统：每日登录 +10 / 当天完成任务 +5，实时动效与防刷；云盘默认 100MB，1 积分 = 永久 +1MB 扩容</li>
+                <li>· AI 每天免费 30 次，超出每次消耗 1 积分，次数实时显示</li>
+                <li>· 云文件管理：图片 / 附件筛选，按日期上传与删除；回顾与成就页</li>
                 <li><b>v1.0.0-beta</b> · 手机号验证码注册登录</li>
                 <li>· 任务图片 + 卡片附件上传：统一缩略图、在线预览、删除、下载</li>
                 <li>· 消息通知中心：管理员回复提醒、红点角标、一键已读（15s 热更新）</li>
@@ -372,8 +375,8 @@ onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document
 .sb-btn:hover { background: var(--surface-2); color: var(--text); }
 .brand-mark svg { display: block; }
 
-.center-mask { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
-.center-card { width: 100%; max-width: 440px; max-height: 86vh; overflow-y: auto; background: var(--surface); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.25); padding: 20px; }
+.center-mask { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; z-index: 200; padding: 26px 20px; }
+.center-card { width: min(100%, 440px); background: var(--surface); border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.25); padding: 20px; }
 .c-head { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 .c-head h3 { flex: 1; font-size: 17px; margin: 0; }
 .c-back, .c-x { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 16px; cursor: pointer; }

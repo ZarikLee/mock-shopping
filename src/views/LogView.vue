@@ -135,15 +135,10 @@
     <div v-if="importOpen" class="center-mask">
       <div class="center-card wide">
         <h3>导入任务记录</h3>
-        <p class="tip">支持 txt / Markdown / 纯文本。日期支持：2024-09-01、2024/9/1、2024年9月1日、20240901、9月1日或 9.1（自动就近补年份）等。任务行前加 [x]/✔ 视为已完成；多个日期自动分天、去重合并，可导入后点“上一版本”撤回。</p>
-        <textarea v-model="importText" class="imp" placeholder="示例：
-2024-09-01 周日
+        <p class="tip">每行开头是日期即可识别；任务前加 [x]/✔ 视为完成。</p>
+        <textarea v-model="importText" class="imp" placeholder="2024-09-01 周日
 - [x] 复习高数
-1. 写作业
-2. 跑步
-
-2024/09/02
-- 读论文"></textarea>
+- 写作业"></textarea>
         <p v-if="importPreview" class="tip">{{ importPreview }}</p>
         <div class="uprow"><button class="upfile" @click="$refs.impFile.click()">选择文件上传</button>
           <input ref="impFile" type="file" accept=".txt,.md,.json,.csv,text/plain" style="display:none" @change="onFile"></div>
@@ -190,7 +185,7 @@
             <span class="rsep">至</span>
             <label class="rlabel">到<input type="date" class="f-input rinput" v-model="exEnd" /></label>
           </div>
-          <p class="tip">将导出编号后的任务文字；图片仅提示张数，附件列出文件名。</p>
+
           <div class="row">
             <button class="ghost" @click="exportOpen = false">取消</button>
             <button class="primary" @click="doExport">导出 txt</button>
@@ -871,13 +866,13 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .fa-x{font-size:17px;line-height:1;font-weight:400}
 .ai-dialog{position:fixed;z-index:96;width:min(390px,calc(100vw - 16px));height:min(560px,68vh);background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.28);overflow:hidden;display:flex}
 
-.center-mask{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);z-index:120;padding:20px}
-.center-card{width:340px;background:var(--surface);border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px}
+.center-mask{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;background:rgba(0,0,0,.3);z-index:120;padding:24px 20px}
+.center-card{width:min(340px,100%);max-width:420px;background:var(--surface);border-radius:16px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:12px;max-height:none}
 .range{display:flex;align-items:center;gap:8px;margin:2px 0}
 .rlabel{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2)}
 .rinput{flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px}
 .rsep{color:var(--text-2)}
-.center-card.wide{width:480px;max-width:94vw}
+
 .center-card h3{margin:0}
 .center-card .tip{color:var(--text-2);font-size:12px;margin:0}
 .center-card .row{display:flex;gap:10px}.center-card .row button{flex:1;padding:10px;border-radius:10px;font-size:14px;cursor:pointer}
