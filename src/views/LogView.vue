@@ -755,7 +755,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .del-day{border:none;background:var(--surface-2);color:var(--text-2);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1}
 .del-day:hover{background:var(--red);color:#fff}
 .daybody{outline:none;min-height:46px;padding:8px 56px 18px 20px;position:relative}
-.spin-wrap{position:absolute;inset:0;z-index:150;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:color-mix(in srgb,var(--surface) 82%, transparent)}
+.spin-wrap{position:absolute;left:clamp(10px,2.5vw,36px);right:clamp(86px,7vw,116px);top:0;bottom:0;z-index:150;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:color-mix(in srgb,var(--surface) 82%, transparent)}
 .spin{width:40px;height:40px;border-radius:50%;border:3px solid var(--surface-2);border-top-color:var(--accent);animation:sp .8s linear infinite}
 .spin-t{color:var(--text-2);font-size:13px}
 @keyframes sp{to{transform:rotate(360deg)}}
