@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { queryAll, queryOne, insert, update, remove } from '../db.js';
+import { getPoints, pointLogs, awardOnce } from '../points.js';
 
 const router = express.Router();
 
@@ -118,6 +119,27 @@ router.get('/sms-debug/send', async (req, res) => {
   }
 });
 
+router.post('/reset', async (req, res, next) => {
+  try {
+    const { phone, code, password } = req.body || {};
+    const phoneStr = String(phone || '').trim();
+    const codeStr = String(code || '').trim();
+    if (!/^1\d{10}$/.test(phoneStr)) return res.status(400).json({ error: '请输入正确的 11 位手机号' });
+    if (!/^\d{6}$/.test(codeStr)) return res.status(400).json({ error: '请填写 6 位短信验证码' });
+    if (!password || String(password).length < 6) return res.status(400).json({ error: '新密码至少 6 位' });
+    const user = await queryOne('users', { account: phoneStr });
+    if (!user) return res.status(404).json({ error: '该手机号尚未注册' });
+    await cleanCodes();
+    const smsAll = await queryAll('sms_codes');
+    const rec = smsAll.find(c => c.phone === phoneStr && c.code === codeStr);
+    if (!rec || rec.expiresAt <= Date.now()) return res.status(400).json({ error: '验证码错误或已过期' });
+    await remove('sms_codes', rec.id);
+    const hash = await bcrypt.hash(String(password), 10);
+    await update('users', user.id, { password: hash });
+    return res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
 router.post('/sms', async (req, res, next) => {
   try {
     const { phone } = req.body || {};
@@ -176,7 +198,9 @@ router.post('/register', async (req, res, next) => {
       nickname: nickname && String(nickname).trim() ? String(nickname).trim() : '用户' + phoneStr.slice(-4),
       role: null,
       createdAt: new Date().toISOString(),
+      points: 0,
     });
+    await awardOnce(user.id, 'login');
     return res.json({ token: signToken(user), user: publicUser(user) });
   } catch (err) {
     next(err);
@@ -197,10 +221,17 @@ router.post('/login', async (req, res, next) => {
     if (!ok) {
       return res.status(401).json({ error: '账号或密码错误' });
     }
-    return res.json({ token: signToken(user), user: publicUser(user) });
+    await awardOnce(user.id, 'login');
+    const u = await queryOne('users', { id: user.id });
+    return res.json({ token: signToken(user), user: publicUser(u || user) });
   } catch (err) {
     next(err);
   }
+});
+
+router.get('/points', authMiddleware, async (req, res, next) => {
+  try { res.json({ points: await getPoints(req.user.id), logs: await pointLogs(req.user.id) }); }
+  catch (e) { next(e); }
 });
 
 router.get('/me', authMiddleware, (req, res) => {

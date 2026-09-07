@@ -1,6 +1,7 @@
 import express from 'express';
 import { queryAll, queryOne, insert, update, remove } from '../db.js';
 import { authMiddleware } from './auth.js';
+import { awardOnce, revokeType, getPoints } from '../points.js';
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -8,7 +9,8 @@ router.use(authMiddleware);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 function now() { return new Date().toISOString(); }
 
-const STORAGE_LIMIT = 500 * 1024 * 1024;
+const BASE_LIMIT = 500 * 1024 * 1024;
+async function userLimit(userId) { const pts = await getPoints(userId); return BASE_LIMIT + Math.min(pts, 20000) * 1024 * 1024; }
 const bytesOf = s => (s ? Math.floor(String(s).length * 0.75) : 0);
 function bytesOfLog(l) {
   if (!l) return 0;
@@ -31,7 +33,8 @@ async function usedBytes(userId) {
 }
 async function ensureCapacity(userId, excludeLog, addBytes) {
   const base = (await usedBytes(userId)) - bytesOfLog(excludeLog);
-  return base + addBytes <= STORAGE_LIMIT;
+  const limit = await userLimit(userId);
+  return base + addBytes <= limit;
 }
 function addedBytes(items, files, images) {
   let n = (items || []).reduce((a, it) => a + (it.img || []).reduce((b, u) => b + bytesOf(u), 0), 0);
@@ -97,7 +100,7 @@ router.get('/', async (req, res, next) => {
 });
 
 router.get('/storage', async (req, res, next) => {
-  try { res.json({ used: await usedBytes(req.user.id), limit: STORAGE_LIMIT }); }
+  try { res.json({ used: await usedBytes(req.user.id), limit: await userLimit(req.user.id) }); }
   catch (e) { next(e); }
 });
 
@@ -222,6 +225,9 @@ router.post('/:id/logs/:date/commit', async (req, res, next) => {
     if (files !== undefined) updates.files = normalizeFiles(files);
     if (images !== undefined) updates.images = normalizeImages(images);
     await update('day_logs', dayLog.id, updates);
+    const t = new Date(); const pad2 = n => String(n).padStart(2, '0');
+    const today = `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
+    if (date === today && cleanItems.some(i => i.done)) await awardOnce(project.userId, 'activity');
     res.json({ version, items: cleanItems });
   } catch (e) { next(e); }
 });
@@ -268,6 +274,9 @@ router.delete('/:id/logs/:date', async (req, res, next) => {
     const vs = await queryAll('log_versions', { logId: dayLog.id });
     for (const v of vs) await remove('log_versions', v.id);
     await remove('day_logs', dayLog.id);
+    const t = new Date(); const p2 = n => String(n).padStart(2, '0');
+    const today = `${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())}`;
+    if (date === today) await revokeType(project.userId, 'activity');
     res.json({ success: true });
   } catch (e) { next(e); }
 });

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, '..', 'data');
-const TABLES = ['users', 'projects', 'day_logs', 'log_versions', 'feedback', 'sms_codes', 'notifications'];
+const TABLES = ['users', 'projects', 'day_logs', 'log_versions', 'feedback', 'sms_codes', 'notifications', 'points_logs'];
 
 const PG_URL = process.env.DATABASE_URL || '';
 
@@ -52,13 +52,14 @@ function ident(table) {
 }
 /* ---------- PostgreSQL 规范列映射（payload key -> 列） ---------- */
 const SCHEMA = {
-  users: { account: { c: 'account', k: 'text' }, password: { c: 'password', k: 'text' }, nickname: { c: 'nickname', k: 'text' }, role: { c: 'role', k: 'text' }, createdAt: { c: 'created_at', k: 'text' } },
+  users: { account: { c: 'account', k: 'text' }, password: { c: 'password', k: 'text' }, nickname: { c: 'nickname', k: 'text' }, role: { c: 'role', k: 'text' }, createdAt: { c: 'created_at', k: 'text' }, points: { c: 'points', k: 'bigint' } },
   projects: { userId: { c: 'user_id', k: 'bigint' }, name: { c: 'name', k: 'text' }, type: { c: 'type', k: 'text' }, startDate: { c: 'start_date', k: 'text' }, createdAt: { c: 'created_at', k: 'text' } },
   day_logs: { projectId: { c: 'project_id', k: 'bigint' }, date: { c: 'date', k: 'text' }, weekday: { c: 'weekday', k: 'text' }, items: { c: 'items', k: 'json' }, files: { c: 'files', k: 'json' }, images: { c: 'images', k: 'json' }, createdAt: { c: 'created_at', k: 'text' }, updatedAt: { c: 'updated_at', k: 'text' } },
   log_versions: { logId: { c: 'log_id', k: 'bigint' }, version: { c: 'version', k: 'bigint' }, items: { c: 'items', k: 'json' }, createdAt: { c: 'created_at', k: 'text' } },
   feedback: { userId: { c: 'user_id', k: 'bigint' }, account: { c: 'account', k: 'text' }, nickname: { c: 'nickname', k: 'text' }, text: { c: 'text', k: 'text' }, replies: { c: 'replies', k: 'json' }, status: { c: 'status', k: 'text' }, createdAt: { c: 'created_at', k: 'bigint' } },
   sms_codes: { phone: { c: 'phone', k: 'text' }, code: { c: 'code', k: 'text' }, createdAt: { c: 'created_at', k: 'bigint' }, expiresAt: { c: 'expires_at', k: 'bigint' } },
   notifications: { userId: { c: 'user_id', k: 'bigint' }, kind: { c: 'kind', k: 'text' }, title: { c: 'title', k: 'text' }, text: { c: 'text', k: 'text' }, at: { c: 'at', k: 'bigint' }, read: { c: 'read', k: 'bool' } },
+  points_logs: { userId: { c: 'user_id', k: 'bigint' }, type: { c: 'type', k: 'text' }, amount: { c: 'amount', k: 'bigint' }, note: { c: 'note', k: 'text' }, createdAt: { c: 'created_at', k: 'bigint' } },
 };
 function cast(k, v) {
   if (k === 'json') return JSON.stringify(v);

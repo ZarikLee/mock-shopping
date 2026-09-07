@@ -8,8 +8,19 @@ CREATE TABLE IF NOT EXISTS users (
   password   text NOT NULL,
   nickname   text,
   role       text,
-  created_at text
+  created_at text,
+  points     bigint NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS points_logs (
+  id         bigserial PRIMARY KEY,
+  user_id    bigint NOT NULL,
+  type       text,
+  amount     bigint NOT NULL DEFAULT 0,
+  note       text,
+  created_at bigint
+);
+CREATE INDEX IF NOT EXISTS idx_plogs_user ON points_logs (user_id, created_at);
 
 CREATE TABLE IF NOT EXISTS projects (
   id         bigserial PRIMARY KEY,

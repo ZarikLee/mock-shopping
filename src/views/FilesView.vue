@@ -108,8 +108,8 @@ onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load()
 </script>
 
 <style scoped>
-.files-page { padding: 26px 30px 80px; max-width: 980px; position: relative; }
-.fp-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+.files-page { padding: clamp(16px, 3vw, 30px) clamp(14px, 4vw, 40px) 80px; width: 100%; box-sizing: border-box; max-width: 1200px; margin: 0 auto; position: relative; }
+.fp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .fp-head h1 { font-size: 22px; margin: 0 0 4px; }
 .fp-sub { color: var(--text-2); font-size: 13px; margin: 0; }
 .fp-count { font-size: 12px; color: var(--text-2); white-space: nowrap; }
@@ -151,3 +151,5 @@ onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load()
 .fade-enter-active, .fade-leave-active { transition: opacity .2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
+
+@media (max-width: 640px){ .fp-imgs .thumb { width: 72px; height: 72px; } .quota { flex-wrap: wrap; } }

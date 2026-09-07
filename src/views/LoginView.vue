@@ -8,14 +8,15 @@
       <div class="logo-mark"><img src="/papertodo_logo.png?v=2" alt="纸上" /></div>
       <h1 class="title">纸上 - Paper Todo</h1>
       <p class="subtitle">像写日记一样，记录每天的 todo</p>
+      <p class="ok" v-if="okMsg">{{ okMsg }}</p>
 
-      <div class="tabs">
+      <div class="tabs" v-show="!resetMode">
         <span class="tab-slide" :class="mode"></span>
         <button :class="['tab', { active: mode === 'login' }]" @click="switchMode('login')">登录</button>
         <button :class="['tab', { active: mode === 'register' }]" @click="switchMode('register')">注册</button>
       </div>
 
-      <form @submit.prevent="submit" class="form">
+      <form v-if="!resetMode" @submit.prevent="submit" class="form">
         <label class="field">
           <span class="f-label">{{ mode === 'login' ? '手机号' : '手机号' }}</span>
           <input v-model.trim="form.account" class="f-input" placeholder="请输入 11 位手机号" autocomplete="username" />
@@ -40,11 +41,28 @@
           <input type="checkbox" v-model="consent" />
           <span class="ag-text">我已阅读并同意<a class="ag-link" @click.prevent="ppOpen = true">《纸上用户隐私协议》</a></span>
         </label>
+        <div v-if="mode === 'login'" class="forgot-row"><button type="button" class="link" @click="openReset">忘记密码？</button></div>
         <button class="submit-btn" :disabled="loading" :class="{ loading }">
           {{ mode === 'login' ? '登录' : '注册' }}
         </button>
       </form>
-      <p class="err" v-if="error">{{ error }}</p>
+      <p class="err" v-if="error && !resetMode">{{ error }}</p>
+
+      <!-- 找回密码 -->
+      <div v-if="resetMode" class="reset-form">
+        <h2 class="rs-title">找回密码</h2>
+        <p class="rs-sub">通过手机验证码重置，然后重新登录</p>
+        <label class="field"><span class="f-label">手机号</span>
+          <input v-model.trim="form.account" class="f-input" placeholder="请输入 11 位手机号" /></label>
+        <div class="field code-row">
+          <input v-model.trim="form.code" class="f-input" placeholder="6 位短信验证码" maxlength="6" />
+          <button type="button" class="code-btn" :disabled="sending || countdown > 0 || !validPhone" @click="sendCode">{{ countdown > 0 ? countdown + 's 后重发' : '获取验证码' }}</button>
+        </div>
+        <label class="field"><span class="f-label">新密码</span>
+          <input v-model="form.password" type="password" class="f-input" placeholder="设置新密码（至少 6 位）" /></label>
+        <button class="submit-btn" :disabled="loading" :class="{ loading }" @click="submitReset">重置并登录</button>
+        <button type="button" class="back-link" @click="openReset(false)">‹ 返回登录</button>
+      </div>
     </div>
 
     <!-- 用户隐私协议 -->
@@ -93,9 +111,11 @@ const user = useUserStore()
 const theme = useThemeStore()
 
 const mode = ref('login')
+const resetMode = ref(false)
 const loading = ref(false)
 const sending = ref(false)
 const error = ref('')
+const okMsg = ref('')
 const consent = ref(false)
 const ppOpen = ref(false)
 const countdown = ref(0)
@@ -119,7 +139,18 @@ const sendCode = async () => {
 }
 
 const switchMode = m => { mode.value = m; error.value = '' }
+const openReset = v => { resetMode.value = v === undefined ? true : !!v; error.value = ''; form.code = ''; form.password = '' }
+const submitReset = async () => {
+  error.value = ''
+  if (!validPhone.value) { error.value = '请输入正确的 11 位手机号'; return }
+  if (!/^\d{6}$/.test(form.code || '')) { error.value = '请填写收到的 6 位验证码'; return }
+  if (!form.password || form.password.length < 6) { error.value = '新密码至少 6 位'; return }
+  loading.value = true
+  try { await authApi.reset({ phone: form.account, code: form.code, password: form.password }); resetMode.value = false; form.code = ''; form.password = ''; error.value = ''; showOk('密码已重置，请用新密码登录') }
+  catch (e) { error.value = e?.error || '重置失败' } finally { loading.value = false }
+}
 
+const showOk = m => { okMsg.value = m; setTimeout(() => okMsg.value = '', 3000) }
 const submit = async () => {
   error.value = ''
   if (mode.value === 'login') {
@@ -169,6 +200,12 @@ const submit = async () => {
 .submit-btn:hover { opacity: .9; }
 .submit-btn.loading { opacity: .6; }
 .err { color: var(--red); font-size: 13px; margin-top: 12px; text-align: center; }
+.ok { color: var(--green); font-size: 13px; margin: 8px 0 0; text-align: center; }
+.forgot-row { text-align: right; margin-top: -6px; }
+.forgot-row .link, .back-link { border: none; background: none; color: var(--accent); font-size: 13px; cursor: pointer; text-decoration: none; }
+.reset-form { display: flex; flex-direction: column; gap: 14px; margin-top: 6px; }
+.rs-title { font-size: 18px; margin: 0; }
+.rs-sub { color: var(--text-2); font-size: 13px; margin: -6px 0 0; }
 .code-row { display: flex !important; flex-direction: row !important; gap: 8px; align-items: center; }
 .code-row .f-input { flex: 1; }
 .code-btn { flex-shrink: 0; padding: 0 14px; border-radius: 10px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 13px; cursor: pointer; height: 46px; }

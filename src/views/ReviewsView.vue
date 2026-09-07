@@ -173,8 +173,8 @@ onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load()
 </script>
 
 <style scoped>
-.rv-page { padding: 26px 30px 90px; max-width: 980px; }
-.rv-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.rv-page { padding: clamp(16px, 3vw, 30px) clamp(14px, 4vw, 40px) 90px; width: 100%; box-sizing: border-box; max-width: 1200px; margin: 0 auto; }
+.rv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .rv-head h1 { font-size: 22px; margin: 0 0 4px; }
 .rv-sub { color: var(--text-2); font-size: 13px; margin: 0; }
 .rv-refresh { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-size: 18px; cursor: pointer; }
@@ -204,3 +204,5 @@ onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load()
 .b-name { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
 .b-desc { font-size: 11px; color: var(--text-2); }
 </style>
+
+@media (max-width: 640px){ .badges { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); } .rv-box { padding: 14px; } }

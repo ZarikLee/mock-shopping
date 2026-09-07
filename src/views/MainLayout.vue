@@ -8,8 +8,13 @@
           <div class="brand-name">纸上 - Paper Todo</div>
         </div>
         <div class="me">
-          <div class="me-name">{{ user.user?.nickname }}</div>
-          <div class="me-role">{{ user.roleText || '未设置身份' }}</div>
+          <div class="me-id">
+            <div class="me-name">{{ user.user?.nickname }}</div>
+            <div class="me-role">{{ user.roleText || '未设置身份' }}</div>
+          </div>
+          <button class="pts-chip" :class="{ pop: ptsPop }" @click="openPts" title="积分：用于云盘容量与 AI 次数加成">
+            <i>✦</i><b>{{ points }}</b>
+          </button>
         </div>
         <div class="proj-drop">
           <span class="pd-label">当前项目</span>
@@ -161,6 +166,25 @@
     <!-- 移动端抽屉遮罩 -->
     <div v-if="mobile && drawerOpen" class="mask" @click="drawerOpen = false"></div>
 
+    <!-- 积分 -->
+    <transition name="fade">
+      <div v-if="ptsOpen" class="center-mask" @click.self="ptsOpen = false">
+        <div class="center-card">
+          <div class="c-head"><h3>我的积分 <b class="pts-big">✦ {{ points }}</b></h3><button class="c-x" @click="ptsOpen = false">×</button></div>
+          <p class="pts-tip">每日登录 +10、当天有完成的任务 +5（每天各一次）；删除当天记录会扣回，防止刷分。</p>
+          <p class="pts-tip">加成：每积分 +1MB 云盘、AI 每日次数 +0.5 次（基准 500MB / 30 次）。</p>
+          <div class="pts-list">
+            <div v-for="l in ptsLogs" :key="l.id" class="pts-item">
+              <span class="pt-note">{{ l.note }}</span>
+              <span class="pt-amt" :class="{ minus: l.amount < 0 }">{{ l.amount > 0 ? '+' : '' }}{{ l.amount }}</span>
+              <span class="pt-time">{{ fmtPtsTime(l.createdAt) }}</span>
+            </div>
+            <div v-if="!ptsLogs.length" class="pts-empty">还没有积分记录，去记一条任务吧</div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <transition name="fade"><div v-if="toastMsg" class="toast">{{ toastMsg }}</div></transition>
   </div>
 </template>
@@ -172,6 +196,7 @@ import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
 import { projectApi } from '../api/projects'
 import { feedbackApi } from '../api/feedback'
+import { authApi } from '../api/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -193,10 +218,18 @@ const fbReadKey = 'dl_fb_read_' + (user.user?.account || '')
 const fbReadAt = ref(Number(localStorage.getItem(fbReadKey) || 0))
 const unreadReplies = computed(() => fbList.value.reduce((n, f) => n + (f.replies || []).filter(r => r.at > fbReadAt.value).length, 0))
 const toastMsg = ref('')
+const points = ref(0)
+const ptsPop = ref(false)
+const ptsOpen = ref(false)
+const ptsLogs = ref([])
 let toastTimer = null
 
 const pageTitle = computed(() => ({ menu: '设置', profile: '个人信息', about: '版本信息', feedback: '建议反馈' }[setPage.value] || '设置'))
 const showToast = m => { toastMsg.value = m; clearTimeout(toastTimer); toastTimer = setTimeout(() => toastMsg.value = '', 2000) }
+let ptsTimer = null
+const fmtPtsTime = ts => { if (!ts) return ''; const d = new Date(ts); const p = n => String(n).padStart(2, '0'); return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}` }
+const loadPoints = async (animate = false) => { try { const res = await authApi.points(); const p = (res && res.points) != null ? Number(res.points) : points.value; if (animate && p > points.value) { ptsPop.value = true; setTimeout(() => ptsPop.value = false, 900) } points.value = p; ptsLogs.value = (res && res.logs) || [] } catch {} }
+const openPts = () => { ptsOpen.value = true; loadPoints(true) }
 const saveProfile = async () => {
   if (!profile.value.nickname.trim()) { showToast('昵称不能为空'); return }
   saving.value = true
@@ -271,9 +304,10 @@ onMounted(() => {
   load()
 })
 let iv=null
+let ptsIv=null
 watch(() => route.fullPath, () => { load(); if (mobile.value) drawerOpen.value = false })
-onMounted(()=>{ iv=setInterval(load,8000) })
-onBeforeUnmount(()=>clearInterval(iv))
+onMounted(()=>{ iv=setInterval(load,8000); loadPoints(); ptsIv=setInterval(() => loadPoints(), 60000) })
+onBeforeUnmount(()=>{ clearInterval(iv); if (ptsIv) clearInterval(ptsIv) })
 onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document.removeEventListener('mousedown', onPdDown) })
 </script>
 
@@ -286,7 +320,22 @@ onBeforeUnmount(() => { window.removeEventListener('resize', onResize); document
 .brand-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .me { padding: 0 6px 14px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
 .me-name { font-weight: 600; font-size: 15px; }
-.me-role { font-size: 12px; color: var(--text-2); }
+.me { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.me-id { min-width: 0; }
+.pts-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,190,0,.5); background: linear-gradient(135deg, rgba(255,214,10,.16), rgba(255,150,0,.12)); color: #d9a400; border-radius: 999px; padding: 3px 9px; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+.pts-chip i { font-style: normal; }
+.pts-chip b { font-size: 13px; }
+.pts-chip.pop { animation: ptsPop .6s ease; }
+@keyframes ptsPop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.pts-big { color: #d9a400; }
+.pts-tip { color: var(--text-2); font-size: 12px; margin: 0; line-height: 1.6; }
+.pts-list { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.pts-item { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.pt-note { flex: 1; color: var(--text); }
+.pt-amt { color: var(--accent); font-weight: 700; }
+.pt-amt.minus { color: var(--red); }
+.pt-time { color: var(--text-2); font-size: 11px; }
+.pts-empty { padding: 20px; text-align: center; color: var(--text-2); font-size: 13px; }
 .proj-drop { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
 .pd-label { font-size: 11px; color: var(--text-2); padding: 0 6px; }
  .pd { position: relative; }

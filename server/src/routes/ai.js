@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { queryAll, queryOne } from '../db.js';
+import { queryAll, queryOne, insert } from '../db.js';
+import { getPoints, todayCount } from '../points.js';
 import { authMiddleware } from './auth.js';
 
 const router = Router();
@@ -181,6 +182,10 @@ router.post('/', authMiddleware, async (req, res) => {
   const { message, messages } = req.body || {};
   const text = String(message || '').trim();
   if (!text) return res.status(400).json({ error: '空消息' });
+  const pts = await getPoints(req.user.id);
+  const usedToday = await todayCount(req.user.id, 'ai_use');
+  const aiQuota = 30 + Math.floor(pts / 2);
+  if (usedToday >= aiQuota) return res.status(429).json({ error: `今日 AI 使用已达上限（${aiQuota} 次）。坚持记录、完成积分后每日可用次数会增加，明天再来吧` });
   const project = await queryOne('projects', { id: Number(req.body.projectId), userId: req.user.id });
   if (!project) return res.status(404).json({ error: '项目不存在' });
   const user = await queryOne('users', { id: req.user.id });
@@ -189,6 +194,7 @@ router.post('/', authMiddleware, async (req, res) => {
   // —— Skill：命中具体功能时直接给出完整、真实的结果 ——
   const logs = await loadLogs(project.id);
   const skilled = detectSkill(text, logs, project);
+  await insert('points_logs', { userId: req.user.id, type: 'ai_use', amount: 0, note: 'AI 对话', createdAt: Date.now() });
   if (skilled) return res.json({ reply: skilled, skill: true });
 
   const sys = [
