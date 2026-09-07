@@ -91,7 +91,7 @@
               @input="e => onInput(day)" @keydown="e => onKey(e, day)" @blur="e => blurDay(day, e)"></div>
             <div class="day-media">
               <div v-if="(day.files || []).length" class="mf-list">
-                <button v-for="(f, fi) in day.files" :key="fi" class="mf-chip" @click="previewFile(f)"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>{{ f.name }}</button>
+                <button v-for="(f, fi) in day.files" :key="fi" class="mf-chip" @click="previewFile(f)"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg><span class="fc-name">{{ f.name }}</span><i class="rm" title="删除" @click.stop="removeFile(day, fi)">×</i></button>
               </div>
               <button class="mf-add" @click="openFilePick(day)"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>附件</button>
             </div>
@@ -150,10 +150,16 @@
         <div class="pv-card">
           <div class="pv-head"><b>{{ pvName }}</b><button class="pv-x" @click="closePreview">×</button></div>
           <div class="pv-body">
-            <img v-if="pvUrl.indexOf('data:image') === 0 || pvType.indexOf('image') === 0" :src="pvUrl" alt="" />
-            <iframe v-else :src="pvUrl" title="预览"></iframe>
+            <img v-if="pvKind === 'image'" :src="pvUrl" alt="" />
+            <video v-else-if="pvKind === 'video'" :src="pvUrl" controls></video>
+            <audio v-else-if="pvKind === 'audio'" :src="pvUrl" controls></audio>
+            <pre v-else-if="pvKind === 'text'" class="pv-text">{{ pvText }}</pre>
+            <div v-else class="pv-fallback">
+              <p>该文件类型（{{ pvType || '未知' }}）暂不支持在线预览</p>
+              <a class="pv-dl big" :href="pvUrl" :download="pvName || 'download'">下载查看</a>
+            </div>
           </div>
-          <div class="pv-foot"><a class="pv-dl" :href="pvUrl" download="download">下载原文件</a></div>
+          <div class="pv-foot"><a class="pv-dl" :href="pvUrl" :download="pvName || 'download'">下载原文件</a></div>
         </div>
       </div>
     </transition>
@@ -224,6 +230,13 @@ const pvOpen=ref(false)
 const pvUrl=ref('')
 const pvName=ref('')
 const pvType=ref('')
+const pvText=ref('')
+const pvKind=computed(()=>{const u=pvUrl.value||'';const t=(pvType.value||'').toLowerCase()
+  if(/^data:image/.test(u)||t.indexOf('image')===0)return 'image'
+  if(/^data:video/.test(u)||t.indexOf('video')===0)return 'video'
+  if(/^data:audio/.test(u)||t.indexOf('audio')===0)return 'audio'
+  if(t.startsWith('text/')||t.includes('json')||t.includes('csv')||t.includes('xml')||t.includes('javascript')||t.includes('svg')||/^data:text\//.test(u))return 'text'
+  return 'file'})
 let imgPick=null
 let filePick=null
 function placeAi(){const b=document.querySelector('.fmt-ai');if(!b)return
@@ -418,8 +431,12 @@ function onPickImg(){showToast('读取图片中…')
   const reads=arr.map(f=>new Promise(res=>{if(f.size>3*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res(String(r.result));r.onerror=()=>res(null);r.readAsDataURL(f)}))
   Promise.all(reads).then(list=>{const ok=list.filter(Boolean);ok.forEach(u=>day.items[i].img.push(u));showToast('已读取 '+ok.length+' 张图片');renderBody(day);afterAttach(day);requestAnimationFrame(()=>{const els=document.querySelectorAll(`.daybody[data-date="${day.date}"] .thumb`);console.log('thumb count',els.length)})})}
 function openFilePick(day){filePick=day;pickFile.value&&pickFile.value.click()}
+function removeFile(day, i){if(Array.isArray(day.files)){day.files.splice(i,1);afterAttach(day)}}
+function b64ToText(b64){try{const bin=atob(b64);const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return new TextDecoder().decode(bytes)}catch(e){return ''}}
+function pvTextOf(u){const i=u.indexOf(',');if(i<0)return '';const head=u.slice(0,i),body=u.slice(i+1)
+  try{return /;base64/i.test(head)?b64ToText(body):decodeURIComponent(body)}catch(e){return body}}
 function previewFile(f){if(f&&f.url)openPreview({url:f.url,name:f.name||'文件',type:f.type})}
-function openPreview(p){pvOpen.value=true;pvUrl.value=p.url;pvName.value=p.name||'';pvType.value=p.type||''}
+function openPreview(p){pvOpen.value=true;pvUrl.value=p.url;pvName.value=p.name||'';pvType.value=p.type||'';pvText.value=pvTextOf(p.url)}
 function closePreview(){pvOpen.value=false}
 function onPickFile(){showToast('读取附件中…')
   const inp=pickFile.value;if(!inp){showToast('未找到附件选择器');return}const arr=Array.from(inp.files);inp.value='';if(!arr.length){showToast('未取到文件');return}
@@ -727,7 +744,10 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .mf-add:hover{border-color:var(--accent);color:var(--accent)}
 .mf-add svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .mf-list{display:flex;flex-wrap:wrap;gap:6px}
-.mf-chip{display:inline-flex;align-items:center;gap:5px;max-width:220px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;padding:3px 8px;border-radius:8px;text-decoration:none}
+.mf-chip{position:relative;display:inline-flex;align-items:center;gap:5px;max-width:240px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;padding:3px 8px;border-radius:8px;text-decoration:none;height:26px}
+.mf-chip .fc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mf-chip .rm{position:absolute;top:-6px;right:-6px;width:15px;height:15px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-style:normal;font-size:11px;line-height:14px;text-align:center;cursor:pointer;opacity:0;transition:opacity .15s}
+.mf-chip:hover .rm{opacity:1}
 .mf-chip svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mf-chip:hover{border-color:var(--accent);color:var(--accent)}
 .daybody ol{list-style:none;counter-reset:item;margin:0;padding:0}
@@ -735,7 +755,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .daybody ol>li::marker{content:''}
 .daybody ol>li{counter-increment:item;position:relative;padding:9px 56px 9px 1.5em;min-height:1.7em;color:var(--text)}
 .daybody ol>li::after{content:'';display:block;clear:both}
-.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.4em;text-align:right;padding-right:5px;color:var(--text-2);opacity:.55;font-size:.92em}
+.daybody ol>li::before{content:counter(item) '.';position:absolute;left:0;top:9px;color:var(--text-2);opacity:.55;font-size:.92em;white-space:nowrap}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.75}
 /* iOS 开关叠加层 */
  .dayph{color:var(--text-2);font-size:14px;padding:12px 4px;cursor:text;opacity:.75}
@@ -784,7 +804,13 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .pv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border)}
 .pv-head b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pv-x{width:26px;height:26px;border:none;border-radius:50%;background:var(--surface-2);color:var(--text);font-size:16px;cursor:pointer;flex-shrink:0}
-.pv-body{flex:1;min-height:0;background:#fff;display:flex;align-items:center;justify-content:center;overflow:auto}
+.pv-body{flex:1;min-height:0;background:#fff;display:flex;align-items:center;justify-content:center;overflow:auto;flex-direction:column}
+.pv-body video{max-width:100%;max-height:100%}
+.pv-body audio{width:86%}
+.pv-text{width:100%;height:100%;margin:0;padding:14px;overflow:auto;white-space:pre-wrap;word-break:break-all;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;color:#1d1d1f;box-sizing:border-box;text-align:left}
+.pv-fallback{display:flex;flex-direction:column;gap:14px;align-items:center;padding:30px;color:#666}
+.pv-fallback p{margin:0;font-size:14px}
+.pv-dl.big{font-size:15px;background:var(--accent);color:#fff;padding:10px 22px;border-radius:10px;text-decoration:none}
 .pv-body img{max-width:100%;max-height:100%;object-fit:contain;display:block}
 .pv-body iframe{width:100%;height:100%;border:none;background:#fff}
 .pv-foot{padding:8px 14px;text-align:right;border-top:1px solid var(--border)}
@@ -799,7 +825,7 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .daybody ol{list-style:none!important;counter-reset:item;margin:0;padding:0}
 .daybody ol>li{list-style:none!important;counter-increment:item;position:relative;padding:9px 56px 9px 1.5em;min-height:1.7em;color:var(--text)}
 .daybody ol>li::marker{content:''!important}
-.daybody ol>li::before{content:counter(item);position:absolute;left:0;top:9px;width:1.4em;text-align:right;padding-right:6px;color:var(--text-2);opacity:.6;font-size:.92em}
+.daybody ol>li::before{content:counter(item) '.';position:absolute;left:0;top:9px;color:var(--text-2);opacity:.6;font-size:.92em;white-space:nowrap}
 .daybody ol>li.done{text-decoration:line-through;color:var(--text-2);opacity:.72}
 .daybody .rail{position:absolute;right:4px;top:0;width:46px;height:100%;pointer-events:none;z-index:6}
 .daybody .rail button{pointer-events:auto;position:absolute;left:0;width:44px;height:24px;border-radius:13px;border:1px solid rgba(0,0,0,.14);background:#e8e8ed;cursor:pointer;transition:background .2s;outline:none}
