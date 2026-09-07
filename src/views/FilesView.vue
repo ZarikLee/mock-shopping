@@ -13,7 +13,7 @@
       <span class="q-num">{{ fmtMB(used) }} / 500 MB</span>
     </div>
 
-    <div v-if="loading" class="empty">载入中…</div>
+    <div v-if="loading" class="fp-load"><span class="spin"></span><p>{{ spinTxt }}</p></div>
     <div v-else-if="!rows.length" class="empty">这个项目还没有图片或附件</div>
 
     <div v-else class="fp-list">
@@ -66,6 +66,9 @@ const user = useUserStore()
 const pid = ref(Number(route.params.projectId))
 const rows = ref([])
 const loading = ref(true)
+const spinTxt = ref('正在翻看你的云盘…')
+const spinMsgs = ['正在翻看你的云盘…', '一张张帮你排好队…', '数一数今天的图片…', '马上就好，别着急哦 ✨']
+let spinTimer = null
 const totalImg = ref(0)
 const totalFile = ref(0)
 const used = ref(0)
@@ -98,9 +101,10 @@ async function load() {
     totalImg.value = rows.value.reduce((n, r) => n + r.images.length, 0)
     totalFile.value = rows.value.reduce((n, r) => n + r.files.length, 0)
   } catch { rows.value = [] } finally { loading.value = false }
+  if (spinTimer) { clearInterval(spinTimer); spinTimer = null }
   try { const r = await projectApi.storage(); used.value = (r && (r.used != null ? r.used : 0)) || 0 } catch {}
 }
-onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load() })
+onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load(); spinTimer = setInterval(() => { spinTxt.value = spinMsgs[Math.floor(Math.random() * spinMsgs.length)] }, 1000) })
 </script>
 
 <style scoped>
@@ -115,6 +119,9 @@ onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load()
 .q-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #7b6cff); border-radius: 5px; transition: width .4s; }
 .q-num { font-size: 12px; color: var(--text-2); white-space: nowrap; }
 .empty { text-align: center; color: var(--text-2); padding: 60px 0; }
+.fp-load { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 80px 0; color: var(--text-2); font-size: 13px; }
+.spin { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--surface-2); border-top-color: var(--accent); animation: fpspin .8s linear infinite; }
+@keyframes fpspin { to { transform: rotate(360deg); } }
 .fp-list { display: flex; flex-direction: column; gap: 14px; }
 .fp-day { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; }
 .fp-date { font-weight: 600; margin-bottom: 10px; }
