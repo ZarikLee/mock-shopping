@@ -126,6 +126,20 @@
 
     <input ref="pickImg" type="file" accept="image/*" multiple style="display:none" @change="onPickImg" />
     <input ref="pickFile" type="file" multiple style="display:none" @change="onPickFile" />
+
+    <!-- 预览 -->
+    <transition name="fade">
+      <div v-if="pvOpen" class="pv-mask" @click.self="closePreview">
+        <div class="pv-card">
+          <div class="pv-head"><b>{{ pvName }}</b><button class="pv-x" @click="closePreview">×</button></div>
+          <div class="pv-body">
+            <img v-if="pvUrl.indexOf('data:image') === 0 || pvType.indexOf('image') === 0" :src="pvUrl" alt="" />
+            <iframe v-else :src="pvUrl" title="预览"></iframe>
+          </div>
+          <div class="pv-foot"><a class="pv-dl" :href="pvUrl" download="download">下载原文件</a></div>
+        </div>
+      </div>
+    </transition>
     <transition name="fade"><div v-if="toast" class="toast">{{ toast }}</div></transition>
 
     <!-- 删除确认 -->
@@ -184,6 +198,10 @@ const aiOpen=ref(false)
 const aiPos=reactive({top:70,right:20})
 const pickImg=ref(null)
 const pickFile=ref(null)
+const pvOpen=ref(false)
+const pvUrl=ref('')
+const pvName=ref('')
+const pvType=ref('')
 let imgPick=null
 let filePick=null
 function placeAi(){const b=document.querySelector('.fmt-ai');if(!b)return
@@ -351,7 +369,7 @@ function appendMedia(li,it,day,idx){if(!day)return
   const arr=Array.isArray(it.img)?it.img:[]
   arr.forEach((u,ii)=>{const w=document.createElement('span');w.className='thumb'
     const im=document.createElement('img');im.src=u;im.loading='lazy'
-    im.addEventListener('click',()=>{window.open(u,'_blank')})
+    im.addEventListener('click',()=>{openPreview({url:u,name:day.items[idx]?('图片'+(ii+1)):'图片',type:'image'})})
     const x=document.createElement('i');x.className='rm';x.textContent='×'
     x.addEventListener('mousedown',ev=>{ev.preventDefault();ev.stopPropagation()})
     x.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();(day.items[idx].img||[]).splice(ii,1);renderBody(day);afterAttach(day)})
@@ -373,7 +391,9 @@ function onPickImg(){showToast('读取图片中…')
   const reads=arr.map(f=>new Promise(res=>{if(f.size>3*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res(String(r.result));r.onerror=()=>res(null);r.readAsDataURL(f)}))
   Promise.all(reads).then(list=>{const ok=list.filter(Boolean);ok.forEach(u=>day.items[i].img.push(u));showToast('已读取 '+ok.length+' 张图片');renderBody(day);afterAttach(day);requestAnimationFrame(()=>{const els=document.querySelectorAll(`.daybody[data-date="${day.date}"] .thumb`);console.log('thumb count',els.length)})})}
 function openFilePick(day){filePick=day;pickFile.value&&pickFile.value.click()}
-function previewFile(f){if(f&&f.url){if(f.url.indexOf('data:image')===0||/^data:/.test(f.url)){const w=window.open('','_blank');if(w){w.document.write('<title>'+(f.name||'预览')+'</title><body style="margin:0"><img src="'+f.url+'" style="width:auto;max-width:100%;max-height:100vh"/></body>');w.document.close()}else{window.open(f.url,'_blank')}}else{window.open(f.url,'_blank')}}}
+function previewFile(f){if(f&&f.url)openPreview({url:f.url,name:f.name||'文件',type:f.type})}
+function openPreview(p){pvOpen.value=true;pvUrl.value=p.url;pvName.value=p.name||'';pvType.value=p.type||''}
+function closePreview(){pvOpen.value=false}
 function onPickFile(){showToast('读取附件中…')
   const inp=pickFile.value;if(!inp){showToast('未找到附件选择器');return}const arr=Array.from(inp.files);inp.value='';if(!arr.length){showToast('未取到文件');return}
   const day=filePick;filePick=null;if(!day){showToast('未记录目标卡片');return}
@@ -715,6 +735,17 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .uprow{margin:2px 0}.upfile{border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
 .imp{width:100%;height:150px;resize:vertical;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:10px;font-size:13px;outline:none;line-height:1.6}
 .toast{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 22px;border-radius:22px;font-size:14px;z-index:200}
+.pv-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:220;display:flex;align-items:center;justify-content:center;padding:24px}
+.pv-card{width:min(860px,94vw);max-height:92vh;background:var(--surface);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.4)}
+.pv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.pv-head b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pv-x{width:26px;height:26px;border:none;border-radius:50%;background:var(--surface-2);color:var(--text);font-size:16px;cursor:pointer;flex-shrink:0}
+.pv-body{flex:1;min-height:0;background:#fff;display:flex;align-items:center;justify-content:center;overflow:auto}
+.pv-body img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.pv-body iframe{width:100%;height:100%;border:none;background:#fff}
+.pv-foot{padding:8px 14px;text-align:right;border-top:1px solid var(--border)}
+.pv-dl{font-size:13px;color:var(--accent);text-decoration:none}
+.pv-dl:hover{text-decoration:underline}
 .fade-enter-active,.fade-leave-active{transition:opacity .2s}.fade-enter-from,.fade-leave-to{opacity:0}
 @media(max-width:768px){.back-m{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);background:var(--bg);border-radius:50%;font-size:16px;cursor:pointer;color:var(--text);margin-right:6px}.fmt{padding:6px 10px}.doc{padding:12px 8px 150px}.t-sub{display:none}.docmap{display:none} .daybody{padding:8px 40px 16px 14px}.center-card.wide{width:94vw}.ai-dialog{right:8px;bottom:84px;width:calc(100vw - 16px);height:72vh}}
 </style>
