@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
   nickname   text,
   role       text,
   created_at text,
-  points     bigint NOT NULL DEFAULT 0
+  points         bigint NOT NULL DEFAULT 0,
+  storage_bonus  bigint NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS points_logs (

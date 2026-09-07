@@ -3,6 +3,7 @@
     <header class="ai-head">
       <span class="ai-dot"></span>
       <span class="ai-title">小纸 <i class="ai-tag">AI</i></span>
+      <span class="ai-quota" :title="'免费每天 ' + aiFree + ' 次，超出每次消耗 1 积分'">剩 {{ Math.max(0, aiFree - aiUsed) }}/{{ aiFree }} · ✦{{ points }}</span>
       <button class="ai-x" @click="emit('close')">×</button>
     </header>
 
@@ -32,6 +33,7 @@
 <script setup>
 import { ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { aiApi } from '../api/ai'
+import { authApi } from '../api/auth'
 
 const props = defineProps({ projectId: { type: Number, required: true } })
 const emit = defineEmits(['close'])
@@ -50,6 +52,10 @@ let shown = ref([])     // 渲染用（分段）
 let seq = 0
 let timers = []
 const sentAny = ref(false)
+const aiUsed = ref(0)
+const aiFree = ref(30)
+const points = ref(0)
+const loadAiQuota = async () => { try { const r = await authApi.points(); aiUsed.value = (r && r.aiUsed) || 0; aiFree.value = (r && r.aiFree) || 30; points.value = (r && r.points) || 0 } catch {} }
 const saved = cache.get(String(props.projectId))
 if (saved) { shown.value = saved.shown.slice(); history.push(...saved.history.map(h => ({ ...h }))); seq = saved.seq || 0; sentAny.value = saved.sentAny }
 
@@ -111,7 +117,7 @@ async function send() {
   nextSug()
   try {
     window.dispatchEvent(new Event('dl:flush')); await new Promise(r=>setTimeout(r,400))
-    const res = await aiApi.chat({ projectId: props.projectId, message: text, messages: history })
+    const res = await aiApi.chat({ projectId: props.projectId, message: text, messages: history }); loadAiQuota()
     const reply = (res && (res.reply || res.data?.reply)) || '嗯嗯，我在听～'
     const isSkill = !!(res && (res.skill || res.data?.skill))
     history.push({ role: 'ai', content: reply })
@@ -143,7 +149,7 @@ watch(() => props.projectId, (np, op) => {
   if (op != null && String(op) !== String(np)) cache.set(String(op), { shown: shown.value.slice(), history: history.map(h => ({ ...h })), seq, sentAny: sentAny.value });
   reset();
 })
-onMounted(startSug)
+onMounted(() => { startSug(); loadAiQuota() })
 onBeforeUnmount(() => { timers.forEach(t => clearTimeout(t)); stopSug(); cache.set(String(props.projectId), { shown: shown.value.slice(), history: history.map(h => ({ ...h })), seq, sentAny: sentAny.value }) })
 </script>
 
@@ -154,6 +160,7 @@ onBeforeUnmount(() => { timers.forEach(t => clearTimeout(t)); stopSug(); cache.s
 .ai-title{font-weight:600;font-size:14px;flex:1;display:flex;align-items:center;gap:5px}
 .ai-tag{font-style:normal;font-size:9px;font-weight:700;background:var(--accent);color:#fff;border-radius:4px;padding:0 4px;line-height:1.4}
 .ai-x{border:none;background:none;color:var(--text-2);font-size:18px;cursor:pointer;width:26px;height:26px;border-radius:50%}
+.ai-quota{font-size:11px;color:var(--text-2);background:var(--surface-2);border-radius:999px;padding:2px 8px;white-space:nowrap;cursor:help}
 .ai-x:hover{background:var(--surface-2)}
 .ai-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
 .ai-welcome{display:flex;gap:10px;color:var(--text-2);font-size:13px;align-items:flex-start;max-width:85%}

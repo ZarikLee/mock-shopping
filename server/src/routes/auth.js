@@ -2,7 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { queryAll, queryOne, insert, update, remove } from '../db.js';
-import { getPoints, pointLogs, awardOnce } from '../points.js';
+import { getPoints, pointLogs, awardOnce, convertToStorage, FREE_AI, todayCount } from '../points.js';
 
 const router = express.Router();
 
@@ -230,7 +230,12 @@ router.post('/login', async (req, res, next) => {
 });
 
 router.get('/points', authMiddleware, async (req, res, next) => {
-  try { res.json({ points: await getPoints(req.user.id), logs: await pointLogs(req.user.id) }); }
+  try { const u = await queryOne('users', { id: req.user.id }); res.json({ points: await getPoints(req.user.id), bonus: Number((u && u.storage_bonus) || 0), aiUsed: await todayCount(req.user.id, 'ai_use'), aiFree: FREE_AI, logs: await pointLogs(req.user.id) }); }
+  catch (e) { next(e); }
+});
+
+router.post('/points/convert', authMiddleware, async (req, res, next) => {
+  try { const points = Number(req.body?.points); const r = await convertToStorage(req.user.id, points); if (r.error) return res.status(400).json({ error: r.error }); res.json(r); }
   catch (e) { next(e); }
 });
 

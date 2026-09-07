@@ -9,8 +9,8 @@ router.use(authMiddleware);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 function now() { return new Date().toISOString(); }
 
-const BASE_LIMIT = 500 * 1024 * 1024;
-async function userLimit(userId) { const pts = await getPoints(userId); return BASE_LIMIT + Math.min(pts, 20000) * 1024 * 1024; }
+const BASE_LIMIT = 100 * 1024 * 1024;
+async function userLimit(userId) { const u = await queryOne('users', { id: userId }); const bonus = Number((u && u.storage_bonus) || 0); return BASE_LIMIT + bonus; }
 const bytesOf = s => (s ? Math.floor(String(s).length * 0.75) : 0);
 function bytesOfLog(l) {
   if (!l) return 0;
@@ -95,7 +95,7 @@ router.get('/', async (req, res, next) => {
 });
 
 router.get('/storage', async (req, res, next) => {
-  try { res.json({ used: await usedBytes(req.user.id), limit: await userLimit(req.user.id) }); }
+  try { const u = await queryOne('users', { id: req.user.id }); res.json({ used: await usedBytes(req.user.id), limit: await userLimit(req.user.id), base: BASE_LIMIT, bonus: Number((u && u.storage_bonus) || 0), points: Number((u && u.points) || 0) }); }
   catch (e) { next(e); }
 });
 

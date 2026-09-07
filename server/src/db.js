@@ -52,7 +52,7 @@ function ident(table) {
 }
 /* ---------- PostgreSQL 规范列映射（payload key -> 列） ---------- */
 const SCHEMA = {
-  users: { account: { c: 'account', k: 'text' }, password: { c: 'password', k: 'text' }, nickname: { c: 'nickname', k: 'text' }, role: { c: 'role', k: 'text' }, createdAt: { c: 'created_at', k: 'text' }, points: { c: 'points', k: 'bigint' } },
+  users: { account: { c: 'account', k: 'text' }, password: { c: 'password', k: 'text' }, nickname: { c: 'nickname', k: 'text' }, role: { c: 'role', k: 'text' }, createdAt: { c: 'created_at', k: 'text' }, points: { c: 'points', k: 'bigint' }, storageBonus: { c: 'storage_bonus', k: 'bigint' } },
   projects: { userId: { c: 'user_id', k: 'bigint' }, name: { c: 'name', k: 'text' }, type: { c: 'type', k: 'text' }, startDate: { c: 'start_date', k: 'text' }, createdAt: { c: 'created_at', k: 'text' } },
   day_logs: { projectId: { c: 'project_id', k: 'bigint' }, date: { c: 'date', k: 'text' }, weekday: { c: 'weekday', k: 'text' }, items: { c: 'items', k: 'json' }, files: { c: 'files', k: 'json' }, images: { c: 'images', k: 'json' }, createdAt: { c: 'created_at', k: 'text' }, updatedAt: { c: 'updated_at', k: 'text' } },
   log_versions: { logId: { c: 'log_id', k: 'bigint' }, version: { c: 'version', k: 'bigint' }, items: { c: 'items', k: 'json' }, createdAt: { c: 'created_at', k: 'text' } },

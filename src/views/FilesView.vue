@@ -10,8 +10,10 @@
     <div class="quota">
       <span class="q-lbl">云盘用量</span>
       <div class="q-bar"><i :style="{ width: quotaPct + '%' }"></i></div>
-      <span class="q-num">{{ fmtMB(used) }} / 500 MB</span>
+      <span class="q-num">{{ fmtMB(used) }} / {{ fmtMB(limit) }} MB</span>
+      <button class="q-buy" @click="convOpen = true">积分扩容量</button>
     </div>
+    <p class="quota-hint">基础 100MB；用积分永久扩容：1 积分 = +20MB，当前可用 {{ points }} 积分。</p>
 
     <div v-if="loading" class="fp-load"><span class="spin"></span><p>{{ spinTxt }}</p></div>
     <div v-else-if="!rows.length" class="empty">这个项目还没有图片或附件</div>
@@ -34,6 +36,21 @@
         </div>
       </section>
     </div>
+
+    <!-- 积分转容量 -->
+    <transition name="fade">
+      <div v-if="convOpen" class="conv-mask" @click.self="convOpen = false">
+        <div class="conv-card">
+          <h3>积分扩容云盘</h3>
+          <p class="conv-tip">当前积分：{{ points }}　比例：1 积分 = +20MB（永久）</p>
+          <div class="conv-presets">
+            <button v-for="p in [5, 10, 20, 50]" :key="p" :class="{ on: convPoints === p }" @click="convPoints = p">{{ p }} 积分 → +{{ p * 20 }}MB</button>
+          </div>
+          <button class="conv-do" :disabled="convBusy || convPoints < 1 || convPoints > points" @click="doConvert">确认扩容</button>
+          <button class="conv-cancel" @click="convOpen = false">取消</button>
+        </div>
+      </div>
+    </transition>
 
     <!-- 预览 -->
     <transition name="fade">
@@ -59,6 +76,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { projectApi } from '../api/projects'
+import { authApi } from '../api/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -72,13 +90,21 @@ let spinTimer = null
 const totalImg = ref(0)
 const totalFile = ref(0)
 const used = ref(0)
-const quotaPct = computed(() => Math.min(100, Math.round(used.value / (500 * 1024 * 1024) * 100)))
+const limit = ref(100 * 1024 * 1024)
+const bonus = ref(0)
+const points = ref(0)
+const convOpen = ref(false)
+const convPoints = ref(10)
+const quotaPct = computed(() => limit.value ? Math.min(100, Math.round(used.value / limit.value * 100)) : 0)
 const fmtMB = b => (b / (1024 * 1024)).toFixed(1)
 const WEEKS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 const wk = d => WEEKS[new Date(d + 'T00:00:00').getDay()]
 const pad = n => String(n).padStart(2, '0')
 const dayLabel = d => { const p = d.split('-'); return `${p[0]}年${+p[1]}月${+p[2]}日` }
 
+const convBusy = ref(false)
+const doConvert = async () => { if (!convPoints.value || convPoints.value < 1 || convPoints.value > points.value) return; convBusy.value = true; try { await authApi.convertStorage({ points: convPoints.value }); convOpen.value = false; await loadStorage() } catch (e) { alert((e && e.error) || '转换失败') } finally { convBusy.value = false } }
+const loadStorage = async () => { try { const r = await projectApi.storage(); used.value = (r && (r.used != null ? r.used : 0)) || 0; if (r && r.limit) limit.value = r.limit; points.value = (r && r.points != null ? r.points : points.value) } catch {} }
 const pv = ref({ open: false, url: '', name: '', kind: 'file', text: '' })
 function b64Text(b64) { try { const bin = atob(b64); const bytes = Uint8Array.from(bin, c => c.charCodeAt(0)); return new TextDecoder().decode(bytes) } catch { return '' } }
 function textOf(u) { const i = u.indexOf(','); if (i < 0) return ''; const head = u.slice(0, i), body = u.slice(i + 1); try { return /;base64/i.test(head) ? b64Text(body) : decodeURIComponent(body) } catch { return body } }
@@ -102,7 +128,7 @@ async function load() {
     totalFile.value = rows.value.reduce((n, r) => n + r.files.length, 0)
   } catch { rows.value = [] } finally { loading.value = false }
   if (spinTimer) { clearInterval(spinTimer); spinTimer = null }
-  try { const r = await projectApi.storage(); used.value = (r && (r.used != null ? r.used : 0)) || 0 } catch {}
+  try { const r = await projectApi.storage(); used.value = (r && (r.used != null ? r.used : 0)) || 0; if (r && r.limit) limit.value = r.limit; bonus.value = (r && r.bonus) || 0; points.value = (r && r.points != null ? r.points : points.value) } catch {}
 }
 onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load(); spinTimer = setInterval(() => { spinTxt.value = spinMsgs[Math.floor(Math.random() * spinMsgs.length)] }, 1000) })
 </script>
@@ -118,6 +144,18 @@ onMounted(() => { if (!user.isLoggedIn) { router.push('/login'); return } load()
 .q-bar { flex: 1; height: 8px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
 .q-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #7b6cff); border-radius: 5px; transition: width .4s; }
 .q-num { font-size: 12px; color: var(--text-2); white-space: nowrap; }
+.q-buy { flex-shrink: 0; border: none; border-radius: 9px; background: var(--accent); color: #fff; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+.quota-hint { font-size: 11px; color: var(--text-2); margin: -10px 0 18px; }
+.conv-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 240; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.conv-card { width: min(360px, 92vw); background: var(--surface); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.conv-card h3 { margin: 0; }
+.conv-tip { margin: 0; color: var(--text-2); font-size: 13px; }
+.conv-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.conv-presets button { padding: 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text); font-size: 12px; cursor: pointer; }
+.conv-presets button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
+.conv-do { border: none; border-radius: 10px; background: var(--accent); color: #fff; padding: 12px; font-size: 14px; cursor: pointer; }
+.conv-do:disabled { opacity: .5; }
+.conv-cancel { border: none; background: none; color: var(--text-2); font-size: 13px; cursor: pointer; }
 .empty { text-align: center; color: var(--text-2); padding: 60px 0; }
 .fp-load { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 80px 0; color: var(--text-2); font-size: 13px; }
 .spin { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--surface-2); border-top-color: var(--accent); animation: fpspin .8s linear infinite; }
