@@ -364,19 +364,21 @@ function appendMedia(li,it,day,idx){if(!day)return
   li.appendChild(box)}
 function afterAttach(day){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),400)}
 function openImgPick(day,i){imgPick={day,i};pickImg.value&&pickImg.value.click()}
-function onPickImg(){const inp=pickImg.value;if(!inp)return;const fs=inp.files;inp.value='';if(!fs||!fs.length)return
-  const job=imgPick;imgPick=null;if(!job)return
+function onPickImg(){showToast('读取图片中…')
+  const inp=pickImg.value;if(!inp){showToast('未找到图片选择器');return}const fs=inp.files;inp.value='';if(!fs||!fs.length){showToast('未取到文件');return}
+  const job=imgPick;imgPick=null;if(!job){showToast('未记录目标任务');return}
   const day=job.day,i=job.i
   if(!day.items[i])day.items[i]={text:'',done:false,img:[]}
   if(!day.items[i].img)day.items[i].img=[]
-  const reads=[...fs].map(f=>new Promise(res=>{if(f.size>3*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res(String(r.result));r.readAsDataURL(f)}))
+  const reads=[...fs].map(f=>new Promise(res=>{if(f.size>3*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res(String(r.result));r.onerror=()=>res(null);r.readAsDataURL(f)}))
   Promise.all(reads).then(list=>{const ok=list.filter(Boolean);ok.forEach(u=>day.items[i].img.push(u));showToast('已读取 '+ok.length+' 张图片');renderBody(day);afterAttach(day);requestAnimationFrame(()=>{const els=document.querySelectorAll(`.daybody[data-date="${day.date}"] .thumb`);console.log('thumb count',els.length)})})}
 function openFilePick(day){filePick=day;pickFile.value&&pickFile.value.click()}
 function previewFile(f){if(f&&f.url){if(f.url.indexOf('data:image')===0||/^data:/.test(f.url)){const w=window.open('','_blank');if(w){w.document.write('<title>'+(f.name||'预览')+'</title><body style="margin:0"><img src="'+f.url+'" style="width:auto;max-width:100%;max-height:100vh"/></body>');w.document.close()}else{window.open(f.url,'_blank')}}else{window.open(f.url,'_blank')}}}
-function onPickFile(){const inp=pickFile.value;if(!inp)return;const fs=inp.files;inp.value='';if(!fs||!fs.length)return
-  const day=filePick;filePick=null;if(!day)return
+function onPickFile(){showToast('读取附件中…')
+  const inp=pickFile.value;if(!inp){showToast('未找到附件选择器');return}const fs=inp.files;inp.value='';if(!fs||!fs.length){showToast('未取到文件');return}
+  const day=filePick;filePick=null;if(!day){showToast('未记录目标卡片');return}
   if(!Array.isArray(day.files))day.files=[]
-  const reads=[...fs].map(f=>new Promise(res=>{if(f.size>8*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res({name:f.name,type:f.type||'',url:String(r.result)});r.readAsDataURL(f)}))
+  const reads=[...fs].map(f=>new Promise(res=>{if(f.size>8*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res({name:f.name,type:f.type||'',url:String(r.result)});r.onerror=()=>res(null);r.readAsDataURL(f)}))
   Promise.all(reads).then(list=>{const ok=list.filter(Boolean);ok.forEach(f=>day.files.push(f));showToast('已添加 '+ok.length+' 个附件');afterAttach(day)})}
 function renderBody(day){nextTick(()=>{
   const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
