@@ -13,6 +13,7 @@
           </div>
         </div>
         <div class="t-actions">
+          <button class="tb" @click="openHandle">一键处理</button>
           <button class="tb blue" @click="importOpen = true">导入任务</button>
 <button class="tb blue" @click="openExport">导出记录</button>
           <span class="bell-wrap">
@@ -208,16 +209,30 @@
       </div>
     </transition>
 
-    <!-- 历史未完成任务提醒 -->
+    <!-- 一键处理 -->
     <transition name="fade">
-      <div v-if="showRemind" class="center-mask" @click.self="closeRemind">
-        <div class="center-card remind">
-          <h3>有几条任务还没完成哦</h3>
-          <p class="tip">过去 {{ pastPendingCount }} 个日子还有 {{ pastPendingTotal }} 条未完成，建议尽快处理：</p>
-          <label class="remind-chk"><input type="checkbox" v-model="remindOff" @change="saveRemindOff" /> 不再提醒我（后续登录/刷新不再弹出）</label>
+      <div v-if="hOpen" class="center-mask" @click.self="hOpen = false">
+        <div class="center-card">
+          <h3>处理未完成任务</h3>
+          <p class="tip">过去 {{ hData.count }} 个日子还有 {{ hData.total }} 条未完成，选择一种处理方式：</p>
           <div class="col-btns">
-            <button class="primary" @click="markAllPastDone">全部转为已完成</button>
-            <button class="ghost-wide" @click="movePastToToday">全部未完成加到今天</button>
+            <button class="primary" @click="askHandle('done')">全部勾选为已完成</button>
+            <button class="ghost-wide" @click="askHandle('move')">全部挪到今天</button>
+            <button class="linkbtn" @click="hOpen = false">取消</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 二次确认 -->
+    <transition name="fade">
+      <div v-if="hConfirm" class="center-mask" style="z-index:240" @click.self="hConfirm = null">
+        <div class="center-card">
+          <h3>{{ hConfirm === 'done' ? '确认全部标记完成？' : '确认全部挪到今天？' }}</h3>
+          <p class="tip">{{ hConfirm === 'done' ? '将把过去 ' + hData.total + ' 条未完成任务全部标记为已完成，此操作无法直接恢复（可尝试“上一版本”）。' : '将把过去 ' + hData.total + ' 条未完成任务复制到“今天”继续跟进，并同时把原记录标记为已完成。' }}</p>
+          <div class="row">
+            <button class="ghost" @click="hConfirm = null">取消</button>
+            <button class="primary" @click="doHandle">确认{{ hConfirm === 'done' ? '标记' : '挪动' }}</button>
           </div>
         </div>
       </div>
@@ -328,6 +343,9 @@ function scrollToDay(date,idx){const el=document.querySelector(`.daybody[data-da
   if(idx!=null){const li=document.querySelector(`.daybody[data-date="${date}"] ol>li:nth-child(${idx+1})`);if(li){li.classList.add('fl');setTimeout(()=>li.classList.remove('fl'),1400)}}}
 const scrollEl=ref(null)
 const showRemind=ref(false)
+const hOpen=ref(false)
+const hConfirm=ref(null)
+const hData=ref({ count: 0, total: 0 })
 const remindOff=ref(localStorage.getItem('dl_rem_off')==='1')
 function saveRemindOff(){if(remindOff.value)localStorage.setItem('dl_rem_off','1');else localStorage.removeItem('dl_rem_off')}
 const undoStack=ref([]);const redoStack=ref([])
@@ -420,6 +438,10 @@ function pastUnfinished(){const arr=days.value.filter(d=>d.date<tNow&&(d.items||
 function ensureToday(){let today=findDay(tNow);if(!today){today=norm({date:tNow,weekday:wk(tNow),items:[]});days.value.push(today)}
   days.value.sort((x,y)=>x.date<y.date?-1:1);renderBody(today);return today}
 function saveDays(arr){return Promise.all(arr.map(d=>projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items,files:d.files||[],images:d.images||[]}).then(()=>{d._dirty=false;d._last=snapDay(d)}).catch(()=>{})))}
+function openHandle(){ const u = pastUnfinished(); if (!u.total) { showToast('没有待处理的未完成任务'); return } hData.value = { count: u.count, total: u.total }; hOpen.value = true }
+function askHandle(kind){ hConfirm.value = kind }
+async function doHandle(){ const kind = hConfirm.value; if (!kind) return; hConfirm.value = null; hOpen.value = false
+  if (kind === 'done') await markAllPastDone(); else await movePastToToday() }
 async function maybeRemind(){if(localStorage.getItem('dl_rem_off')==='1')return
   const u=pastUnfinished();if(!u.total)return
   pastPendingTotal.value=u.total;pastPendingCount.value=u.count;showRemind.value=true}
@@ -579,7 +601,7 @@ async function load(){loading.value=true;loadError.value=''
     if(days.value.length){const last=days.value[days.value.length-1]
       try{const info=await projectApi.log(pid.value,last.date);if(info.dayLog&&info.lastVersion&&!same(snapDay(last),info.lastVersion.items.map(i=>[i.text||'',!!i.done])))unsavedPrompt.value=true}catch{}}
     days.value.forEach(renderBody)
-    requestAnimationFrame(()=>{days.value.forEach(renderBody);maybeRemind();scrollToBottomEntry()})
+    requestAnimationFrame(()=>{days.value.forEach(renderBody);scrollToBottomEntry()})
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})).filter(i=>i.text!==''||(i.img&&i.img.length))}
