@@ -184,6 +184,10 @@ async function ensureTables() {
   const sql = fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf-8');
   const p = await ensurePool();
   await p.query(sql);
+  // 历史数据以显式 id 导入后，自增序列可能滞后 → 推进到 max(id)
+  for (const t of TABLES) {
+    await p.query(`SELECT setval(pg_get_serial_sequence('${t}', 'id'), COALESCE((SELECT max(id) FROM ${t}), 1))`).catch(() => {});
+  }
   tablesEnsured = true;
 }
 export async function migrateJsonToPgIfNeeded() {
