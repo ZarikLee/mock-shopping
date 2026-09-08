@@ -542,9 +542,11 @@ function addNextDay(){let date,day
   day=findDay(date)
   if(!day){day=norm({date,weekday:wk(date),items:[]});days.value.push(day)}
   days.value.sort((a,b)=>a.date<b.date?-1:1)
-  renderBody(day);onInput(day);focusLi(day,0);document.querySelector('.daybody[data-date="'+date+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})}
+  renderBody(day);onInput(day);focusLi(day,0);document.querySelector('.daybody[data-date="'+date+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})
+  autosave(day).then(()=>{}).catch(()=>{})}
 function showToast(m){toast.value=m;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.value='',2000)}
 function backHome(){ const target = homeId && homeId !== String(pid.value) ? '/log/' + homeId : ''; router.push(target || '/projects') }
+function scheduleAutosave(day){clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),1200)}
 function clearAllTimers(){Object.values(timers).forEach(t=>clearTimeout(t))}
 function curSnap(){days.value.forEach(readBody);return snapAll()}
 function snapAll(){return days.value.map(d=>({date:d.date,items:cleanItems(d.items).map(i=>({text:i.text,done:!!i.done}))}))}
@@ -577,11 +579,11 @@ async function load(){loading.value=true;loadError.value=''
     if(days.value.length){const last=days.value[days.value.length-1]
       try{const info=await projectApi.log(pid.value,last.date);if(info.dayLog&&info.lastVersion&&!same(snapDay(last),info.lastVersion.items.map(i=>[i.text||'',!!i.done])))unsavedPrompt.value=true}catch{}}
     days.value.forEach(renderBody)
-    requestAnimationFrame(()=>{days.value.forEach(renderBody);scrollToBottomEntry()})
+    requestAnimationFrame(()=>{days.value.forEach(renderBody);maybeRemind();scrollToBottomEntry()})
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})).filter(i=>i.text!==''||(i.img&&i.img.length))}
-async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[],images:day.images||[]});day._dirty=false;day._last=snapDay(day);lastSaved.value=nowStamp();if(day.date===tNow&&day.items.some(i=>i.done))maybeNotifyPts()}catch{}}
+async function autosave(day){readBody(day);day.items=cleanItems(day.items);try{await projectApi.commit(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[],images:day.images||[]});day._dirty=false;day._last=snapDay(day);lastSaved.value=nowStamp();if(day.date===tNow&&day.items.some(i=>i.done))maybeNotifyPts()}catch(e){showToast('保存失败：'+(e?.error||'请重试'));scheduleAutosave(day)}}
 async function saveDraft(day){try{await projectApi.draft(pid.value,day.date,{weekday:day.weekday,items:day.items,files:day.files||[],images:day.images||[]})}catch{}}
 async function saveAll(){saving.value=true
   for(const day of days.value){if(!day._dirty)continue;readBody(day)
@@ -701,7 +703,7 @@ function flushNow(){days.value.forEach(day=>{if(day._dirty){readBody(day);clearT
 onMounted(()=>{if(!user.isLoggedIn){router.push('/login');return}load();window.addEventListener('resize',relayoutAll);window.addEventListener('dl:flush',flushNow);bellTimer=setInterval(loadBell,15000);loadBell();spinTimer=setInterval(()=>{spinTxt.value=spinMsgs[Math.floor(Math.random()*spinMsgs.length)]},1000);document.addEventListener('mousedown', onDocDown)})
 function relayoutAll(){days.value.forEach(d=>{readBody(d);renderBody(d)});if(aiOpen.value)placeAi()}
 watch(()=>route.params.projectId,()=>{if(!user.isLoggedIn)return;pid.value=Number(route.params.projectId);days.value=[];load()})
-onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer);if(bellTimer)clearInterval(bellTimer);if(spinTimer)clearInterval(spinTimer);document.removeEventListener('mousedown', onDocDown)})
+onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTimeout(toastTimer);if(bellTimer)clearInterval(bellTimer);if(spinTimer)clearInterval(spinTimer);document.removeEventListener('mousedown', onDocDown);saveAll()})
 </script>
 
 <style scoped>

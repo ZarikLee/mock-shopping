@@ -230,7 +230,7 @@ router.post('/login', async (req, res, next) => {
 });
 
 router.get('/points', authMiddleware, async (req, res, next) => {
-  try { const u = await queryOne('users', { id: req.user.id }); res.json({ points: await getPoints(req.user.id), bonus: Number((u && u.storage_bonus) || 0), aiUsed: await todayCount(req.user.id, 'ai_use'), aiFree: FREE_AI, logs: await pointLogs(req.user.id) }); }
+  try { await awardOnce(req.user.id, 'login'); const u = await queryOne('users', { id: req.user.id }); res.json({ points: await getPoints(req.user.id), bonus: Number((u && u.storage_bonus) || 0), aiUsed: await todayCount(req.user.id, 'ai_use'), aiFree: FREE_AI, logs: await pointLogs(req.user.id) }); }
   catch (e) { next(e); }
 });
 

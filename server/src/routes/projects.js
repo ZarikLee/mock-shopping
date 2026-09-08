@@ -27,10 +27,15 @@ async function allUserLogs(userId) {
   }
   return out;
 }
-async function usedBytes(userId) {
+const usageCache = new Map()
+async function usedBytes(userId, force) {
+  if (!force && usageCache.has(userId) && usageCache.get(userId).t > Date.now() - 20000) return usageCache.get(userId).v
   const logs = await allUserLogs(userId);
-  return logs.reduce((n, l) => n + bytesOfLog(l), 0);
+  const v = logs.reduce((n, l) => n + bytesOfLog(l), 0)
+  usageCache.set(userId, { t: Date.now(), v })
+  return v
 }
+function invalidateUsage(userId) { usageCache.delete(userId) }
 async function ensureCapacity(userId, excludeLog, addBytes) {
   const base = (await usedBytes(userId)) - bytesOfLog(excludeLog);
   const limit = await userLimit(userId);
@@ -136,6 +141,7 @@ router.delete('/:id', async (req, res, next) => {
       await remove('day_logs', l.id);
     }
     await remove('projects', project.id);
+    invalidateUsage(req.user.id)
     res.json({ success: true });
   } catch (e) { next(e); }
 });
@@ -188,9 +194,11 @@ router.post('/:id/logs/:date/draft', async (req, res, next) => {
       if (files !== undefined) updates.files = normalizeFiles(files);
       if (images !== undefined) updates.images = normalizeImages(images);
       const updated = await update('day_logs', existing.id, updates);
+      invalidateUsage(project.userId)
       return res.json(updated);
     }
     const dayLog = await insert('day_logs', { projectId: project.id, date, weekday: weekday !== undefined && weekday !== null ? String(weekday) : '', items: cleanItems, files: normalizeFiles(files), images: normalizeImages(images), createdAt: now(), updatedAt: now() });
+    invalidateUsage(project.userId)
     res.json(dayLog);
   } catch (e) { next(e); }
 });
@@ -220,6 +228,7 @@ router.post('/:id/logs/:date/commit', async (req, res, next) => {
     if (files !== undefined) updates.files = normalizeFiles(files);
     if (images !== undefined) updates.images = normalizeImages(images);
     await update('day_logs', dayLog.id, updates);
+    invalidateUsage(project.userId)
     const t = new Date(); const pad2 = n => String(n).padStart(2, '0');
     const today = `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
     if (date === today && cleanItems.some(i => i.done)) await awardOnce(project.userId, 'activity');
@@ -269,6 +278,7 @@ router.delete('/:id/logs/:date', async (req, res, next) => {
     const vs = await queryAll('log_versions', { logId: dayLog.id });
     for (const v of vs) await remove('log_versions', v.id);
     await remove('day_logs', dayLog.id);
+    invalidateUsage(project.userId)
     const t = new Date(); const p2 = n => String(n).padStart(2, '0');
     const today = `${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())}`;
     if (date === today) await revokeType(project.userId, 'activity');
