@@ -163,7 +163,7 @@ async function load() {
     const logs = await projectApi.logs(pid.value, { full: 1 })
     const arr = Array.isArray(logs) ? logs : (logs.logs || [])
     allRows.value = arr
-      .filter(l => (l.files && l.files.length) || (l.images && l.images.length) || (l.items && l.items.length))
+      .filter(l => (l.files && l.files.length) || (l.images && l.images.length))
       .map(l => ({ date: l.date, weekday: wk(l.date), items: l.items || [], files: l.files || [], images: l.images || [] }))
       .sort((a, b) => b.date.localeCompare(a.date))
     totalImg.value = allRows.value.reduce((n, r) => n + r.images.length, 0)
