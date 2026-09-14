@@ -409,7 +409,25 @@ function computeMapThumb(){const scr=scrollEl.value;if(!scr)return
   const vr=Math.min(1,scr.clientHeight/scr.scrollHeight)
   thumb.h=Math.min(H,Math.max(8,H*vr))
   const range=Math.max(0,H-thumb.h)
-  thumb.top=clampN((scr.scrollTop/max)*range,0,range)})}
+  thumb.top=clampN((scr.scrollTop/max)*range,0,range)}
+function updateMirror(){const mw=mapMirror.value;const scr=scrollEl.value;if(!mw||!scr||!M.r)return
+  const shift=(M.sH>M.mapH)?scr.scrollTop*M.r:0
+  mw.style.top=Math.round(M.top*M.r-shift)+'px'}
+function onDocScroll(){computeMapThumb();updateMirror()}
+function startThumb(e){const scr=scrollEl.value;if(!scr||!M.r)return
+  const max=scr.scrollHeight-scr.clientHeight;const startY=e.clientY;const startTop=scr.scrollTop
+  const mv=ev=>{const dy=ev.clientY-startY;scr.scrollTop=clampN(startTop+dy/M.r,0,Math.max(0,max))}
+  const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up)}
+  window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up)}
+function thumbDown(e){e.preventDefault();startThumb(e)}
+function mapDown(e){const scr=scrollEl.value;if(!scr)return
+  const mapEl=document.querySelector('.docmap');if(!mapEl)return
+  const y=e.clientY-mapEl.getBoundingClientRect().top
+  const H=M.mapH||mapEl.clientHeight
+  const filled=Math.min(M.sH||H,H)
+  const frac=clampN(y/Math.max(1,filled),0,1)
+  const max=Math.max(0,scr.scrollHeight-scr.clientHeight)
+  scr.scrollTo({top:frac*max,behavior:'smooth'})}
 function layout(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const lis=[...el.querySelectorAll('ol>li')]
   let rail=el.querySelector(':scope > .rail');if(!rail){rail=document.createElement('div');rail.className='rail';rail.setAttribute('contenteditable','false');el.appendChild(rail)}
