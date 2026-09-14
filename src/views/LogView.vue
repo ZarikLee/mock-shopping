@@ -265,6 +265,7 @@ const status=ref('已自动保存')
 const lastSaved=ref('')
 const pad2=n=>String(n).padStart(2,'0')
 const nowStamp=()=>{const d=new Date();return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`}
+const hasDirty=computed(()=>days.value.some(d=>d._dirty))
 const savedTip=computed(()=>hasDirty.value?'正在编辑…':(lastSaved.value?('已自动保存 '+lastSaved.value):'已自动保存'))
 const versions=ref([]);const showVersions=ref(false);const selVersion=ref(null);const confirmRollback=ref(false)
 const importOpen=ref(false);const importText=ref('');const parsed=ref([]);const importPreview=ref('')
