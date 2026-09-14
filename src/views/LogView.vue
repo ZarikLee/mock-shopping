@@ -460,6 +460,7 @@ function drawMap(){
     card.style.background=undone?'rgba(255,149,0,0.16)':'transparent'
     card.style.borderRadius='6px'
   })
+  if(window&&window.console&&console.debug)console.debug('[map] mirror children',mw.children.length)
   computeMapThumb()}
 function computeMapThumb(){const scr=scrollEl.value;if(!scr)return
   const H=document.querySelector('.docmap')?.clientHeight||Math.max(10,M.mapH)
@@ -549,7 +550,7 @@ async function load(){loading.value=true;loadError.value=''
     if(days.value.length){const last=days.value[days.value.length-1]
       try{const info=await projectApi.log(pid.value,last.date);if(info.dayLog&&info.lastVersion&&!same(snapDay(last),info.lastVersion.items.map(i=>[i.text||'',!!i.done])))unsavedPrompt.value=true}catch{}}
     days.value.forEach(renderBody)
-    requestAnimationFrame(()=>{days.value.forEach(renderBody);scrollToBottomEntry()})
+    requestAnimationFrame(()=>{days.value.forEach(renderBody);scrollToBottomEntry();setTimeout(()=>scheduleMap(),400)})
   }catch(e){loadError.value=e?.error||'加载失败'}
   loading.value=false}
 function cleanItems(a){return a.map(i=>({text:(i.text||'').replace(/^\s*[。.。]\s*$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})).filter(i=>i.text!==''||(i.img&&i.img.length))}
@@ -761,13 +762,13 @@ onBeforeUnmount(()=>{Object.values(timers).forEach(t=>clearTimeout(t));clearTime
 .scroll{flex:1;min-width:0;overflow-y:auto}
 .scroll{scrollbar-width:none}
 .scroll::-webkit-scrollbar{display:none}
-.docmap{position:absolute;right:12px;top:8px;bottom:8px;width:58px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.docmap{position:absolute;right:12px;top:8px;bottom:8px;width:74px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:6;box-shadow:0 1px 6px rgba(0,0,0,.06);background-image:repeating-linear-gradient(180deg, color-mix(in srgb, var(--text-2) 12%, transparent) 0 1px, transparent 1px 9px)}
 .map-mirror{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;opacity:.92;color:inherit}
 .map-thumb{position:absolute;left:0;right:0;border-radius:6px;background:rgba(255,255,255,.3);backdrop-filter:blur(6px) saturate(1.6);-webkit-backdrop-filter:blur(6px) saturate(1.6);cursor:ns-resize;pointer-events:auto;border:1px solid rgba(255,255,255,.95);box-shadow:0 0 0 1px rgba(255,255,255,.35),inset 0 0 10px rgba(255,255,255,.45),0 2px 8px rgba(0,0,0,.14);box-sizing:border-box}
 .dstat.todo{color:var(--glow-border)}.dstat.ok{color:var(--green)}
 .cstat{width:9px;height:9px;border-radius:50%;background:var(--glow-border);display:inline-block}
 .cstat.ok{background:var(--green)}
-.doc{padding:20px clamp(86px,7vw,116px) 56px clamp(10px,2.5vw,36px)}
+.doc{padding:20px clamp(104px,8vw,138px) 56px clamp(10px,2.5vw,36px)}
 .center-card .col-btns{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .col-btns button{width:100%;padding:11px;border-radius:10px;font-size:14px;cursor:pointer;border:none}
 .ghost-wide{background:transparent;border:1px solid var(--border);color:var(--text)}
