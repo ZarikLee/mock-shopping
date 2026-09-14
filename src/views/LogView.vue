@@ -364,12 +364,70 @@ const prefs=reactive(lp()||{font:"-apple-system,BlinkMacSystemFont,'PingFang SC'
 function applyPrefs(){localStorage.setItem('dl_prefs',JSON.stringify(prefs))}
 const WEEKS=['周日','周一','周二','周三','周四','周五','周六']
 const pad=n=>String(n).padStart(2,'0')
+const wk=d=>WEEKS[new Date(d+'T00:00:00').getDay()]
+const dayLabel=d=>{const p=d.split('-');return `${p[0]}年${+p[1]}月${+p[2]}日`}
+const fmtTime=t=>{if(!t)return'';const d=new Date(t);return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b)
+function pastUnfinished(){const arr=days.value.filter(d=>d.date<tNow&&(d.items||[]).some(i=>!i.done));return {list:arr,total:arr.reduce((n,d)=>n+d.items.filter(i=>!i.done).length,0),count:arr.length}}
+function ensureToday(){let today=findDay(tNow);if(!today){today=norm({date:tNow,weekday:wk(tNow),items:[]});days.value.push(today)}days.value.sort((x,y)=>x.date<y.date?-1:1);renderBody(today);return today}
+function saveDays(arr){return Promise.all(arr.map(d=>projectApi.commit(pid.value,d.date,{weekday:d.weekday,items:d.items,files:d.files||[],images:d.images||[]}).then(()=>{d._dirty=false;d._last=snapDay(d)}).catch(()=>{})))}
 function dstr(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
 const nowD=new Date();const tNow=dstr(nowD)
 const isToday=d=>d===tNow
 const doneOf=day=>(day.items||[]).filter(i=>i.done).length
 const cs=day=>{const it=day.items||[];if(!it.length)return '';return it.every(i=>i.done)?'ok':'todo'}
 const mapCls=day=>{const it=day.items||[];if(!it.length)return 'none';return it.every(i=>i.done)?'ok':'todo'}
+const norm=l=>({date:l.date,weekday:l.weekday||wk(l.date),items:(l.items||[]).map(i=>({text:(i.text||'').replace(/^[。.]$/,'').trim(),done:!!i.done,img:Array.isArray(i.img)?i.img.slice():[]})),files:(Array.isArray(l.files)?l.files.map(f=>({name:f.name||'文件',type:f.type||'',url:f.url})):[]),images:Array.isArray(l.images)?l.images.slice():[],_dirty:false,_last:null})
+const findDay=date=>days.value.find(d=>d.date===date)
+const snapDay=day=>{const a=day.items.map(i=>[i.text,i.done,JSON.stringify(i.img||[])]);a.push('F'+JSON.stringify(day.files||[]));a.push('I'+JSON.stringify(day.images||[]));return a}
+function renderBody(day){nextTick(()=>{
+  const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
+  const ol=document.createElement('ol')
+  day.items.forEach(it=>{const li=document.createElement('li');if(it.done)li.classList.add('done');li.appendChild(document.createTextNode(it.text?it.text:'\u200b'));ol.appendChild(li)})
+  if(!ol.children.length){const li=document.createElement('li');ol.appendChild(li)}
+  el.innerHTML='';el.appendChild(ol)
+  layout(day);scheduleMap()
+})}
+function afterAttach(day){day._dirty=true;unsavedPrompt.value=false;clearTimeout(timers[day.date]);timers[day.date]=setTimeout(()=>autosave(day),400)}
+function scrollToBottomEntry(){const el=scrollEl.value;if(!el||!days.value.length)return
+  const max=el.scrollHeight-el.clientHeight;if(max<=0)return
+  el.scrollTop=Math.max(0,max-1000)
+  requestAnimationFrame(()=>{el.scrollTo({top:max,behavior:'smooth'})})}
+/* 图片（当天） */
+function openImgPickFor(day){imgPick=day;pickImg.value&&pickImg.value.click()}
+function onPickImg(){const inp=pickImg.value;if(!inp)return;const arr=Array.from(inp.files);inp.value='';if(!arr.length)return
+  const day=imgPick;imgPick=null;if(!day)return
+  if(!Array.isArray(day.images))day.images=[]
+  const reads=arr.map(f=>new Promise(res=>{if(f.size>3*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res(String(r.result));r.onerror=()=>res(null);r.readAsDataURL(f)}))
+  Promise.all(reads).then(list=>{const ok=list.filter(Boolean);ok.forEach(u=>day.images.push(u));renderBody(day);afterAttach(day)})}
+function removeImage(day,i){if(Array.isArray(day.images)){day.images.splice(i,1);renderBody(day);afterAttach(day)}}
+/* 附件（当天） */
+function openFilePick(day){filePick=day;pickFile.value&&pickFile.value.click()}
+function onPickFile(){const inp=pickFile.value;if(!inp)return;const arr=Array.from(inp.files);inp.value='';if(!arr.length)return
+  const day=filePick;filePick=null;if(!day)return
+  if(!Array.isArray(day.files))day.files=[]
+  const reads=arr.map(f=>new Promise(res=>{if(f.size>8*1024*1024)return res(null);const r=new FileReader();r.onload=()=>res({name:f.name,type:f.type||'',url:String(r.result)});r.onerror=()=>res(null);r.readAsDataURL(f)}))
+  Promise.all(reads).then(list=>{const ok=list.filter(Boolean);ok.forEach(f=>day.files.push(f));afterAttach(day)})}
+function removeFile(day,i){if(Array.isArray(day.files)){day.files.splice(i,1);afterAttach(day)}}
+function previewFile(f){if(f&&f.url)openPreview({url:f.url,name:f.name||'文件',type:f.type})}
+/* 预览 */
+function openPreview(p){pvOpen.value=true;pvUrl.value=p.url;pvName.value=p.name||'';pvType.value=p.type||'';pvText.value=pvTextOf(p.url)}
+function closePreview(){pvOpen.value=false}
+function b64ToText(b64){try{const bin=atob(b64);const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return new TextDecoder().decode(bytes)}catch{return ''}}
+function pvTextOf(u){const i=u.indexOf(',');if(i<0)return '';const head=u.slice(0,i),body=u.slice(i+1);try{return /;base64/i.test(head)?b64ToText(body):decodeURIComponent(body)}catch{return body}}
+/* 一键处理 */
+function openHandle(){const u=pastUnfinished();if(!u.total){showToast('没有待处理的未完成任务');return}hData.value={count:u.count,total:u.total};hOpen.value=true}
+function askHandle(kind){hConfirm.value=kind}
+async function doHandle(){const kind=hConfirm.value;if(!kind)return;hConfirm.value=null;hOpen.value=false
+  if(kind==='done')await markAllPastDone();else await movePastToToday()}
+async function markAllPastDone(){pushSnap('全部标记完成');const u=pastUnfinished();if(!u.list.length){return}
+  u.list.forEach(d=>{d.items.forEach(i=>i.done=true)});await saveDays(u.list);u.list.forEach(renderBody);showToast('已全部标记完成')}
+async function movePastToToday(){pushSnap('未完成搬到今天');const u=pastUnfinished();const today=ensureToday()
+  const move=[];u.list.forEach(d=>{d.items.forEach(i=>{if(!i.done){move.push({text:i.text,done:false});i.done=true}})})
+  today.items=today.items.concat(move.filter(i=>i.text&&i.text.trim()));renderBody(today)
+  await saveDays([today,...u.list]);showToast('已将 '+move.length+' 条搬到今天')}
+function maybeRemind(){}
+function closeRemind(){showRemind.value=false}
 const mapMirror=ref(null)
 const thumb=reactive({top:0,h:16})
 const thumbStyle=computed(()=>({top:thumb.top+'px',height:Math.max(10,thumb.h)+'px'}))
