@@ -271,14 +271,14 @@ const load = async () => {
   try { const res = await projectApi.list(); projects.value = Array.isArray(res) ? res : (res.projects || []) }
   catch { projects.value = [] }
 }
-const currentProjId = computed(() => (route.path.startsWith('/log/') ? String(route.params.projectId || '') : ''))
+const currentProjId = computed(() => { const m = route.path.match(/^\/(log|files|review)\/(\d+)/); return m ? m[2] : '' })
 const pdOpen = ref(false)
 const pdRef = ref(null)
 const currentName = computed(() => { const p = projects.value.find(x => String(x.id) === currentProjId.value); return p ? p.name : '' })
 const firstId = computed(() => projects.value.length ? String(projects.value[0].id) : '')
 const goFiles = id => { if (!id) return; pdOpen.value = false; router.push('/files/' + id); if (mobile.value) drawerOpen.value = false }
 const goReview = id => { if (!id) return; pdOpen.value = false; router.push('/review/' + id); if (mobile.value) drawerOpen.value = false }
-const pickProj = id => { pdOpen.value = false; if (id) { router.push('/log/' + id); if (mobile.value) drawerOpen.value = false } }
+const pickProj = id => { pdOpen.value = false; if (id) { const seg = (route.path.split('/')[1] || 'log'); const base = ['log', 'files', 'review'].includes(seg) ? seg : 'log'; router.push('/' + base + '/' + id); if (mobile.value) drawerOpen.value = false } }
 const newProj = () => { pdOpen.value = false; showNewProj.value = true }
 const onPdDown = e => { if (pdRef.value && pdOpen.value && !pdRef.value.contains(e.target)) pdOpen.value = false }
 const showNewProj = ref(false)
