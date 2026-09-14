@@ -474,6 +474,32 @@ function computeMapThumb(){const scr=scrollEl.value;if(!scr)return
   thumb.h=y
   const range=Math.max(0, S-y)
   thumb.top=clampN((scr.scrollTop/max)*range,0,range)}
+function updateMirror(){const mw=mapMirror.value;const scr=scrollEl.value;if(!mw||!scr||!M.r)return
+  const shift=(M.sH>M.mapH)?scr.scrollTop*M.r:0
+  mw.style.top=Math.round(M.top*M.r-shift)+'px'}
+function onDocScroll(){computeMapThumb();updateMirror()}
+function startThumb(e){const scr=scrollEl.value;if(!scr||!M.r)return
+  const max=scr.scrollHeight-scr.clientHeight;const startY=e.clientY;const startTop=scr.scrollTop
+  const mv=ev=>{const dy=ev.clientY-startY;scr.scrollTop=clampN(startTop+dy/M.r,0,Math.max(0,max))}
+  const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up)}
+  window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up)}
+function thumbDown(e){e.preventDefault();startThumb(e)}
+function mapDown(e){const scr=scrollEl.value;if(!scr)return
+  const mapEl=document.querySelector('.docmap');if(!mapEl)return
+  const y=e.clientY-mapEl.getBoundingClientRect().top
+  const H=M.mapH||mapEl.clientHeight
+  const filled=Math.min(M.sH||H,H)
+  const frac=clampN(y/Math.max(1,filled),0,1)
+  const max=Math.max(0,scr.scrollHeight-scr.clientHeight)
+  scr.scrollTo({top:frac*max,behavior:'smooth'})}
+function layout(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
+  const lis=[...el.querySelectorAll('ol>li')]
+  let rail=el.querySelector(':scope > .rail');if(!rail){rail=document.createElement('div');rail.className='rail';rail.setAttribute('contenteditable','false');el.appendChild(rail)}
+  while(rail.children.length<lis.length){rail.appendChild(document.createElement('button'))}
+  while(rail.children.length>lis.length)rail.removeChild(rail.lastChild)
+  lis.forEach((li,i)=>{const bt=rail.children[i];const on=li.classList.contains('done');bt.className='sw'+(on?' on':'');bt.style.top=(li.offsetTop+2)+'px'
+    bt.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();day.items[i]=day.items[i]||{text:li.textContent||'',done:false};day.items[i].done=!day.items[i].done;li.classList.toggle('done',day.items[i].done);readBody(day);onInput(day)}})
+}
 function readBody(day){const el=document.querySelector(`.daybody[data-date="${day.date}"]`);if(!el)return
   const lis=[...el.querySelectorAll(':scope ol > li')];const old=day.items||[]
   day.items=lis.map((li,idx)=>{const c=li.cloneNode(true);c.querySelectorAll('.li-imgs,.li-media').forEach(n=>n.remove())
